@@ -2,7 +2,7 @@
 #include <event_groups.h>
 
 UART Hardware::uart1(USART1);
-UART Hardware::uart2(USART1);
+UART Hardware::uart2(USART2);
 
 std::array<I2C::State, 2> Hardware::i2cStates;
 std::array<SPI::State, 1> Hardware::spiState;

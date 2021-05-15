@@ -30,6 +30,9 @@ void UART::Initialize() {
             HAL_NVIC_SetPriority(USART2_IRQn, 10, 0);
             HAL_NVIC_EnableIRQ(USART2_IRQn);
             break;
+    case Instance::NONE:
+        throw std::runtime_error("Somehow instance not set to UART1 or UART2...");
+        
     }
     
     state.handle.Instance = instance == Instance::UART_1 ? USART1 : USART2;
@@ -132,15 +135,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 }
 
 
-UART::UART(USART_TypeDef *usart): baudRate{115200}
+UART::UART(USART_TypeDef *usart):  mode{Mode::INTERRUPTS}, baudRate{115200}
 {
-    
-    baudRate = 115200;
-    
+
     if (usart == USART1)
         instance = Instance::UART_1;
     else if (usart == USART2)
         instance = Instance::UART_2;
-    else
-        throw std::runtime_error("Please ensure you choose either UART_1 or UART_2");
+//    else
+//        throw std::runtime_error("Please ensure you choose either UART_1 or UART_2");
 }

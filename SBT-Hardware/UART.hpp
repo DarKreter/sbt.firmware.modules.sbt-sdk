@@ -31,6 +31,7 @@ class UART
     /*-------ENUMS---------*/
     enum class Instance
     {
+        NONE,
         UART_1,
         UART_2
     };
@@ -45,8 +46,8 @@ class UART
     Instance instance;
     Mode mode;
     
-//public:
-    explicit UART(USART_TypeDef* usart);
+public:
+    UART(USART_TypeDef* usart);
     
     void SendRCC(uint8_t* data, size_t numOfBytes);
     void SendIT(uint8_t* data, size_t numOfBytes);
@@ -57,7 +58,7 @@ class UART
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
     
 public:
-    uint32_t baudRate = 115200;
+    uint32_t baudRate;
     
     UART() = delete;
     
