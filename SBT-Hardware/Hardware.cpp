@@ -1,7 +1,9 @@
 #include <Hardware.hpp>
 #include <event_groups.h>
 
-std::array<Uart::State, 2> Hardware::uartStates;
+UART Hardware::uart1(USART1);
+UART Hardware::uart2(USART1);
+
 std::array<I2C::State, 2> Hardware::i2cStates;
 std::array<SPI::State, 1> Hardware::spiState;
 std::array<CAN::State, 1> Hardware::canState;
@@ -57,111 +59,6 @@ void Hardware::configureClocks() {
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
-}
-
-void Hardware::initializeUart(Uart::Uart id, uint32_t baudRate) {
-    switch (id) {
-        case Uart::Uart::UART_1:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_USART1_CLK_ENABLE();
-            // Set GPIO
-            enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
-            enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
-            // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
-            HAL_NVIC_EnableIRQ(USART1_IRQn);
-            break;
-        case Uart::Uart::UART_2:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_USART2_CLK_ENABLE();
-            // Set GPIO
-            enableGpio(GPIOA, GPIO_PIN_2, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX2
-            enableGpio(GPIOA, GPIO_PIN_3, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX2
-            // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(USART2_IRQn, 10, 0);
-            HAL_NVIC_EnableIRQ(USART2_IRQn);
-            break;
-    }
-
-    Uart::State& state = getUartState(id);
-    state.handle.Instance = id == Uart::Uart::UART_1 ? USART1 : USART2;
-    state.handle.Init.BaudRate = baudRate;
-    state.handle.Init.WordLength = UART_WORDLENGTH_8B;
-    state.handle.Init.Parity = UART_PARITY_NONE;
-    state.handle.Init.StopBits = UART_STOPBITS_1;
-    state.handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    state.handle.Init.OverSampling = UART_OVERSAMPLING_16;
-    state.handle.Init.Mode = UART_MODE_TX_RX;
-
-    // Set registers with prepared data
-    HAL_UART_Init(&state.handle);
-
-    // Enable interrupts
-    __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
-    __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
-
-    // Clear bits
-    state.txRxState = xEventGroupCreate();
-    xEventGroupClearBits(state.txRxState, Uart::State::rxBit | Uart::State::txBit);
-}
-
-void Hardware::uartSend(Uart::Uart id, uint8_t *data, size_t numOfBytes) {
-    Uart::State& state = getUartState(id);
-    // Check if event group was created
-    if(state.txRxState) {
-        // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & Uart::State::txBit) == 0) {
-            // If UART is not busy, transmit and set TX flag to busy
-            HAL_UART_Transmit_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, Uart::State::txBit);
-        }
-    }
-}
-
-void Hardware::uartReceive(Uart::Uart id, uint8_t *data, size_t numOfBytes) {
-    Uart::State& state = getUartState(id);
-    // Check if event group was created
-    if(state.txRxState) {
-        // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & Uart::State::rxBit) == 0) {
-            // If UART is not busy, transmit and set RX flag to busy
-            HAL_UART_Receive_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, Uart::State::rxBit);
-        }
-    }
-}
-
-bool Hardware::isUartTxComplete(Uart::Uart id) {
-    const Uart::State& state = getUartState(id);
-    return (xEventGroupGetBits(state.txRxState) & Uart::State::txBit) == 0;
-}
-
-bool Hardware::isUartRxComplete(Uart::Uart id) {
-    const Uart::State& state = getUartState(id);
-    return (xEventGroupGetBits(state.txRxState) & Uart::State::rxBit) == 0;
-}
-
-void Hardware::abortUartTx(Uart::Uart id) {
-    HAL_UART_AbortTransmit_IT(&getUartState(id).handle);
-    xEventGroupClearBits(getUartState(id).txRxState, Uart::State::txBit);
-}
-
-void Hardware::abortUartRx(Uart::Uart id) {
-    HAL_UART_AbortReceive_IT(&getUartState(id).handle);
-    xEventGroupClearBits(getUartState(id).txRxState, Uart::State::rxBit);
-}
-
-Uart::State& Hardware::getUartState(Uart::Uart id) {
-    switch (id) {
-        case Uart::Uart::UART_1:
-            return uartStates[0];
-        case Uart::Uart::UART_2:
-            return uartStates[1];
-    }
-    // Give up and stay here
-    return getUartState(id);
 }
 
 void Hardware::initializeI2C(I2C::I2C id, uint32_t address, uint32_t speed) {
@@ -278,232 +175,197 @@ void Hardware::initializeSpi() {
     xEventGroupClearBits(spiState.at(0).txRxState, SPI::State::rxBit | SPI::State::txBit);
 }
 
-void Hardware::spiSend(uint8_t *data, size_t numOfBytes) {
-    SPI::State& state = getSpiState();
-    // Check if event group was created
-    if(state.txRxState) {
-        // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & SPI::State::txBit) == 0) {
-            // If UART is not busy, transmit and set TX flag to busy
-            HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, Uart::State::txBit);
-        }
-    }
-}
-
-void Hardware::spiReceive(uint8_t *data, size_t numOfBytes) {
-    SPI::State& state = getSpiState();
-    // Check if event group was created
-    if(state.txRxState) {
-        // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & SPI::State::rxBit) == 0) {
-            // If UART is not busy, transmit and set RX flag to busy
-            HAL_SPI_Receive_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, SPI::State::rxBit);
-        }
-    }
-}
-
-SPI::State &Hardware::getSpiState() {
-    return spiState.at(0);
-}
-
-void Hardware::initializeCan(const std::initializer_list <uint32_t>& acceptedAddresses) {
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_CAN1_CLK_ENABLE();
-    enableGpio(GPIOA, GPIO_PIN_11, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // RX
-    enableGpio(GPIOA, GPIO_PIN_12, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // TX
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 5);
-    HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
-    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 5);
-    HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
-    HAL_NVIC_SetPriority(CEC_IRQn, 5, 5);
-    HAL_NVIC_EnableIRQ(CEC_IRQn);
-
-    CAN_HandleTypeDef& handle = getCanState().handle;
-
-    handle.Instance = CAN1;
-    handle.Init.Prescaler = 1;
-    handle.Init.Mode = CAN_MODE_NORMAL;
-    handle.Init.SyncJumpWidth = CAN_SJW_1TQ;
-    handle.Init.TimeSeg1 = CAN_BS1_6TQ;
-    handle.Init.TimeSeg2 = CAN_BS2_1TQ;
-    handle.Init.TimeTriggeredMode = DISABLE;
-    handle.Init.AutoBusOff = DISABLE;
-    handle.Init.AutoWakeUp = DISABLE;
-    handle.Init.AutoRetransmission = ENABLE;
-    handle.Init.ReceiveFifoLocked = DISABLE;
-    handle.Init.TransmitFifoPriority = DISABLE;
-
-    HAL_CAN_Init(&handle);
-
-    // Configure filters
-
-    CAN_FilterTypeDef filter;
-    filter.FilterMode = CAN_FILTERMODE_IDMASK;
-    filter.FilterScale = CAN_FILTERSCALE_32BIT;
-    filter.FilterActivation = CAN_FILTER_ENABLE;
-
-    for(uint32_t idx = 0; idx < acceptedAddresses.size(); ++idx) {
-        // RM0008 p. 665
-        const uint32_t address = *(acceptedAddresses.begin() + idx);
-        const uint32_t lowerPortion = (address & 0b1111111111111u) << 3u;
-        const uint32_t upperPortion = (address & 0b111110000000000000u) >> 13u;
-        filter.FilterMaskIdLow = (0x1FFFFFFFu & 0b1111111111111u) << 3u;;
-        filter.FilterMaskIdHigh = (0x1FFFFFFFu & 0b111110000000000000u) >> 13u;;
-        filter.FilterIdLow = lowerPortion;
-        filter.FilterIdHigh = upperPortion;
-        filter.FilterBank = idx;
-        filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-        HAL_CAN_ConfigFilter(&handle, &filter);
-    }
-    HAL_CAN_Start(&handle);
-
-    // Create queue for messages
-    getCanState().queueHandle = xQueueCreate(20, sizeof(CAN::RxMessage));
-
-    HAL_CAN_ActivateNotification(&handle, CAN_IT_RX_FIFO0_MSG_PENDING);
-    HAL_CAN_ActivateNotification(&handle, CAN_IT_RX_FIFO1_MSG_PENDING);
-}
-
-bool Hardware::isAnyTxMailboxFree() {
-    return HAL_CAN_GetTxMailboxesFreeLevel(&getCanState().handle) > 0;
-}
-
-void Hardware::sendCanMessage(CAN::TxMessage &message) {
-    [[maybe_unused]] uint32_t usedMailbox;
-    if(isAnyTxMailboxFree()) {
-        HAL_CAN_AddTxMessage(&getCanState().handle, &message.header, message.payload.data(), &usedMailbox);
-    }
-}
-
-CAN::State& Hardware::getCanState() {
-    return canState.at(0);
-}
-
-std::optional<CAN::RxMessage> Hardware::getCanMessageFromQueue() {
-    CAN::RxMessage rxMessage{};
-    if(xQueueReceive(getCanState().queueHandle, &rxMessage, 0) == pdTRUE){
-        return rxMessage;
-    }
-    return std::nullopt;
-}
-
-// Handlers for default HAL UART callbacks
-
-void USART1_IRQHandler() {
-    HAL_UART_IRQHandler(&Hardware::getUartState(Uart::Uart::UART_1).handle);
-}
-
-void USART2_IRQHandler() {
-    HAL_UART_IRQHandler(&Hardware::getUartState(Uart::Uart::UART_2).handle);
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-    if(huart->Instance == USART1){
-        if(auto* eventGroup = Hardware::getUartState(Uart::Uart::UART_1).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
-        }
-    }
-    else if(huart->Instance == USART2){
-        if(auto* eventGroup = Hardware::getUartState(Uart::Uart::UART_2).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
-        }
-    }
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if(huart->Instance == USART1){
-        if(auto* eventGroup = Hardware::getUartState(Uart::Uart::UART_1).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-        }
-    }
-    if(huart->Instance == USART2){
-        if(auto* eventGroup = Hardware::getUartState(Uart::Uart::UART_1).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-        }
-    }
-}
-
-// Handlers for I2C transmission
-
-void I2C1_EV_IRQHandler(){
-    HAL_I2C_EV_IRQHandler(&Hardware::getI2CState(I2C::I2C::I2C_1).handle);
-}
-
-void I2C1_ER_IRQHandler(){
-    HAL_I2C_ER_IRQHandler(&Hardware::getI2CState(I2C::I2C::I2C_1).handle);
-}
-
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c){
-    if(hi2c->Instance == I2C1){
-        if(auto* eventGroup = Hardware::getI2CState(I2C::I2C::I2C_1).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
-        }
-    }
-}
-
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c){
-    if(hi2c->Instance == I2C1){
-        if(auto* eventGroup = Hardware::getI2CState(I2C::I2C::I2C_1).txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-        }
-    }
-}
-
-// Handlers for SPI transmission
-
-void SPI1_IRQHandler(){
-    HAL_SPI_IRQHandler(&Hardware::getSpiState().handle);
-}
-
-void HAL_SPI_TxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
-    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
-        xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
-    }
-}
-void HAL_SPI_RxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
-    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
-        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-    }
-}
-
-void HAL_SPI_TxHalfCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
-    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
-        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-    }
-}
-
-void HAL_SPI_RxHalfCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
-    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
-        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-    }
-}
-
-void HAL_SPI_ErrorCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
-    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
-        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
-    }
-}
-
-// Handlers for CAN transmission
-void CAN1_RX0_IRQHandler(){
-    HAL_CAN_IRQHandler(&Hardware::getCanState().handle);
-}
-
-void saveMessageToQueue(uint32_t fifoId){
-    CAN::RxMessage message{};
-    CAN_RxHeaderTypeDef header{};
-    HAL_CAN_GetRxMessage(&Hardware::getCanState().handle, fifoId, &header, message.payload.data());
-    message.id = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
-
-    xQueueSendToBackFromISR(Hardware::getCanState().queueHandle, &message, NULL);
-}
-
-void HAL_CAN_RxFifo0MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
-    saveMessageToQueue(CAN_RX_FIFO0);
-}
-
-void HAL_CAN_RxFifo1MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
-    saveMessageToQueue(CAN_RX_FIFO1);
-}
+//void Hardware::spiSend(uint8_t *data, size_t numOfBytes) {
+//    SPI::State& state = getSpiState();
+//    // Check if event group was created
+//    if(state.txRxState) {
+//        // Check if there is no transmission
+//        if((xEventGroupGetBits(state.txRxState) & SPI::State::txBit) == 0) {
+//            // If UART is not busy, transmit and set TX flag to busy
+//            HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes);
+//            xEventGroupSetBits(state.txRxState, Uart::State::txBit);
+//        }
+//    }
+//}
+//
+//void Hardware::spiReceive(uint8_t *data, size_t numOfBytes) {
+//    SPI::State& state = getSpiState();
+//    // Check if event group was created
+//    if(state.txRxState) {
+//        // Check if there is no transmission
+//        if((xEventGroupGetBits(state.txRxState) & SPI::State::rxBit) == 0) {
+//            // If UART is not busy, transmit and set RX flag to busy
+//            HAL_SPI_Receive_IT(&state.handle, data, numOfBytes);
+//            xEventGroupSetBits(state.txRxState, SPI::State::rxBit);
+//        }
+//    }
+//}
+//
+//SPI::State &Hardware::getSpiState() {
+//    return spiState.at(0);
+//}
+//
+//void Hardware::initializeCan(const std::initializer_list <uint32_t>& acceptedAddresses) {
+//    __HAL_RCC_GPIOA_CLK_ENABLE();
+//    __HAL_RCC_CAN1_CLK_ENABLE();
+//    enableGpio(GPIOA, GPIO_PIN_11, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // RX
+//    enableGpio(GPIOA, GPIO_PIN_12, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // TX
+//    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 5);
+//    HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+//    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 5);
+//    HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
+//    HAL_NVIC_SetPriority(CEC_IRQn, 5, 5);
+//    HAL_NVIC_EnableIRQ(CEC_IRQn);
+//
+//    CAN_HandleTypeDef& handle = getCanState().handle;
+//
+//    handle.Instance = CAN1;
+//    handle.Init.Prescaler = 1;
+//    handle.Init.Mode = CAN_MODE_NORMAL;
+//    handle.Init.SyncJumpWidth = CAN_SJW_1TQ;
+//    handle.Init.TimeSeg1 = CAN_BS1_6TQ;
+//    handle.Init.TimeSeg2 = CAN_BS2_1TQ;
+//    handle.Init.TimeTriggeredMode = DISABLE;
+//    handle.Init.AutoBusOff = DISABLE;
+//    handle.Init.AutoWakeUp = DISABLE;
+//    handle.Init.AutoRetransmission = ENABLE;
+//    handle.Init.ReceiveFifoLocked = DISABLE;
+//    handle.Init.TransmitFifoPriority = DISABLE;
+//
+//    HAL_CAN_Init(&handle);
+//
+//    // Configure filters
+//
+//    CAN_FilterTypeDef filter;
+//    filter.FilterMode = CAN_FILTERMODE_IDMASK;
+//    filter.FilterScale = CAN_FILTERSCALE_32BIT;
+//    filter.FilterActivation = CAN_FILTER_ENABLE;
+//
+//    for(uint32_t idx = 0; idx < acceptedAddresses.size(); ++idx) {
+//        // RM0008 p. 665
+//        const uint32_t address = *(acceptedAddresses.begin() + idx);
+//        const uint32_t lowerPortion = (address & 0b1111111111111u) << 3u;
+//        const uint32_t upperPortion = (address & 0b111110000000000000u) >> 13u;
+//        filter.FilterMaskIdLow = (0x1FFFFFFFu & 0b1111111111111u) << 3u;;
+//        filter.FilterMaskIdHigh = (0x1FFFFFFFu & 0b111110000000000000u) >> 13u;;
+//        filter.FilterIdLow = lowerPortion;
+//        filter.FilterIdHigh = upperPortion;
+//        filter.FilterBank = idx;
+//        filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+//        HAL_CAN_ConfigFilter(&handle, &filter);
+//    }
+//    HAL_CAN_Start(&handle);
+//
+//    // Create queue for messages
+//    getCanState().queueHandle = xQueueCreate(20, sizeof(CAN::RxMessage));
+//
+//    HAL_CAN_ActivateNotification(&handle, CAN_IT_RX_FIFO0_MSG_PENDING);
+//    HAL_CAN_ActivateNotification(&handle, CAN_IT_RX_FIFO1_MSG_PENDING);
+//}
+//
+//bool Hardware::isAnyTxMailboxFree() {
+//    return HAL_CAN_GetTxMailboxesFreeLevel(&getCanState().handle) > 0;
+//}
+//
+//void Hardware::sendCanMessage(CAN::TxMessage &message) {
+//    [[maybe_unused]] uint32_t usedMailbox;
+//    if(isAnyTxMailboxFree()) {
+//        HAL_CAN_AddTxMessage(&getCanState().handle, &message.header, message.payload.data(), &usedMailbox);
+//    }
+//}
+//
+//CAN::State& Hardware::getCanState() {
+//    return canState.at(0);
+//}
+//
+//std::optional<CAN::RxMessage> Hardware::getCanMessageFromQueue() {
+//    CAN::RxMessage rxMessage{};
+//    if(xQueueReceive(getCanState().queueHandle, &rxMessage, 0) == pdTRUE){
+//        return rxMessage;
+//    }
+//    return std::nullopt;
+//}
+//
+//
+//// Handlers for I2C transmission
+//
+//void I2C1_EV_IRQHandler(){
+//    HAL_I2C_EV_IRQHandler(&Hardware::getI2CState(I2C::I2C::I2C_1).handle);
+//}
+//
+//void I2C1_ER_IRQHandler(){
+//    HAL_I2C_ER_IRQHandler(&Hardware::getI2CState(I2C::I2C::I2C_1).handle);
+//}
+//
+//void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c){
+//    if(hi2c->Instance == I2C1){
+//        if(auto* eventGroup = Hardware::getI2CState(I2C::I2C::I2C_1).txRxState) {
+//            xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
+//        }
+//    }
+//}
+//
+//void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c){
+//    if(hi2c->Instance == I2C1){
+//        if(auto* eventGroup = Hardware::getI2CState(I2C::I2C::I2C_1).txRxState) {
+//            xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
+//        }
+//    }
+//}
+//
+//// Handlers for SPI transmission
+//
+//void SPI1_IRQHandler(){
+//    HAL_SPI_IRQHandler(&Hardware::getSpiState().handle);
+//}
+//
+//void HAL_SPI_TxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
+//    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
+//        xEventGroupClearBitsFromISR(eventGroup, Uart::State::txBit);
+//    }
+//}
+//void HAL_SPI_RxCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
+//    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
+//        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
+//    }
+//}
+//
+//void HAL_SPI_TxHalfCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
+//    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
+//        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
+//    }
+//}
+//
+//void HAL_SPI_RxHalfCpltCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
+//    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
+//        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
+//    }
+//}
+//
+//void HAL_SPI_ErrorCallback([[maybe_unused]] SPI_HandleTypeDef *hspi){
+//    if(auto* eventGroup = Hardware::getSpiState().txRxState) {
+//        xEventGroupClearBitsFromISR(eventGroup, Uart::State::rxBit);
+//    }
+//}
+//
+//// Handlers for CAN transmission
+//void CAN1_RX0_IRQHandler(){
+//    HAL_CAN_IRQHandler(&Hardware::getCanState().handle);
+//}
+//
+//void saveMessageToQueue(uint32_t fifoId){
+//    CAN::RxMessage message{};
+//    CAN_RxHeaderTypeDef header{};
+//    HAL_CAN_GetRxMessage(&Hardware::getCanState().handle, fifoId, &header, message.payload.data());
+//    message.id = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
+//
+//    xQueueSendToBackFromISR(Hardware::getCanState().queueHandle, &message, NULL);
+//}
+//
+//void HAL_CAN_RxFifo0MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
+//    saveMessageToQueue(CAN_RX_FIFO0);
+//}
+//
+//void HAL_CAN_RxFifo1MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
+//    saveMessageToQueue(CAN_RX_FIFO1);
+//}
