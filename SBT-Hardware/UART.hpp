@@ -11,11 +11,16 @@
 
 #include<array>
 
-
 struct Hardware;
 
 class UART
 {
+    bool initialized;
+    bool printfEnabled;
+    
+    //static constexpr int BUFOR_SIZE = 128;
+    char* buffer;   //buffer for Print function
+    
     /*-------HANDLERS---------*/
     struct State
     {
@@ -25,7 +30,6 @@ class UART
         static constexpr size_t txBit = 1 << 0;
         static constexpr size_t rxBit = 1 << 1;
     };
-    
     State state;
     
     /*-------ENUMS---------*/
@@ -33,9 +37,11 @@ class UART
     {
         NONE,
         UART_1,
-        UART_2
+        UART_2,
+        UART_3
     };
     
+public:
     enum class Mode
     {
         BLOCKING,
@@ -43,11 +49,31 @@ class UART
         DMA
     };
     
-    Instance instance;
-    Mode mode;
+    enum class WordLength
+    {
+        _8BITS = UART_WORDLENGTH_8B,
+        _9BITS = UART_WORDLENGTH_9B
+    };
     
-public:
-    UART(USART_TypeDef* usart);
+    enum class Parity
+    {
+        NONE = UART_PARITY_NONE,
+        EVEN = UART_PARITY_EVEN,
+        ODD  = UART_PARITY_ODD
+    };
+    
+    enum class StopBits
+    {
+        STOP_BITS_1 = UART_STOPBITS_1,
+        STOP_BITS_2 = UART_STOPBITS_2
+    };
+    
+private:
+    //TODO: changes this to constructor
+    void configureStaticVariables(USART_TypeDef* usart);
+    //UART(USART_TypeDef* usart);
+    UART() = default;// = delete;
+    
     
     void SendRCC(uint8_t* data, size_t numOfBytes);
     void SendIT(uint8_t* data, size_t numOfBytes);
@@ -57,30 +83,46 @@ public:
     void ReceiveIT(uint8_t* data, size_t numOfBytes);
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
     
-public:
+    
+    Instance instance;
+    Mode mode;
+    WordLength wordLength;
+    Parity parity;
+    StopBits stopBits;
     uint32_t baudRate;
+    uint32_t timeout;
+public:
+    [[nodiscard]] bool IsInitialized() const {return initialized;}
     
-    UART() = delete;
+    void EnablePrintf(uint8_t bf = 128);
+    void DisablePrintf();
     
-    UART(uint32_t baudRate);
+    void ChangeModeToBlocking(uint32_t tmt = 500);
+    void ChangeModeToInterrupts();
+    
+    void SetWordLength(WordLength wl);
+    void SetParity(Parity p);
+    void SetStopBits(StopBits sb);
+    void SetBaudRate(uint32_t br);
     
     State& getState() {return state;}
     
     void Initialize();
     
     void Send(uint8_t *data, size_t numOfBytes);
+    void printf(const char *fmt, ...);
     
     void Receive(uint8_t *data, size_t numOfBytes);
     
-    bool IsTxComplete();
-    
-    bool IsRxComplete();
+    [[nodiscard]] bool IsTxComplete() const;
+    [[nodiscard]] bool IsRxComplete() const;
     
     void AbortTx();
-    
     void AbortRx();
     
     friend Hardware;
+    //TODO(Daniel): remove this
+    friend void entryPoint();
 };
 
 

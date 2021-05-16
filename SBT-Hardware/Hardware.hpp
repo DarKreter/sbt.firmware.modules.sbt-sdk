@@ -125,8 +125,7 @@ struct Hardware {
     static std::optional<CAN::RxMessage> getCanMessageFromQueue();
     static CAN::State& getCanState();
 
-    static UART uart1;
-    static UART uart2;
+    static UART uart1, uart2, uart3;
 private:
     static std::array<I2C::State, 2> i2cStates;
     static std::array<SPI::State, 1> spiState;
