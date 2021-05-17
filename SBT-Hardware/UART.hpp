@@ -72,7 +72,7 @@ private:
     //TODO: changes this to constructor
     void configureStaticVariables(USART_TypeDef* usart);
     //UART(USART_TypeDef* usart);
-    UART() = default;// = delete;
+    UART();// = delete;
     
     
     void SendRCC(uint8_t* data, size_t numOfBytes);

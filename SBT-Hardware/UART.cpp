@@ -319,3 +319,13 @@ void UART::DisablePrintf()
 {
     delete[] buffer;
 }
+
+UART::UART()
+{
+    mode = Mode::DMA;
+    wordLength = WordLength::_9BITS;
+    parity = Parity::EVEN;
+    stopBits = StopBits::STOP_BITS_2;
+    baudRate = 115269;
+    timeout = 100;
+}
