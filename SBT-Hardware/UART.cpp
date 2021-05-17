@@ -297,7 +297,7 @@ void UART::ChangeModeToInterrupts()
 void UART::printf(const char *fmt, ...)
 {
     if(!printfEnabled)
-        throw std::runtime_error("Enable printf feature before using it! [ .EnablePrintf(uint32_t) ]");
+        SetPrintfBufferSize(128);
     
     //For custom print working
     va_list vaList;
@@ -309,15 +309,19 @@ void UART::printf(const char *fmt, ...)
     va_end(vaList);
 }
 
-void UART::EnablePrintf(uint8_t bf)
+void UART::SetPrintfBufferSize(uint16_t bf)
 {
+    if(printfEnabled)
+        return;
+    
     printfEnabled = true;
     buffer = new char[bf];
 }
 
 void UART::DisablePrintf()
 {
-    delete[] buffer;
+    if(printfEnabled)
+        delete[] buffer;
 }
 
 UART::UART()

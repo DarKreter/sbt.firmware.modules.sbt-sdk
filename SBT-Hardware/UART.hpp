@@ -18,7 +18,6 @@ class UART
     bool initialized;
     bool printfEnabled;
     
-    //static constexpr int BUFOR_SIZE = 128;
     char* buffer;   //buffer for Print function
     
     /*-------HANDLERS---------*/
@@ -94,7 +93,7 @@ private:
 public:
     [[nodiscard]] bool IsInitialized() const {return initialized;}
     
-    void EnablePrintf(uint8_t bf = 128);
+    void SetPrintfBufferSize(uint16_t bf);
     void DisablePrintf();
     
     void ChangeModeToBlocking(uint32_t tmt = 500);
