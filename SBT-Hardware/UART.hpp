@@ -24,9 +24,6 @@ class UART
     {
         EventGroupHandle_t txRxState;
         UART_HandleTypeDef handle;
-        
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
     };
     State state;
     
@@ -103,7 +100,7 @@ public:
     void SetStopBits(StopBits sb);
     void SetBaudRate(uint32_t br);
     
-    State& getState() {return state;}
+    State& GetState() {return state;}
     
     void Initialize();
     

@@ -72,7 +72,7 @@ void UART::Initialize() {
     
     // Clear bits
     state.txRxState = xEventGroupCreate();
-    xEventGroupClearBits(state.txRxState, UART::State::rxBit | UART::State::txBit);
+    xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
     
     initialized = true;
 }
@@ -108,10 +108,10 @@ void UART::SendIT(uint8_t *data, size_t numOfBytes)
     // Check if event group was created
     if(state.txRxState) {
         // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & UART::State::txBit) == 0) {
+        if((xEventGroupGetBits(state.txRxState) & Hardware::txBit) == 0) {
             // If UART is not busy, transmit and set TX flag to busy
             HAL_UART_Transmit_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, UART::State::txBit);
+            xEventGroupSetBits(state.txRxState, Hardware::txBit);
         }
     }
 }
@@ -147,77 +147,77 @@ void UART::ReceiveIT(uint8_t *data, size_t numOfBytes)
     // Check if event group was created
     if(state.txRxState) {
         // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & UART::State::rxBit) == 0) {
+        if((xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0) {
             // If UART is not busy, transmit and set RX flag to busy
             HAL_UART_Receive_IT(&state.handle, data, numOfBytes);
-            xEventGroupSetBits(state.txRxState, UART::State::rxBit);
+            xEventGroupSetBits(state.txRxState, Hardware::rxBit);
         }
     }
 }
 
 bool UART::IsTxComplete() const {
-    return (xEventGroupGetBits(state.txRxState) & UART::State::txBit) == 0;
+    return (xEventGroupGetBits(state.txRxState) & Hardware::txBit) == 0;
 }
 
 bool UART::IsRxComplete() const {
-    return (xEventGroupGetBits(state.txRxState) & UART::State::rxBit) == 0;
+    return (xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0;
 }
 
 void UART::AbortTx() {
     HAL_UART_AbortTransmit_IT(&state.handle);
-    xEventGroupClearBits(state.txRxState, UART::State::txBit);
+    xEventGroupClearBits(state.txRxState, Hardware::txBit);
 }
 
 void UART::AbortRx() {
     HAL_UART_AbortReceive_IT(&state.handle);
-    xEventGroupClearBits(state.txRxState, UART::State::rxBit);
+    xEventGroupClearBits(state.txRxState, Hardware::rxBit);
 }
 
 // Handlers for default HAL UART callbacks
 void USART1_IRQHandler() {
-    HAL_UART_IRQHandler(&Hardware::uart1.getState().handle);
+    HAL_UART_IRQHandler(&Hardware::uart1.GetState().handle);
 }
 
 void USART2_IRQHandler() {
-    HAL_UART_IRQHandler(&Hardware::uart2.getState().handle);
+    HAL_UART_IRQHandler(&Hardware::uart2.GetState().handle);
 }
 
 void USART3_IRQHandler() {
-    HAL_UART_IRQHandler(&Hardware::uart3.getState().handle);
+    HAL_UART_IRQHandler(&Hardware::uart3.GetState().handle);
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     if(huart->Instance == USART1){
-        if(auto* eventGroup = Hardware::uart1.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart1.getState().txBit);
+        if(auto* eventGroup = Hardware::uart1.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::txBit);
         }
     }
     else if(huart->Instance == USART2){
-        if(auto* eventGroup = Hardware::uart2.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart2.getState().txBit);
+        if(auto* eventGroup = Hardware::uart2.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::txBit);
         }
     }
     else if(huart->Instance == USART3){
-        if(auto* eventGroup = Hardware::uart3.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart3.getState().txBit);
+        if(auto* eventGroup = Hardware::uart3.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::txBit);
         }
     }
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     if(huart->Instance == USART1){
-        if(auto* eventGroup = Hardware::uart1.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart1.getState().rxBit);
+        if(auto* eventGroup = Hardware::uart1.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::rxBit);
         }
     }
     if(huart->Instance == USART2){
-        if(auto* eventGroup = Hardware::uart2.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart2.getState().rxBit);
+        if(auto* eventGroup = Hardware::uart2.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::rxBit);
         }
     }
     if(huart->Instance == USART3){
-        if(auto* eventGroup = Hardware::uart3.getState().txRxState) {
-            xEventGroupClearBitsFromISR(eventGroup, Hardware::uart3.getState().rxBit);
+        if(auto* eventGroup = Hardware::uart3.GetState().txRxState) {
+            xEventGroupClearBitsFromISR(eventGroup, Hardware::rxBit);
         }
     }
 }

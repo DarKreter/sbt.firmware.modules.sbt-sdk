@@ -6,6 +6,7 @@
 #include <queue.h>
 #include <map>
 #include <UART.hpp>
+#include <SPI.hpp>
 
 // Goal of this abstraction is to isolate main code from hardware-specific code. Ideally, this code could use a stub and
 // be compiled for Linux without any problem
@@ -35,21 +36,9 @@ namespace I2C {
     struct State {
         EventGroupHandle_t txRxState;
         I2C_HandleTypeDef handle;
-
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
     };
 }
 
-namespace SPI {
-    struct State {
-        EventGroupHandle_t txRxState;
-        SPI_HandleTypeDef handle;
-
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
-    };
-}
 
 namespace CAN {
     struct State {
@@ -71,6 +60,10 @@ namespace CAN {
 }
 
 struct Hardware {
+    
+    static constexpr size_t txBit = 1 << 0;
+    static constexpr size_t rxBit = 1 << 1;
+    
     /**
      * @brief Configure GPIO pin
      * @param gpio GPIO Port
@@ -115,11 +108,6 @@ struct Hardware {
     static void i2cReceiveMaster(I2C::I2C id, uint16_t address, uint8_t data[], size_t numOfBytes);
     static I2C::State& getI2CState(I2C::I2C id);
 
-    static void initializeSpi();
-    static void spiSend(uint8_t data[], size_t numOfBytes);
-    static void spiReceive(uint8_t data[], size_t numOfBytes);
-    static SPI::State& getSpiState();
-
     static void initializeCan(const std::initializer_list <uint32_t> &acceptedAddresses);
     static bool isAnyTxMailboxFree();
     static void sendCanMessage(CAN::TxMessage &message);
@@ -127,11 +115,12 @@ struct Hardware {
     static CAN::State& getCanState();
 
     static UART uart1, uart2, uart3;
+    static SPI_t spi1, spi2;
     
     static void InitializeStaticVariables();
+    
 private:
     static std::array<I2C::State, 2> i2cStates;
-    static std::array<SPI::State, 1> spiState;
     static std::array<CAN::State, 1> canState;
 };
 
