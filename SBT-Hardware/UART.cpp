@@ -11,7 +11,7 @@
 void UART::Initialize() {
     
     if(initialized)
-        throw std::runtime_error("SPI already initialized!");
+        throw std::runtime_error("UART already initialized!");
     
     switch (instance) {
         case Instance::UART_1:
@@ -84,13 +84,13 @@ void UART::Send(uint8_t *data, size_t numOfBytes)
     
     switch(mode)
     {
-        case Mode::INTERRUPTS:
+        case OperatingMode::INTERRUPTS:
             SendIT(data,numOfBytes);
             break;
-        case Mode::BLOCKING:
+        case OperatingMode::BLOCKING:
             SendRCC(data,numOfBytes);
             break;
-        case Mode::DMA:
+        case OperatingMode::DMA:
             //SendDMA(data,numOfBytes);
             //break;
         default:
@@ -123,13 +123,13 @@ void UART::Receive(uint8_t *data, size_t numOfBytes)
     
     switch(mode)
     {
-        case Mode::INTERRUPTS:
+        case OperatingMode::INTERRUPTS:
             ReceiveIT(data,numOfBytes);
             break;
-        case Mode::BLOCKING:
+        case OperatingMode::BLOCKING:
             ReceiveRCC(data,numOfBytes);
             break;
-        case Mode::DMA:
+        case OperatingMode::DMA:
             //ReceiveDMA(data,numOfBytes);
             //break;
         default:
@@ -237,7 +237,7 @@ void UART::configureStaticVariables(USART_TypeDef *usart)
     else
         throw std::runtime_error("Please choose UART_1, UART_2 or UART_3");
     
-    mode = Mode::INTERRUPTS;
+    mode = OperatingMode::INTERRUPTS;
     wordLength = WordLength::_8BITS;
     parity = Parity::NONE;
     stopBits = StopBits::STOP_BITS_1;
@@ -282,7 +282,7 @@ void UART::ChangeModeToBlocking(uint32_t tmt)
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    mode = Mode::BLOCKING;
+    mode = OperatingMode::BLOCKING;
     timeout = tmt;
 }
 
@@ -291,7 +291,7 @@ void UART::ChangeModeToInterrupts()
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    mode = Mode::INTERRUPTS;
+    mode = OperatingMode::INTERRUPTS;
 }
 
 void UART::printf(const char *fmt, ...)
@@ -326,7 +326,7 @@ void UART::DisablePrintf()
 
 UART::UART()
 {
-    mode = Mode::DMA;
+    mode = OperatingMode::DMA;
     wordLength = WordLength::_9BITS;
     parity = Parity::EVEN;
     stopBits = StopBits::STOP_BITS_2;

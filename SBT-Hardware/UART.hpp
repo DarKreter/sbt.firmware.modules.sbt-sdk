@@ -37,7 +37,7 @@ class UART
     };
     
 public:
-    enum class Mode
+    enum class OperatingMode
     {
         BLOCKING,
         INTERRUPTS,
@@ -80,7 +80,7 @@ private:
     
     
     Instance instance;
-    Mode mode;
+    OperatingMode mode;
     WordLength wordLength;
     Parity parity;
     StopBits stopBits;
