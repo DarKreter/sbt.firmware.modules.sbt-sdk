@@ -5,11 +5,10 @@
 #ifndef F1XX_PROJECT_TEMPLATE_UART_HPP
 #define F1XX_PROJECT_TEMPLATE_UART_HPP
 
-#include<FreeRTOS.h>
+#include <FreeRTOS.h>
 #include <event_groups.h>
 #include <stm32f1xx_hal.h>
-
-#include<array>
+#include <array>
 
 struct Hardware;
 
@@ -120,8 +119,6 @@ public:
     void AbortRx();
     
     friend Hardware;
-    //TODO(Daniel): remove this
-    friend void entryPoint();
 };
 
 

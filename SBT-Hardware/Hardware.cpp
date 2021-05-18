@@ -174,6 +174,13 @@ void Hardware::initializeSpi() {
     xEventGroupClearBits(spiState.at(0).txRxState, SPI::State::rxBit | SPI::State::txBit);
 }
 
+void Hardware::InitializeStaticVariables()
+{
+    uart1.configureStaticVariables(USART1);
+    uart2.configureStaticVariables(USART2);
+    uart3.configureStaticVariables(USART3);
+}
+
 //void Hardware::spiSend(uint8_t *data, size_t numOfBytes) {
 //    SPI::State& state = getSpiState();
 //    // Check if event group was created

@@ -25,6 +25,7 @@ namespace Gpio {
     };
 }
 
+
 namespace I2C {
     enum class I2C {
         I2C_1,
@@ -126,6 +127,8 @@ struct Hardware {
     static CAN::State& getCanState();
 
     static UART uart1, uart2, uart3;
+    
+    static void InitializeStaticVariables();
 private:
     static std::array<I2C::State, 2> i2cStates;
     static std::array<SPI::State, 1> spiState;

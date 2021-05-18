@@ -80,7 +80,7 @@ void UART::Initialize() {
 void UART::Send(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("SPI not initialized!");
+        throw std::runtime_error("UART not initialized!");
     
     switch(mode)
     {
@@ -248,7 +248,7 @@ void UART::configureStaticVariables(USART_TypeDef *usart)
 void UART::SetWordLength(UART::WordLength wl)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     wordLength = wl;
 }
@@ -256,7 +256,7 @@ void UART::SetWordLength(UART::WordLength wl)
 void UART::SetParity(UART::Parity p)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     parity = p;
 }
@@ -264,7 +264,7 @@ void UART::SetParity(UART::Parity p)
 void UART::SetStopBits(UART::StopBits sb)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     stopBits = sb;
 }
@@ -272,7 +272,7 @@ void UART::SetStopBits(UART::StopBits sb)
 void UART::SetBaudRate(uint32_t br)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     baudRate = br;
 }
@@ -280,7 +280,7 @@ void UART::SetBaudRate(uint32_t br)
 void UART::ChangeModeToBlocking(uint32_t tmt)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     mode = Mode::BLOCKING;
     timeout = tmt;
@@ -289,7 +289,7 @@ void UART::ChangeModeToBlocking(uint32_t tmt)
 void UART::ChangeModeToInterrupts()
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        throw std::runtime_error("UART already initialized!"); // Too late
     
     mode = Mode::INTERRUPTS;
 }
