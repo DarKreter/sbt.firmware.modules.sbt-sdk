@@ -170,6 +170,11 @@ bool SPI_t::IsRxComplete() const
     return (xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0;
 }
 
+void SPI_t::Abort() {
+    HAL_SPI_Abort(&state.handle);
+    xEventGroupClearBits(state.txRxState, Hardware::txBit | Hardware::rxBit);
+}
+
 void SPI_t::configureStaticVariables(SPI_TypeDef *spii)
 {
     initialized = false;

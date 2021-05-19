@@ -147,8 +147,8 @@ public:
     [[nodiscard]] bool IsTxComplete() const;
     [[nodiscard]] bool IsRxComplete() const;
     
-//    void AbortTx();
-//    void AbortRx();
+    void Abort();
+    void AbortRx();
     
     friend Hardware;
     
