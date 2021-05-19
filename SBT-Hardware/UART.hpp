@@ -63,6 +63,13 @@ public:
         STOP_BITS_2 = UART_STOPBITS_2
     };
     
+    enum class TransmissionMode
+    {
+        FULL_DUPLEX   = UART_MODE_TX_RX,
+        RECEIVE_ONLY  = UART_MODE_RX,
+        TRANSMIT_ONLY = UART_MODE_TX
+    };
+    
 private:
     //TODO: changes this to constructor
     void configureStaticVariables(USART_TypeDef* usart);
@@ -84,6 +91,7 @@ private:
     WordLength wordLength;
     Parity parity;
     StopBits stopBits;
+    TransmissionMode transmissionMode;
     uint32_t baudRate;
     uint32_t timeout;
 public:
@@ -95,6 +103,7 @@ public:
     void ChangeModeToBlocking(uint32_t tmt = 500);
     void ChangeModeToInterrupts();
     
+    void SetTransmissionMode(TransmissionMode tm);
     void SetWordLength(WordLength wl);
     void SetParity(Parity p);
     void SetStopBits(StopBits sb);

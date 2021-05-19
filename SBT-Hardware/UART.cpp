@@ -19,14 +19,16 @@ void UART::Initialize() {
             __HAL_RCC_GPIOA_CLK_ENABLE();
             __HAL_RCC_USART1_CLK_ENABLE();
             // Set GPIO
-            Hardware::enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
-            Hardware::enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
+            //if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+                Hardware::enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
+            //if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+                Hardware::enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
             // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS)
-            {
+            //if(mode == OperatingMode::INTERRUPTS)
+            //{
                 HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
                 HAL_NVIC_EnableIRQ(USART1_IRQn);
-            }
+            //}
             state.handle.Instance = USART1;
             break;
         case Instance::UART_2:
@@ -34,8 +36,10 @@ void UART::Initialize() {
             __HAL_RCC_GPIOA_CLK_ENABLE();
             __HAL_RCC_USART2_CLK_ENABLE();
             // Set GPIO
-            Hardware::enableGpio(GPIOA, GPIO_PIN_2, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX2
-            Hardware::enableGpio(GPIOA, GPIO_PIN_3, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX2
+            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+                Hardware::enableGpio(GPIOA, GPIO_PIN_2, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX2
+            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+                Hardware::enableGpio(GPIOA, GPIO_PIN_3, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX2
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS)
             {
@@ -49,8 +53,10 @@ void UART::Initialize() {
             __HAL_RCC_GPIOB_CLK_ENABLE();
             __HAL_RCC_USART3_CLK_ENABLE();
             // Set GPIO
-            Hardware::enableGpio(GPIOB, GPIO_PIN_10, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX3
-            Hardware::enableGpio(GPIOB, GPIO_PIN_11, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX3
+            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+                Hardware::enableGpio(GPIOB, GPIO_PIN_10, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX3
+            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+                Hardware::enableGpio(GPIOB, GPIO_PIN_11, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX3
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS)
             {
@@ -70,17 +76,17 @@ void UART::Initialize() {
     state.handle.Init.StopBits = static_cast<uint32_t>(stopBits);
     state.handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     state.handle.Init.OverSampling = UART_OVERSAMPLING_16;
-    state.handle.Init.Mode = UART_MODE_TX_RX;
+    state.handle.Init.Mode = static_cast<uint32_t>(transmissionMode);
     
     // Set registers with prepared data
     HAL_UART_Init(&state.handle);
     
     // Enable interrupts
-    if(mode == OperatingMode::INTERRUPTS)
-    {
+    //if(mode == OperatingMode::INTERRUPTS)
+    //{
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
-    }
+    //}
     // Clear bits
     state.txRxState = xEventGroupCreate();
     xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
@@ -252,6 +258,7 @@ void UART::configureStaticVariables(USART_TypeDef *usart)
     wordLength = WordLength::_8BITS;
     parity = Parity::NONE;
     stopBits = StopBits::STOP_BITS_1;
+    transmissionMode = TransmissionMode::FULL_DUPLEX;
     baudRate = 115200;
     timeout = 500;
 }
@@ -343,4 +350,13 @@ UART::UART()
     stopBits = StopBits::STOP_BITS_2;
     baudRate = 115269;
     timeout = 100;
+}
+
+void UART::SetTransmissionMode(UART::TransmissionMode ts)
+{
+    if(initialized)
+        throw std::runtime_error("UART already initialized!"); // Too late
+    
+    transmissionMode = ts;
+    
 }

@@ -192,7 +192,7 @@ void SPI_t::configureStaticVariables(SPI_TypeDef *spii)
     firstBit = FirstBit::MSB;
     clockPolarity = ClockPolarity::HIGH;
     clockPhase = ClockPhase::_2EDGE;
-    transmitionMode = TransmitionMode::FULL_DUPLEX;
+    transmissionMode = TransmissionMode::FULL_DUPLEX;
     deviceType = DeviceType::MASTER;
     timeout = 500;
 }
@@ -258,13 +258,13 @@ void SPI_t::CalculateMisoMosi()
 {
     mosiEnabled = misoEnabled = true;
     
-    switch(transmitionMode)
+    switch(transmissionMode)
     {
-        case TransmitionMode::FULL_DUPLEX:
+        case TransmissionMode::FULL_DUPLEX:
             direction = SPI_DIRECTION_2LINES;
             break;
         
-        case TransmitionMode::HALF_DUPLEX:
+        case TransmissionMode::HALF_DUPLEX:
             direction = SPI_DIRECTION_1LINE;
             if(deviceType == DeviceType::MASTER)
                 misoEnabled = false;
@@ -272,7 +272,7 @@ void SPI_t::CalculateMisoMosi()
                 mosiEnabled = false;
             
             break;
-        case TransmitionMode::RECEIVE_ONLY:
+        case TransmissionMode::RECEIVE_ONLY:
             direction = SPI_DIRECTION_2LINES_RXONLY;
             if(deviceType == DeviceType::MASTER)
                 mosiEnabled = false;
@@ -280,7 +280,7 @@ void SPI_t::CalculateMisoMosi()
                 misoEnabled = false;
             
             break;
-        case TransmitionMode::TRANSMIT_ONLY:
+        case TransmissionMode::TRANSMIT_ONLY:
             direction = SPI_DIRECTION_2LINES;
             if(deviceType == DeviceType::MASTER)
                 misoEnabled = false;
@@ -293,12 +293,12 @@ void SPI_t::CalculateMisoMosi()
 
 }
 
-void SPI_t::SetTransmitionMode(SPI_t::TransmitionMode tm)
+void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode tm)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
-    transmitionMode = tm;
+    transmissionMode = tm;
 }
 
 void SPI_t::SetDeviceType(SPI_t::DeviceType dt)

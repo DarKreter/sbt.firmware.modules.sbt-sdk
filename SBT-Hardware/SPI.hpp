@@ -78,7 +78,7 @@ public:
         _2EDGE = SPI_PHASE_2EDGE
     };
     
-    enum class TransmitionMode
+    enum class TransmissionMode
     {
         FULL_DUPLEX,
         HALF_DUPLEX,
@@ -116,7 +116,7 @@ private:
     FirstBit firstBit;
     ClockPolarity clockPolarity;
     ClockPhase clockPhase;
-    TransmitionMode transmitionMode;
+    TransmissionMode transmissionMode;
     uint32_t direction;
     
     DeviceType deviceType;
@@ -133,7 +133,7 @@ public:
     void SetDataSize(DataSize ds);
     void SetClockPolarity(ClockPolarity cp);
     void SetClockPhase(ClockPhase cp);
-    void SetTransmitionMode(TransmitionMode tm);
+    void SetTransmissionMode(TransmissionMode tm);
     void SetDeviceType(DeviceType dt);
     
     State& GetState() {return state;}
