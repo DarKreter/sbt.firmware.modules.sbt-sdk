@@ -25,9 +25,11 @@ void SPI_t::Initialize()
             if(mosiEnabled)
                 Hardware::enableGpio(GPIOA, GPIO_PIN_7, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // MOSI
             // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(SPI1_IRQn, 5, 5);
-            HAL_NVIC_EnableIRQ(SPI1_IRQn);
-            
+            if(mode == OperatingMode::INTERRUPTS)
+            {
+                HAL_NVIC_SetPriority(SPI1_IRQn, 5, 5);
+                HAL_NVIC_EnableIRQ(SPI1_IRQn);
+            }
             break;
         case Instance::SPI_2:
             // Enable clocks
@@ -40,8 +42,11 @@ void SPI_t::Initialize()
             if(mosiEnabled)
                 Hardware::enableGpio(GPIOB, GPIO_PIN_15, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // MOSI
             // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(SPI2_IRQn, 5, 5);
-            HAL_NVIC_EnableIRQ(SPI2_IRQn);
+            if(mode == OperatingMode::INTERRUPTS)
+            {
+                HAL_NVIC_SetPriority(SPI2_IRQn, 5, 5);
+                HAL_NVIC_EnableIRQ(SPI2_IRQn);
+            }
             break;
         case Instance::NONE:
             throw std::runtime_error("Somehow instance not set to any SPI...");
@@ -63,9 +68,11 @@ void SPI_t::Initialize()
     HAL_SPI_Init(&handle);
     
     //__HAL_SPI_ENABLE_IT(&handle, SPI_IT_TXE);
-    __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
-    __HAL_SPI_ENABLE_IT(&handle, SPI_IT_ERR);
-    
+    if(mode == OperatingMode::INTERRUPTS)
+    {
+        __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
+        __HAL_SPI_ENABLE_IT(&handle, SPI_IT_ERR);
+    }
     // Clear bits
     state.txRxState = xEventGroupCreate();
     xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);

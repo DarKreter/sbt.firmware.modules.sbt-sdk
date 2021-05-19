@@ -22,8 +22,11 @@ void UART::Initialize() {
             Hardware::enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
             Hardware::enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
             // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
-            HAL_NVIC_EnableIRQ(USART1_IRQn);
+            if(mode == OperatingMode::INTERRUPTS)
+            {
+                HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
+                HAL_NVIC_EnableIRQ(USART1_IRQn);
+            }
             state.handle.Instance = USART1;
             break;
         case Instance::UART_2:
@@ -34,8 +37,11 @@ void UART::Initialize() {
             Hardware::enableGpio(GPIOA, GPIO_PIN_2, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX2
             Hardware::enableGpio(GPIOA, GPIO_PIN_3, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX2
             // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(USART2_IRQn, 10, 0);
-            HAL_NVIC_EnableIRQ(USART2_IRQn);
+            if(mode == OperatingMode::INTERRUPTS)
+            {
+                HAL_NVIC_SetPriority(USART2_IRQn, 10, 0);
+                HAL_NVIC_EnableIRQ(USART2_IRQn);
+            }
             state.handle.Instance = USART2;
             break;
         case Instance::UART_3:
@@ -46,8 +52,11 @@ void UART::Initialize() {
             Hardware::enableGpio(GPIOB, GPIO_PIN_10, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX3
             Hardware::enableGpio(GPIOB, GPIO_PIN_11, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX3
             // Enable interrupts with low priority
-            HAL_NVIC_SetPriority(USART3_IRQn, 10, 0);
-            HAL_NVIC_EnableIRQ(USART3_IRQn);
+            if(mode == OperatingMode::INTERRUPTS)
+            {
+                HAL_NVIC_SetPriority(USART3_IRQn, 10, 0);
+                HAL_NVIC_EnableIRQ(USART3_IRQn);
+            }
             state.handle.Instance = USART3;
             break;
     case Instance::NONE:
@@ -67,9 +76,11 @@ void UART::Initialize() {
     HAL_UART_Init(&state.handle);
     
     // Enable interrupts
-    __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
-    __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
-    
+    if(mode == OperatingMode::INTERRUPTS)
+    {
+        __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
+        __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
+    }
     // Clear bits
     state.txRxState = xEventGroupCreate();
     xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
