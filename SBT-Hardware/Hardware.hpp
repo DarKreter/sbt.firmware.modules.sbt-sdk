@@ -5,6 +5,8 @@
 #include <event_groups.h>
 #include <queue.h>
 #include <map>
+#include <UART.hpp>
+#include <SPI.hpp>
 
 // Goal of this abstraction is to isolate main code from hardware-specific code. Ideally, this code could use a stub and
 // be compiled for Linux without any problem
@@ -24,20 +26,6 @@ namespace Gpio {
     };
 }
 
-namespace Uart {
-    enum class Uart {
-        UART_1,
-        UART_2
-    };
-
-    struct State {
-        EventGroupHandle_t txRxState;
-        UART_HandleTypeDef handle;
-
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
-    };
-}
 
 namespace I2C {
     enum class I2C {
@@ -48,21 +36,9 @@ namespace I2C {
     struct State {
         EventGroupHandle_t txRxState;
         I2C_HandleTypeDef handle;
-
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
     };
 }
 
-namespace SPI {
-    struct State {
-        EventGroupHandle_t txRxState;
-        SPI_HandleTypeDef handle;
-
-        static constexpr size_t txBit = 1 << 0;
-        static constexpr size_t rxBit = 1 << 1;
-    };
-}
 
 namespace CAN {
     struct State {
@@ -84,6 +60,10 @@ namespace CAN {
 }
 
 struct Hardware {
+    
+    static constexpr size_t txBit = 1 << 0;
+    static constexpr size_t rxBit = 1 << 1;
+    
     /**
      * @brief Configure GPIO pin
      * @param gpio GPIO Port
@@ -98,57 +78,7 @@ struct Hardware {
      * @brief Configure system clock
      */
     static void configureClocks();
-
-    /**
-     * @brief Configure UART
-     * @param id ID of UART
-     * @param baudRate Speed of UART operation
-     */
-    static void initializeUart(Uart::Uart id, uint32_t baudRate);
-
-    /**
-     * @brief Send data via interrupt mode UART
-     * @param id ID of UART
-     * @param data Pointer to data to be sent
-     * @param numOfBytes Length of data in bytes
-     * @warning Note that data is not copied anywhere and needs to be available during entire transmission.
-     */
-    static void uartSend(Uart::Uart id, uint8_t data[], size_t numOfBytes);
-
-    /**
-     * @brief Receive data via interrupt mode UART
-     * @param id ID of UART
-     * @param data Pointer to container where data will be written
-     * @param numOfBytes Length of expected data in bytes
-     */
-    static void uartReceive(Uart::Uart id, uint8_t data[], size_t numOfBytes);
-
-    /**
-     * @brief Check if UART TX is busy
-     * @param id ID of UART
-     * @return true if UART TX is ready for transmission
-     */
-    static bool isUartTxComplete(Uart::Uart id);
-
-    /**
-     * @brief Check if UART RX is busy
-     * @param id ID of UART
-     * @return true if UART RX is ready for transmission
-     */
-    static bool isUartRxComplete(Uart::Uart id);
-
-    /**
-     * @brief Stop transmitting data via UART
-     * @param id ID of UART
-     */
-    static void abortUartTx(Uart::Uart id);
-
-    /**
-     * @brief Stop receiving data via UART
-     * @param id ID of UART
-     */
-    static void abortUartRx(Uart::Uart id);
-    static Uart::State& getUartState(Uart::Uart id);
+    
 
     /**
      * @brief Configure I2C in master mode
@@ -178,21 +108,19 @@ struct Hardware {
     static void i2cReceiveMaster(I2C::I2C id, uint16_t address, uint8_t data[], size_t numOfBytes);
     static I2C::State& getI2CState(I2C::I2C id);
 
-    static void initializeSpi();
-    static void spiSend(uint8_t data[], size_t numOfBytes);
-    static void spiReceive(uint8_t data[], size_t numOfBytes);
-    static SPI::State& getSpiState();
-
     static void initializeCan(const std::initializer_list <uint32_t> &acceptedAddresses);
     static bool isAnyTxMailboxFree();
     static void sendCanMessage(CAN::TxMessage &message);
     static std::optional<CAN::RxMessage> getCanMessageFromQueue();
     static CAN::State& getCanState();
 
+    static UART uart1, uart2, uart3;
+    static SPI_t spi1, spi2;
+    
+    static void InitializeStaticVariables();
+    
 private:
-    static std::array<Uart::State, 2> uartStates;
     static std::array<I2C::State, 2> i2cStates;
-    static std::array<SPI::State, 1> spiState;
     static std::array<CAN::State, 1> canState;
 };
 
