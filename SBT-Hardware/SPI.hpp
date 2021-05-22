@@ -94,7 +94,7 @@ public:
     
 private:
     //TODO: changes this to constructor
-    void configureStaticVariables(SPI_TypeDef* spii);
+    void ConfigureStaticVariables(SPI_TypeDef* spii);
     //UART(USART_TypeDef* usart);
     SPI_t() = default; // = delete;
     
@@ -148,7 +148,6 @@ public:
     [[nodiscard]] bool IsRxComplete() const;
     
     void Abort();
-    void AbortRx();
     
     friend Hardware;
     

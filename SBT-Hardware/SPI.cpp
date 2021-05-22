@@ -67,10 +67,13 @@ void SPI_t::Initialize()
     
     HAL_SPI_Init(&handle);
     
-    //__HAL_SPI_ENABLE_IT(&handle, SPI_IT_TXE);
     if(mode == OperatingMode::INTERRUPTS)
     {
-        __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
+    //TODO: Why this must be commented even on INTERRUPT mode??
+//        if((deviceType == DeviceType::MASTER && mosiEnabled) || (deviceType == DeviceType::SLAVE && misoEnabled))
+//            __HAL_SPI_ENABLE_IT(&handle, SPI_IT_TXE);
+//        if((deviceType == DeviceType::MASTER && misoEnabled) || (deviceType == DeviceType::SLAVE && mosiEnabled))
+//            __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
         __HAL_SPI_ENABLE_IT(&handle, SPI_IT_ERR);
     }
     // Clear bits
@@ -175,7 +178,7 @@ void SPI_t::Abort() {
     xEventGroupClearBits(state.txRxState, Hardware::txBit | Hardware::rxBit);
 }
 
-void SPI_t::configureStaticVariables(SPI_TypeDef *spii)
+void SPI_t::ConfigureStaticVariables(SPI_TypeDef *spii)
 {
     initialized = false;
     

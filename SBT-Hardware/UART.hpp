@@ -72,7 +72,7 @@ public:
     
 private:
     //TODO: changes this to constructor
-    void configureStaticVariables(USART_TypeDef* usart);
+    void ConfigureStaticVariables(USART_TypeDef* usart);
     //UART(USART_TypeDef* usart);
     UART();// = delete;
     

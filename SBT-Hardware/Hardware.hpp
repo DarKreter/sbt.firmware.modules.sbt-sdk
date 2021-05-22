@@ -3,10 +3,9 @@
 #include <stm32f1xx_hal.h>
 #include <FreeRTOS.h>
 #include <event_groups.h>
-#include <queue.h>
-#include <map>
 #include <UART.hpp>
 #include <SPI.hpp>
+#include <CAN.hpp>
 
 // Goal of this abstraction is to isolate main code from hardware-specific code. Ideally, this code could use a stub and
 // be compiled for Linux without any problem
@@ -40,24 +39,6 @@ namespace I2C {
 }
 
 
-namespace CAN {
-    struct State {
-        CAN_HandleTypeDef handle;
-        QueueHandle_t queueHandle;
-    };
-
-    struct RxMessage {
-        uint32_t id;
-        std::array<uint8_t, 8> payload;
-    };
-
-    struct TxMessage {
-        explicit TxMessage(uint32_t id);
-
-        CAN_TxHeaderTypeDef header;
-        std::array<uint8_t, 8> payload;
-    };
-}
 
 struct Hardware {
     
@@ -107,21 +88,16 @@ struct Hardware {
      */
     static void i2cReceiveMaster(I2C::I2C id, uint16_t address, uint8_t data[], size_t numOfBytes);
     static I2C::State& getI2CState(I2C::I2C id);
-
-    static void initializeCan(const std::initializer_list <uint32_t> &acceptedAddresses);
-    static bool isAnyTxMailboxFree();
-    static void sendCanMessage(CAN::TxMessage &message);
-    static std::optional<CAN::RxMessage> getCanMessageFromQueue();
-    static CAN::State& getCanState();
+    
 
     static UART uart1, uart2, uart3;
     static SPI_t spi1, spi2;
+    static CAN can;
     
     static void InitializeStaticVariables();
     
 private:
     static std::array<I2C::State, 2> i2cStates;
-    static std::array<CAN::State, 1> canState;
 };
 
 

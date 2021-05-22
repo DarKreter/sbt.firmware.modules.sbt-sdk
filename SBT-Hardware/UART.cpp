@@ -239,7 +239,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
-void UART::configureStaticVariables(USART_TypeDef *usart)
+void UART::ConfigureStaticVariables(USART_TypeDef *usart)
 {
     initialized = false;
     printfEnabled = false;
