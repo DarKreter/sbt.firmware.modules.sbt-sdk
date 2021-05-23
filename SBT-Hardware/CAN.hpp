@@ -54,8 +54,8 @@ public:
             struct
             {
                 uint32_t    : 16,
-                            parameterID : 16,
-                            data : 32;
+                            parameterID : 16;
+                int32_t data;
             }integer;
             
             struct
@@ -71,16 +71,16 @@ public:
     public:
     
         TxMessage() = default;
-        TxMessage(uint16_t id, uint32_t parameter);
+        TxMessage(uint16_t id, int32_t parameter);
         TxMessage(uint16_t id, float parameter);
         
         void SetParameterID(uint16_t id);
-        void SetData(uint32_t parameter);
+        void SetData(int32_t parameter);
         void SetData(float parameter);
         
         [[nodiscard]] uint16_t GetParameterID() const {return integer.parameterID;}
-        [[nodiscard]] uint32_t GetDataInt() const {return integer.data;}
-        [[nodiscard]] uint32_t GetDataFloat() const {return floating.data;}
+        [[nodiscard]] int32_t  GetDataInt() const {return integer.data;}
+        [[nodiscard]] float    GetDataFloat() const {return floating.data;}
         [[nodiscard]] uint8_t* GetPayload(){ return payload; }
         
         friend CAN;
@@ -110,6 +110,8 @@ public:
     bool IsAnyTxMailboxFree();
     void Send(TxMessage &message);
     void Send(TxMessage &&message);
+    void Send(uint16_t id, int32_t parameter);
+    void Send(uint16_t id, float parameter);
     
     std::optional<RxMessage> GetMessage();
     

@@ -20,7 +20,7 @@ void CAN::TxMessage::SetParameterID(uint16_t id)
     integer.parameterID = id;
 }
 
-void CAN::TxMessage::SetData(uint32_t parameter)
+void CAN::TxMessage::SetData(int32_t parameter)
 {
     integer.data = parameter;
 }
@@ -30,7 +30,7 @@ void CAN::TxMessage::SetData(float parameter)
     floating.data = parameter;
 }
 
-CAN::TxMessage::TxMessage(uint16_t id, uint32_t parameter): payload{}
+CAN::TxMessage::TxMessage(uint16_t id, int32_t parameter): payload{}
 {
     integer.parameterID = id;
     integer.data = parameter;
@@ -63,8 +63,8 @@ void CAN::Initialize(const uint32_t ourID, const std::initializer_list <uint32_t
     CAN_HandleTypeDef& handle = state.handle;
     
     handle.Instance = CAN1;
-    handle.Init.Prescaler = 1;
     handle.Init.Mode = static_cast<uint32_t>(mode);
+    handle.Init.Prescaler = 1;
     handle.Init.SyncJumpWidth = CAN_SJW_1TQ;
     handle.Init.TimeSeg1 = CAN_BS1_6TQ;
     handle.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -156,6 +156,16 @@ void CAN::Send(CAN::TxMessage &message)
 void CAN::Send(TxMessage &&message)
 {
     Send(message);
+}
+
+void CAN::Send(uint16_t id, int32_t parameter)
+{
+    Send(TxMessage(id, parameter));
+}
+
+void CAN::Send(uint16_t id, float parameter)
+{
+    Send(TxMessage(id, parameter));
 }
 
 // Handlers for CAN transmission
