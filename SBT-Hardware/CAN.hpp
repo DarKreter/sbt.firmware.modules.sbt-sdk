@@ -105,7 +105,7 @@ public:
     CAN::State& GetState(){ return state;   }
     
     [[nodiscard]] bool IsInitialized() const {return initialized;}
-    void Initialize(uint32_t ourID, const std::initializer_list <uint32_t> &acceptedAddresses);
+    void Initialize(uint32_t ourBoxID, const std::initializer_list <uint32_t> &acceptedAddresses);
     
     bool IsAnyTxMailboxFree();
     void Send(TxMessage &message);

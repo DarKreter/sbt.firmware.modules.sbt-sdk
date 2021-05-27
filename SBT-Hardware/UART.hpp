@@ -100,7 +100,7 @@ public:
     void SetPrintfBufferSize(uint16_t bf);
     void DisablePrintf();
     
-    void ChangeModeToBlocking(uint32_t tmt = 500);
+    void ChangeModeToBlocking(uint32_t Timeout = 500);
     void ChangeModeToInterrupts();
     
     void SetTransmissionMode(TransmissionMode tm);

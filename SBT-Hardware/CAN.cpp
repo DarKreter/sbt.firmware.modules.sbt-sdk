@@ -42,12 +42,12 @@ CAN::TxMessage::TxMessage(uint16_t id, float parameter): payload{}
     floating.data = parameter;
 }
 
-void CAN::Initialize(const uint32_t ourID, const std::initializer_list <uint32_t>& acceptedAddresses)
+void CAN::Initialize(const uint32_t ourBoxID, const std::initializer_list <uint32_t>& acceptedAddresses)
 {
     if(initialized)
         throw std::runtime_error("CAN already initialized!");
     
-    deviceID = ourID;
+    deviceID = ourBoxID;
     
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_CAN1_CLK_ENABLE();

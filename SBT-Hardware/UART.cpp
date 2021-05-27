@@ -19,16 +19,16 @@ void UART::Initialize() {
             __HAL_RCC_GPIOA_CLK_ENABLE();
             __HAL_RCC_USART1_CLK_ENABLE();
             // Set GPIO
-            //if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
                 Hardware::enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
-            //if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
                 Hardware::enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
             // Enable interrupts with low priority
-            //if(mode == OperatingMode::INTERRUPTS)
-            //{
+            if(mode == OperatingMode::INTERRUPTS)
+            {
                 HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
                 HAL_NVIC_EnableIRQ(USART1_IRQn);
-            //}
+            }
             state.handle.Instance = USART1;
             break;
         case Instance::UART_2:
@@ -82,15 +82,14 @@ void UART::Initialize() {
     HAL_UART_Init(&state.handle);
     
     // Enable interrupts
-    //if(mode == OperatingMode::INTERRUPTS)
-    //{
+    if(mode == OperatingMode::INTERRUPTS)
+    {
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
-    //}
-    // Clear bits
-    state.txRxState = xEventGroupCreate();
-    xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
-    
+        // Clear bits
+        state.txRxState = xEventGroupCreate();
+        xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
+    }
     initialized = true;
 }
 
@@ -295,13 +294,13 @@ void UART::SetBaudRate(uint32_t br)
     baudRate = br;
 }
 
-void UART::ChangeModeToBlocking(uint32_t tmt)
+void UART::ChangeModeToBlocking(uint32_t Timeout)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
     mode = OperatingMode::BLOCKING;
-    timeout = tmt;
+    timeout = Timeout;
 }
 
 void UART::ChangeModeToInterrupts()
