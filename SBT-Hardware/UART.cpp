@@ -238,7 +238,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
-void UART::ConfigureStaticVariables(USART_TypeDef *usart)
+UART::UART(USART_TypeDef *usart)
 {
     initialized = false;
     printfEnabled = false;
@@ -339,16 +339,6 @@ void UART::DisablePrintf()
 {
     if(printfEnabled)
         delete[] buffer;
-}
-
-UART::UART()
-{
-    mode = OperatingMode::DMA;
-    wordLength = WordLength::_9BITS;
-    parity = Parity::EVEN;
-    stopBits = StopBits::STOP_BITS_2;
-    baudRate = 115269;
-    timeout = 100;
 }
 
 void UART::SetTransmissionMode(UART::TransmissionMode ts)

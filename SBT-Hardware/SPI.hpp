@@ -93,10 +93,8 @@ public:
     };
     
 private:
-    //TODO: changes this to constructor
-    void ConfigureStaticVariables(SPI_TypeDef* spii);
-    //UART(USART_TypeDef* usart);
-    SPI_t() = default; // = delete;
+    SPI_t(SPI_TypeDef* spii);
+    SPI_t()  = delete;
     
     void CalculateMisoMosi();
     

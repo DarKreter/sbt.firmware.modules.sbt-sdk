@@ -178,7 +178,7 @@ void SPI_t::Abort() {
     xEventGroupClearBits(state.txRxState, Hardware::txBit | Hardware::rxBit);
 }
 
-void SPI_t::ConfigureStaticVariables(SPI_TypeDef *spii)
+SPI_t::SPI_t(SPI_TypeDef *spii)
 {
     initialized = false;
     

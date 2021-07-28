@@ -1,15 +1,11 @@
 #include <Hardware.hpp>
 #include <event_groups.h>
 
-UART Hardware::uart1, Hardware::uart2, Hardware::uart3;
-SPI_t Hardware::spi1, Hardware::spi2;
+UART Hardware::uart1(USART1), Hardware::uart2(USART2), Hardware::uart3(USART3);
+SPI_t Hardware::spi1(SPI1), Hardware::spi2(SPI2);
 CAN Hardware::can;
 
 std::array<I2C::State, 2> Hardware::i2cStates;
-
-
-
-
 
 void Hardware::enableGpio(GPIO_TypeDef* gpio, uint32_t pin, Gpio::Mode direction, Gpio::Pull pull) {
 
@@ -136,20 +132,6 @@ I2C::State &Hardware::getI2CState(I2C::I2C id) {
     // Give up and stay here
     return getI2CState(id);
 }
-
-void Hardware::InitializeStaticVariables()
-{
-    uart1.ConfigureStaticVariables(USART1);
-    uart2.ConfigureStaticVariables(USART2);
-    uart3.ConfigureStaticVariables(USART3);
-    
-    spi1.ConfigureStaticVariables(SPI1);
-    spi2.ConfigureStaticVariables(SPI2);
-    
-    can.ConfigureStaticVariables();
-}
-
-
 
 // Handlers for I2C transmission
 

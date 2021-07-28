@@ -22,9 +22,7 @@ class CAN
         QueueHandle_t queueHandle;
     };
     
-    //TODO: changes this to constructor
-    void ConfigureStaticVariables();
-    CAN() = default;// =delete;
+    CAN();
 
 public:
     enum class Mode: uint32_t

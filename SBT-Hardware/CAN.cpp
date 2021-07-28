@@ -127,7 +127,7 @@ std::optional<CAN::RxMessage> CAN::GetMessage() {
     return std::nullopt;
 }
 
-void CAN::ConfigureStaticVariables()
+CAN::CAN()
 {
     initialized = false;
     mode = Mode::NORMAL;

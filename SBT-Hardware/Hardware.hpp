@@ -94,7 +94,6 @@ struct Hardware {
     static SPI_t spi1, spi2;
     static CAN can;
     
-    static void InitializeStaticVariables();
     
 private:
     static std::array<I2C::State, 2> i2cStates;
