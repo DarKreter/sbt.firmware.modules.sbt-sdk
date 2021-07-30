@@ -262,36 +262,36 @@ UART::UART(USART_TypeDef *usart)
     timeout = 500;
 }
 
-void UART::SetWordLength(UART::WordLength wl)
+void UART::SetWordLength(UART::WordLength _wordLength)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    wordLength = wl;
+    wordLength = _wordLength;
 }
 
-void UART::SetParity(UART::Parity p)
+void UART::SetParity(UART::Parity _parity)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    parity = p;
+    parity = _parity;
 }
 
-void UART::SetStopBits(UART::StopBits sb)
+void UART::SetStopBits(UART::StopBits _stopBits)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    stopBits = sb;
+    stopBits = _stopBits;
 }
 
-void UART::SetBaudRate(uint32_t br)
+void UART::SetBaudRate(uint32_t _baudRate)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    baudRate = br;
+    baudRate = _baudRate;
 }
 
 void UART::ChangeModeToBlocking(uint32_t Timeout)
@@ -326,13 +326,13 @@ void UART::printf(const char *fmt, ...)
     va_end(vaList);
 }
 
-void UART::SetPrintfBufferSize(uint16_t bf)
+void UART::SetPrintfBufferSize(uint16_t bufferSize)
 {
     if(printfEnabled)
         return;
     
     printfEnabled = true;
-    buffer = new char[bf];
+    buffer = new char[bufferSize];
 }
 
 void UART::DisablePrintf()
@@ -341,11 +341,11 @@ void UART::DisablePrintf()
         delete[] buffer;
 }
 
-void UART::SetTransmissionMode(UART::TransmissionMode ts)
+void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    transmissionMode = ts;
+    transmissionMode = _transmissionMode;
     
 }

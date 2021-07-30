@@ -96,6 +96,9 @@ private:
     SPI_t(SPI_TypeDef* spii);
     SPI_t()  = delete;
     
+    /**
+     * @brief Set mosiEnabled, misoEnabled and direction based on deviceType and transmissionMode
+     */
     void CalculateMisoMosi();
     
     void SendRCC(uint8_t* data, size_t numOfBytes);
@@ -120,31 +123,93 @@ private:
     DeviceType deviceType;
     uint32_t timeout;
 public:
+    /**
+     * @brief Tells if object was already Initialized (by calling Initialize function)
+     * @return true if was, false if not
+     */
     [[nodiscard]] bool IsInitialized() const {return initialized;}
     
-    void ChangeModeToBlocking(uint32_t tmt = 500);
+    /**
+     * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
+     * @param Timeout timeout
+     */
+    void ChangeModeToBlocking(uint32_t _timeout = 500);
+    /**
+     * @brief Changes operating mode of SPI to interrupts (Default: Interrupts)
+     */
     void ChangeModeToInterrupts();
     
+    /**
+     * @brief Set prescaler (Default: PRESCALER_2)
+     * @param _prescaler PRESCALER_2, PRESCALER_4, ..., PRESCALER_256
+     */
+    void SetPrescaler(Prescaler _prescaler);
+    /**
+     * @brief Set prescaler (Default: MSB)
+     * @param _firstBit MSB or LSB
+     */
+    void SetFirstBit(FirstBit _firstBit);
+    /**
+     * @brief Set data size (Default: _8BIT)
+     * @param _dataSize _8BIT or _9BIT
+     */
+    void SetDataSize(DataSize _dataSize);
+    /**
+     * @brief Set clock polarity (Default: HIGH)
+     * @param _clockPolarity HIGH or LOW
+     */
+    void SetClockPolarity(ClockPolarity _clockPolarity);
+    /**
+     * @brief Set clock phase (Default: _2EDGE)
+     * @param _clockPhase _1EDGE or _2EDGE
+     */
+    void SetClockPhase(ClockPhase _clockPhase);
+    /**
+     * @brief Set transmission mode (Default: FULL_DUPLEX)
+     * @param _transmissionMode FULL_DUPLEX, HALF_DUPLEX, RECEIVE_ONLY or TRANSMIT_ONLY
+     */
+    void SetTransmissionMode(TransmissionMode _transmissionMode);
+    /**
+     * @brief Set device type (Default: MASTER)
+     * @param _deviceType MASTER or SLAVE
+     */
+    void SetDeviceType(DeviceType _deviceType);
     
-    void SetPrescaler(Prescaler pr);
-    void SetFirstBit(FirstBit fb);
-    void SetDataSize(DataSize ds);
-    void SetClockPolarity(ClockPolarity cp);
-    void SetClockPhase(ClockPhase cp);
-    void SetTransmissionMode(TransmissionMode tm);
-    void SetDeviceType(DeviceType dt);
-    
+    /**
+     * @brief Return state handler for this object
+     */
     State& GetState() {return state;}
     
+    /**
+     * @brief Initialize function, needs to be called after configuration and before using Send of Receive
+     */
     void Initialize();
     
+    /**
+     * @brief Sending data. Way of sending is defined by your configuration before Initialize()
+     * @param data pointer to data table
+     * @param numOfBytes number of bytes to send
+     */
     void Send(uint8_t *data, size_t numOfBytes);
-    
+    /**
+     * @brief Receiving data. Way of receiving is defined by your configuration before Initialize()
+     * @param data pointer to data table
+     * @param numOfBytes number of bytes expected to receive
+     */
     void Receive(uint8_t *data, size_t numOfBytes);
     
+    /**
+     * @brief Checks if Transmission is completed
+     */
     [[nodiscard]] bool IsTxComplete() const;
+    /**
+     * @brief Checks if receiving is completed
+     */
     [[nodiscard]] bool IsRxComplete() const;
     
+    /**
+     * @brief Abort communication
+     */
     void Abort();
     
     friend Hardware;

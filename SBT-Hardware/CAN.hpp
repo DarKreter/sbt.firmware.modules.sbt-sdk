@@ -98,19 +98,60 @@ public:
         [[nodiscard]] uint32_t& GetDeviceID() {return deviceID;}
     };
     
-    void SetMode(Mode md);
+    /**
+     * @brief Set mode (Default: NORMAL)
+     * @param _mode NORMAL, LOOPBACK, SILENT or SILENT_LOOPBACK
+     */
+    void SetMode(Mode _mode);
     
+    /**
+    * @brief Return state handler for this object
+    */
     CAN::State& GetState(){ return state;   }
     
+    /**
+     * @brief Tells if object was already Initialized (by calling Initialize function)
+     * @return true if was, false if not
+     */
     [[nodiscard]] bool IsInitialized() const {return initialized;}
+    /**
+     * @brief Initialize function, needs to be called after configuration and before using Send of Receive
+     * @param ourBoxID ID with which our box will be sending frames
+     * @param acceptedAddresses list of addresses from which we will be receiving frames
+     */
     void Initialize(uint32_t ourBoxID, const std::initializer_list <uint32_t> &acceptedAddresses);
     
+    /**
+     * @brief Checks if we can send message
+     */
     bool IsAnyTxMailboxFree();
+    /**
+     * @brief Sending message
+     * @param message We need to provide object of that message
+     */
     void Send(TxMessage &message);
+    /**
+     * @brief Sending message
+     * @param message We need to provide object of that message
+     */
     void Send(TxMessage &&message);
+    /**
+     * @brief Sending message
+     * @param id parameter id
+     * @param parameter value we want to send
+     */
     void Send(uint16_t id, int32_t parameter);
+    /**
+     * @brief Sending message
+     * @param id parameter id
+     * @param parameter value we want to send
+     */
     void Send(uint16_t id, float parameter);
     
+    /**
+     * @brief Gets message from queue of received messages
+     * @return if there was no message it returns std::nullopt
+     */
     std::optional<RxMessage> GetMessage();
     
     

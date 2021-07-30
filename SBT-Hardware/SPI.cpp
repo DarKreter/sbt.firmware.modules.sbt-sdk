@@ -200,53 +200,53 @@ SPI_t::SPI_t(SPI_TypeDef *spii)
     timeout = 500;
 }
 
-void SPI_t::SetPrescaler(SPI_t::Prescaler pr)
+void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    prescaler = pr;
+    prescaler = _prescaler;
 }
 
-void SPI_t::SetDataSize(DataSize ds)
+void SPI_t::SetDataSize(DataSize _dataSize)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    dataSize = ds;
+    dataSize = _dataSize;
 }
 
-void SPI_t::SetFirstBit(FirstBit fb)
+void SPI_t::SetFirstBit(FirstBit _firstBit)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    firstBit = fb;
+    firstBit = _firstBit;
 }
 
-void SPI_t::SetClockPolarity(ClockPolarity cp)
+void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    clockPolarity = cp;
+    clockPolarity = _clockPolarity;
 }
 
-void SPI_t::SetClockPhase(ClockPhase cp)
+void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
-    clockPhase = cp;
+    clockPhase = _clockPhase;
 }
 
-void SPI_t::ChangeModeToBlocking(uint32_t tmt)
+void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
     mode = OperatingMode::BLOCKING;
-    timeout = tmt;
+    timeout = _timeout;
 }
 
 void SPI_t::ChangeModeToInterrupts()
@@ -296,20 +296,20 @@ void SPI_t::CalculateMisoMosi()
 
 }
 
-void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode tm)
+void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
-    transmissionMode = tm;
+    transmissionMode = _transmissionMode;
 }
 
-void SPI_t::SetDeviceType(SPI_t::DeviceType dt)
+void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
-    deviceType = dt;
+    deviceType = _deviceType;
 }
 
 // Handlers for SPI transmission

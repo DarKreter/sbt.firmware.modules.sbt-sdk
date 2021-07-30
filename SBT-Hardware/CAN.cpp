@@ -133,12 +133,12 @@ CAN::CAN()
     mode = Mode::NORMAL;
 }
 
-void CAN::SetMode(CAN::Mode md)
+void CAN::SetMode(CAN::Mode _mode)
 {
     if(initialized)
         throw std::runtime_error("CAN already initialized!"); // Too late
     
-    mode = md;
+    mode = _mode;
 }
 
 void CAN::Send(CAN::TxMessage &message)
