@@ -78,6 +78,7 @@ struct Hardware {
      * @warning Note that data is not copied anywhere and needs to be available during entire transmission.
      */
     static void i2cSendMaster(I2C::I2C id, uint16_t address, uint8_t data[], size_t numOfBytes);
+    static void i2cSendSlave(I2C::I2C id, uint8_t data[], size_t numOfBytes);
 
     /**
      * @brief Receive data via interrupt mode I2C as a master
@@ -87,6 +88,7 @@ struct Hardware {
      * @param numOfBytes Length of data in bytes
      */
     static void i2cReceiveMaster(I2C::I2C id, uint16_t address, uint8_t data[], size_t numOfBytes);
+    static void i2cReceiveSlave(I2C::I2C id, uint8_t data[], size_t numOfBytes);
     static I2C::State& getI2CState(I2C::I2C id);
     
 

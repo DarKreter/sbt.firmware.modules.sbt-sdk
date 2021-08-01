@@ -62,9 +62,9 @@ void Hardware::initializeI2C(I2C::I2C id, uint32_t address, uint32_t speed) {
             enableGpio(GPIOB, GPIO_PIN_6, Gpio::Mode::AlternateOD, Gpio::Pull::Pullup);  // SCL
             enableGpio(GPIOB, GPIO_PIN_7, Gpio::Mode::AlternateOD, Gpio::Pull::Pullup);  // SDA
             // Enable interrupts with high priority due to silicon limitation (UM1850 p. 259)
-            HAL_NVIC_SetPriority(I2C1_EV_IRQn, 1, 1);
+            HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
             HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-            HAL_NVIC_SetPriority(I2C1_ER_IRQn, 1, 1);
+            HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
             HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
             break;
         case I2C::I2C::I2C_2:
@@ -87,10 +87,11 @@ void Hardware::initializeI2C(I2C::I2C id, uint32_t address, uint32_t speed) {
     HAL_I2C_Init(&state.handle);
 
     // Enable interrupts
-    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_BUF);
-    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_EVT);
-    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_ERR);
+//    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_BUF);
+//    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_EVT);
+//    __HAL_I2C_ENABLE_IT(&state.handle, I2C_IT_ERR);
 
+    
     // Clear bits
     state.txRxState = xEventGroupCreate();
     xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
@@ -101,11 +102,12 @@ void Hardware::i2cSendMaster(I2C::I2C id, uint16_t address, uint8_t *data, size_
     // Check if event group was created
     if(state.txRxState) {
         // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & Hardware::txBit) == 0) {
+//        if((xEventGroupGetBits(state.txRxState) & Hardware::txBit) == 0) {
             // If I2C is not busy, transmit and set TX flag to busy
-            HAL_I2C_Master_Transmit_IT(&state.handle, address, data, numOfBytes);
+            auto temp = HAL_I2C_Master_Transmit(&state.handle, address, data, numOfBytes, 1000);
+            Hardware::uart1.printf("%d\n", (int)temp);
             xEventGroupSetBits(state.txRxState, Hardware::txBit);
-        }
+//        }
     }
 }
 
@@ -114,11 +116,41 @@ void Hardware::i2cReceiveMaster(I2C::I2C id, uint16_t address, uint8_t *data, si
     // Check if event group was created
     if(state.txRxState) {
         // Check if there is no transmission
-        if((xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0) {
+//        if((xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0) {
             // If I2C is not busy, transmit and set RX flag to busy
-            HAL_I2C_Master_Transmit_IT(&state.handle, address, data, numOfBytes);
+            
+            auto temp = HAL_I2C_Master_Receive_IT(&state.handle, address, data, numOfBytes);
+            Hardware::uart1.printf("%d", (int)temp);
+            
+            
             xEventGroupSetBits(state.txRxState, Hardware::rxBit);
-        }
+//        }
+    }
+}
+
+void Hardware::i2cSendSlave(I2C::I2C id, uint8_t *data, size_t numOfBytes) {
+    I2C::State& state = getI2CState(id);
+    // Check if event group was created
+    if(state.txRxState) {
+        // Check if there is no transmission
+//        if((xEventGroupGetBits(state.txRxState) & Hardware::txBit) == 0) {
+            // If I2C is not busy, transmit and set TX flag to busy
+            HAL_I2C_Slave_Transmit_IT(&state.handle, data, numOfBytes);
+            xEventGroupSetBits(state.txRxState, Hardware::txBit);
+//        }
+    }
+}
+
+void Hardware::i2cReceiveSlave(I2C::I2C id, uint8_t *data, size_t numOfBytes) {
+    I2C::State& state = getI2CState(id);
+    // Check if event group was created
+    if(state.txRxState) {
+        // Check if there is no transmission
+//        if((xEventGroupGetBits(state.txRxState) & Hardware::rxBit) == 0) {
+            // If I2C is not busy, transmit and set RX flag to busy
+            HAL_I2C_Slave_Receive_IT(&state.handle, data, numOfBytes);
+            xEventGroupSetBits(state.txRxState, Hardware::rxBit);
+//        }
     }
 }
 
