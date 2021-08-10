@@ -93,7 +93,20 @@ public:
     };
     
 private:
-    SPI_t(SPI_TypeDef* spii);
+    Instance instance;
+    OperatingMode mode;
+    Prescaler prescaler;
+    DataSize dataSize;
+    FirstBit firstBit;
+    ClockPolarity clockPolarity;
+    ClockPhase clockPhase;
+    TransmissionMode transmissionMode;
+    uint32_t direction;
+    
+    DeviceType deviceType;
+    uint32_t timeout;
+    
+    explicit SPI_t(SPI_TypeDef* spii);
     SPI_t()  = delete;
     
     /**
@@ -109,25 +122,7 @@ private:
     void ReceiveIT(uint8_t* data, size_t numOfBytes);
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
     
-    
-    Instance instance;
-    OperatingMode mode;
-    Prescaler prescaler;
-    DataSize dataSize;
-    FirstBit firstBit;
-    ClockPolarity clockPolarity;
-    ClockPhase clockPhase;
-    TransmissionMode transmissionMode;
-    uint32_t direction;
-    
-    DeviceType deviceType;
-    uint32_t timeout;
 public:
-    /**
-     * @brief Tells if object was already Initialized (by calling Initialize function)
-     * @return true if was, false if not
-     */
-    [[nodiscard]] bool IsInitialized() const {return initialized;}
     
     /**
      * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
@@ -179,6 +174,12 @@ public:
      * @brief Return state handler for this object
      */
     State& GetState() {return state;}
+    
+    /**
+     * @brief Tells if object was already Initialized (by calling Initialize function)
+     * @return true if was, false if not
+     */
+    [[nodiscard]] bool IsInitialized() const {return initialized;}
     
     /**
      * @brief Initialize function, needs to be called after configuration and before using Send of Receive

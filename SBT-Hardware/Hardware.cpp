@@ -2,6 +2,7 @@
 #include <event_groups.h>
 
 UART Hardware::uart1(USART1), Hardware::uart2(USART2), Hardware::uart3(USART3);
+I2C Hardware::i2c1(I2C1), Hardware::i2c2(I2C2);
 SPI_t Hardware::spi1(SPI1), Hardware::spi2(SPI2);
 CAN Hardware::can;
 

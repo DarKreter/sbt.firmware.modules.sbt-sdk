@@ -257,6 +257,22 @@ void SPI_t::ChangeModeToInterrupts()
     mode = OperatingMode::INTERRUPTS;
 }
 
+void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
+{
+    if(initialized)
+        throw std::runtime_error("SPI already initialized!"); // Too late
+    
+    transmissionMode = _transmissionMode;
+}
+
+void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
+{
+    if(initialized)
+        throw std::runtime_error("SPI already initialized!"); // Too late
+    
+    deviceType = _deviceType;
+}
+
 void SPI_t::CalculateMisoMosi()
 {
     mosiEnabled = misoEnabled = true;
@@ -294,22 +310,6 @@ void SPI_t::CalculateMisoMosi()
     }
     
 
-}
-
-void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
-{
-    if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
-    
-    transmissionMode = _transmissionMode;
-}
-
-void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
-{
-    if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
-    
-    deviceType = _deviceType;
 }
 
 // Handlers for SPI transmission

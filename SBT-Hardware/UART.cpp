@@ -13,6 +13,9 @@ void UART::Initialize() {
     if(initialized)
         throw std::runtime_error("UART already initialized!");
     
+    if(instance == Instance::UART_3 && Hardware::i2c2.IsInitialized())
+        throw std::runtime_error("Cannot initialize UART3 along with I2C2!");
+    
     switch (instance) {
         case Instance::UART_1:
             // Enable clocks

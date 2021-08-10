@@ -23,8 +23,8 @@ namespace Gpio {
     };
 }
 
-struct Hardware {
-    
+struct Hardware
+{
     static constexpr size_t txBit = 1 << 0;
     static constexpr size_t rxBit = 1 << 1;
     
@@ -44,6 +44,7 @@ struct Hardware {
     static void configureClocks();
 
     static UART uart1, uart2, uart3;
+    static I2C i2c1, i2c2;
     static SPI_t spi1, spi2;
     static CAN can;
 };

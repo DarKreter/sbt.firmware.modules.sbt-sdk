@@ -81,8 +81,17 @@ public:
     };
     
 private:
+    Instance instance;
+    OperatingMode mode;
+    WordLength wordLength;
+    Parity parity;
+    StopBits stopBits;
+    TransmissionMode transmissionMode;
+    uint32_t baudRate;
+    uint32_t timeout;
+    
     //setting default settings
-    UART(USART_TypeDef* usart);
+    explicit UART(USART_TypeDef* usart);
     //To avoid creating objects with different constructor than one above
     UART() = delete;
     
@@ -96,22 +105,7 @@ private:
     void ReceiveIT(uint8_t* data, size_t numOfBytes);
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
     
-    
-    Instance instance;
-    OperatingMode mode;
-    WordLength wordLength;
-    Parity parity;
-    StopBits stopBits;
-    TransmissionMode transmissionMode;
-    uint32_t baudRate;
-    uint32_t timeout;
 public:
-    /**
-     * @brief Tells if object was already Initialized (by calling Initialize function)
-     * @return true if was, false if not
-     */
-    [[nodiscard]] bool IsInitialized() const {return initialized;}
-    
     /**
      * @brief Set buffer(for using printf function) to sent size
      * Also use new to allocate memory for buffer
@@ -163,6 +157,12 @@ public:
      * @brief Return state handler for this object
      */
     State& GetState() {return state;}
+    
+    /**
+     * @brief Tells if object was already Initialized (by calling Initialize function)
+     * @return true if was, false if not
+     */
+    [[nodiscard]] bool IsInitialized() const {return initialized;}
     
     /**
      * @brief Initialize function, needs to be called after configuration and before using Send of Receive
