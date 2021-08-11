@@ -86,8 +86,16 @@ private:
 
 public:
     
+    /**
+     * @brief Set addressing mode (Default: _7BIT)
+     * @param _addressingMode _7BIT or _10BIT
+     */
     void SetAddressingMode(AddressingMode _addressingMode);
     
+    /**
+     * @brief Sets speed (Default: 100 000)
+     * @param _speed
+     */
     void SetSpeed(uint32_t _speed);
     /**
     * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
@@ -105,29 +113,50 @@ public:
     State& GetState() {return state;}
     
     /**
-     * @brief Send data via interrupt mode I2C as a master
+     * @brief Send data in I2C as a master
      * @param slaveAddress Address of slave
      * @param data Pointer to data to be sent
      * @param numOfBytes Length of data in bytes
      * @warning Note that data is not copied anywhere and needs to be available during entire transmission.
      */
     void SendMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
-    
-    void SendSlave(uint8_t* data, size_t numOfBytes);
-    
     /**
-     * @brief Receive data via interrupt mode I2C as a master
-     * @param id ID of I2C
+     * @brief Send data in I2C as a slave
+     * @param data Pointer to data to be sent
+     * @param numOfBytes Length of data in bytes
+     * @warning Note that data is not copied anywhere and needs to be available during entire transmission.
+     */
+    void SendSlave(uint8_t* data, size_t numOfBytes);
+    /**
+     * @brief Receive data in I2C as a master
      * @param slaveAddress Address of slave
      * @param data Pointer to container where data will be written
      * @param numOfBytes Length of data in bytes
      */
     void ReceiveMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
-    
+    /**
+     * @brief Receive data in I2C as a slave
+     * @param data Pointer to container where data will be written
+     * @param numOfBytes Length of data in bytes
+     */
     void ReceiveSlave(uint8_t* data, size_t numOfBytes);
-
+    /**
+     * @brief Read indicated register from slave device
+     * @param slaveAddress Address of slave
+     * @param registerAddress Address of register from which we will read data
+     * @param registerSize size of register
+     * @param data pointer to table where read data will be stored
+     * @param dataSize sizeof data
+     */
     void ReadRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t registerSize, uint8_t* data, uint16_t dataSize);
-    
+    /**
+     * @brief Write data to register as master
+     * @param slaveAddress Address of slave
+     * @param registerAddress Address of register where we will write data
+     * @param registerSize size of register
+     * @param data pointer to table where read data will be stored
+     * @param dataSize sizeof data
+     */
     void WriteRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t registerSize, uint8_t* data, uint16_t dataSize);
     
     
