@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 
-void CAN::TxMessage::ConfigureMessage(uint32_t id)
+void CAN::GenericMessage::ConfigureMessage(uint32_t id)
 {
     header.ExtId = id;
     header.IDE = CAN_ID_EXT;
@@ -30,13 +30,13 @@ void CAN::TxMessage::SetData(float parameter)
     floating.data = parameter;
 }
 
-CAN::TxMessage::TxMessage(uint16_t id, int32_t parameter): payload{}
+CAN::GenericMessage::GenericMessage(uint16_t id, int32_t parameter): payload{}
 {
     integer.parameterID = id;
     integer.data = parameter;
 }
 
-CAN::TxMessage::TxMessage(uint16_t id, float parameter): payload{}
+CAN::GenericMessage::GenericMessage(uint16_t id, float parameter): payload{}
 {
     integer.parameterID = id;
     floating.data = parameter;
@@ -168,24 +168,24 @@ void CAN::Send(uint16_t id, float parameter)
     Send(TxMessage(id, parameter));
 }
 
+void CAN::saveMessageToQueue(uint32_t fifoId){
+    CAN::RxMessage message{};
+    CAN_RxHeaderTypeDef header{};
+    HAL_CAN_GetRxMessage( &Hardware::can.GetState().handle, fifoId, &header, message.GetPayload() );
+    message.SetDeviceID( header.IDE == CAN_ID_STD ? header.StdId : header.ExtId );
+    
+    xQueueSendToBackFromISR(Hardware::can.GetState().queueHandle, &message, NULL);
+}
+
 // Handlers for CAN transmission
 void CAN1_RX0_IRQHandler(){
     HAL_CAN_IRQHandler(&Hardware::can.GetState().handle);
 }
 
-void saveMessageToQueue(uint32_t fifoId){
-    CAN::RxMessage message{};
-    CAN_RxHeaderTypeDef header{};
-    HAL_CAN_GetRxMessage( &Hardware::can.GetState().handle, fifoId, &header, message.GetPayload() );
-    message.GetDeviceID() = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
-    
-    xQueueSendToBackFromISR(Hardware::can.GetState().queueHandle, &message, NULL);
-}
-
 void HAL_CAN_RxFifo0MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
-    saveMessageToQueue(CAN_RX_FIFO0);
+    Hardware::can.saveMessageToQueue(CAN_RX_FIFO0);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef *hcan){
-    saveMessageToQueue(CAN_RX_FIFO1);
+    Hardware::can.saveMessageToQueue(CAN_RX_FIFO1);
 }
