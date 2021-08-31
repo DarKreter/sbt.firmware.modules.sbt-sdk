@@ -13,22 +13,25 @@ void UART::Initialize() {
     if(initialized)
         throw std::runtime_error("UART already initialized!");
     
+    if(instance == Instance::UART_3 && Hardware::i2c2.IsInitialized())
+        throw std::runtime_error("Cannot initialize UART3 along with I2C2!");
+    
     switch (instance) {
         case Instance::UART_1:
             // Enable clocks
             __HAL_RCC_GPIOA_CLK_ENABLE();
             __HAL_RCC_USART1_CLK_ENABLE();
             // Set GPIO
-            //if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
                 Hardware::enableGpio(GPIOA, GPIO_PIN_9, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull);  // TX1
-            //if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
                 Hardware::enableGpio(GPIOA, GPIO_PIN_10, Gpio::Mode::AlternateInput, Gpio::Pull::Pullup);  // RX1
             // Enable interrupts with low priority
-            //if(mode == OperatingMode::INTERRUPTS)
-            //{
+            if(mode == OperatingMode::INTERRUPTS)
+            {
                 HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
                 HAL_NVIC_EnableIRQ(USART1_IRQn);
-            //}
+            }
             state.handle.Instance = USART1;
             break;
         case Instance::UART_2:
@@ -82,15 +85,14 @@ void UART::Initialize() {
     HAL_UART_Init(&state.handle);
     
     // Enable interrupts
-    //if(mode == OperatingMode::INTERRUPTS)
-    //{
+    if(mode == OperatingMode::INTERRUPTS)
+    {
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_RXNE);
         __HAL_UART_ENABLE_IT(&state.handle, UART_IT_TC);
-    //}
-    // Clear bits
-    state.txRxState = xEventGroupCreate();
-    xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
-    
+        // Clear bits
+        state.txRxState = xEventGroupCreate();
+        xEventGroupClearBits(state.txRxState, Hardware::rxBit | Hardware::txBit);
+    }
     initialized = true;
 }
 
@@ -239,7 +241,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     }
 }
 
-void UART::configureStaticVariables(USART_TypeDef *usart)
+UART::UART(USART_TypeDef *usart)
 {
     initialized = false;
     printfEnabled = false;
@@ -263,45 +265,45 @@ void UART::configureStaticVariables(USART_TypeDef *usart)
     timeout = 500;
 }
 
-void UART::SetWordLength(UART::WordLength wl)
+void UART::SetWordLength(UART::WordLength _wordLength)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    wordLength = wl;
+    wordLength = _wordLength;
 }
 
-void UART::SetParity(UART::Parity p)
+void UART::SetParity(UART::Parity _parity)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    parity = p;
+    parity = _parity;
 }
 
-void UART::SetStopBits(UART::StopBits sb)
+void UART::SetStopBits(UART::StopBits _stopBits)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    stopBits = sb;
+    stopBits = _stopBits;
 }
 
-void UART::SetBaudRate(uint32_t br)
+void UART::SetBaudRate(uint32_t _baudRate)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    baudRate = br;
+    baudRate = _baudRate;
 }
 
-void UART::ChangeModeToBlocking(uint32_t tmt)
+void UART::ChangeModeToBlocking(uint32_t Timeout)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
     mode = OperatingMode::BLOCKING;
-    timeout = tmt;
+    timeout = Timeout;
 }
 
 void UART::ChangeModeToInterrupts()
@@ -327,13 +329,13 @@ void UART::printf(const char *fmt, ...)
     va_end(vaList);
 }
 
-void UART::SetPrintfBufferSize(uint16_t bf)
+void UART::SetPrintfBufferSize(uint16_t bufferSize)
 {
     if(printfEnabled)
         return;
     
     printfEnabled = true;
-    buffer = new char[bf];
+    buffer = new char[bufferSize];
 }
 
 void UART::DisablePrintf()
@@ -342,21 +344,11 @@ void UART::DisablePrintf()
         delete[] buffer;
 }
 
-UART::UART()
-{
-    mode = OperatingMode::DMA;
-    wordLength = WordLength::_9BITS;
-    parity = Parity::EVEN;
-    stopBits = StopBits::STOP_BITS_2;
-    baudRate = 115269;
-    timeout = 100;
-}
-
-void UART::SetTransmissionMode(UART::TransmissionMode ts)
+void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 {
     if(initialized)
         throw std::runtime_error("UART already initialized!"); // Too late
     
-    transmissionMode = ts;
+    transmissionMode = _transmissionMode;
     
 }

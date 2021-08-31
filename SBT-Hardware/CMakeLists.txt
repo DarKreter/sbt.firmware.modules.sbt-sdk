@@ -4,7 +4,10 @@ set(HEADER_LIST
 
 set(SRC_LIST
         Hardware.cpp
-        UART.cpp UART.hpp SPI.cpp SPI.hpp)
+        UART.cpp
+        SPI.cpp
+        CAN.cpp
+        I2C.cpp)
 
 add_library(SBT-Hardware ${SRC_LIST} ${HEADER_LIST})
 

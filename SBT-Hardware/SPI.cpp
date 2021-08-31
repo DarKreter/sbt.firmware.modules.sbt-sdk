@@ -67,10 +67,13 @@ void SPI_t::Initialize()
     
     HAL_SPI_Init(&handle);
     
-    //__HAL_SPI_ENABLE_IT(&handle, SPI_IT_TXE);
     if(mode == OperatingMode::INTERRUPTS)
     {
-        __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
+    //TODO: Why this must be commented even on INTERRUPT mode??
+//        if((deviceType == DeviceType::MASTER && mosiEnabled) || (deviceType == DeviceType::SLAVE && misoEnabled))
+//            __HAL_SPI_ENABLE_IT(&handle, SPI_IT_TXE);
+//        if((deviceType == DeviceType::MASTER && misoEnabled) || (deviceType == DeviceType::SLAVE && mosiEnabled))
+//            __HAL_SPI_ENABLE_IT(&handle, SPI_IT_RXNE);
         __HAL_SPI_ENABLE_IT(&handle, SPI_IT_ERR);
     }
     // Clear bits
@@ -175,7 +178,7 @@ void SPI_t::Abort() {
     xEventGroupClearBits(state.txRxState, Hardware::txBit | Hardware::rxBit);
 }
 
-void SPI_t::configureStaticVariables(SPI_TypeDef *spii)
+SPI_t::SPI_t(SPI_TypeDef *spii)
 {
     initialized = false;
     
@@ -197,53 +200,53 @@ void SPI_t::configureStaticVariables(SPI_TypeDef *spii)
     timeout = 500;
 }
 
-void SPI_t::SetPrescaler(SPI_t::Prescaler pr)
+void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    prescaler = pr;
+    prescaler = _prescaler;
 }
 
-void SPI_t::SetDataSize(DataSize ds)
+void SPI_t::SetDataSize(DataSize _dataSize)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    dataSize = ds;
+    dataSize = _dataSize;
 }
 
-void SPI_t::SetFirstBit(FirstBit fb)
+void SPI_t::SetFirstBit(FirstBit _firstBit)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    firstBit = fb;
+    firstBit = _firstBit;
 }
 
-void SPI_t::SetClockPolarity(ClockPolarity cp)
+void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
         
-    clockPolarity = cp;
+    clockPolarity = _clockPolarity;
 }
 
-void SPI_t::SetClockPhase(ClockPhase cp)
+void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
-    clockPhase = cp;
+    clockPhase = _clockPhase;
 }
 
-void SPI_t::ChangeModeToBlocking(uint32_t tmt)
+void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
         throw std::runtime_error("SPI already initialized!"); // Too late
     
     mode = OperatingMode::BLOCKING;
-    timeout = tmt;
+    timeout = _timeout;
 }
 
 void SPI_t::ChangeModeToInterrupts()
@@ -252,6 +255,22 @@ void SPI_t::ChangeModeToInterrupts()
         throw std::runtime_error("SPI already initialized!"); // Too late
     
     mode = OperatingMode::INTERRUPTS;
+}
+
+void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
+{
+    if(initialized)
+        throw std::runtime_error("SPI already initialized!"); // Too late
+    
+    transmissionMode = _transmissionMode;
+}
+
+void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
+{
+    if(initialized)
+        throw std::runtime_error("SPI already initialized!"); // Too late
+    
+    deviceType = _deviceType;
 }
 
 void SPI_t::CalculateMisoMosi()
@@ -291,22 +310,6 @@ void SPI_t::CalculateMisoMosi()
     }
     
 
-}
-
-void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode tm)
-{
-    if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
-    
-    transmissionMode = tm;
-}
-
-void SPI_t::SetDeviceType(SPI_t::DeviceType dt)
-{
-    if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
-    
-    deviceType = dt;
 }
 
 // Handlers for SPI transmission
