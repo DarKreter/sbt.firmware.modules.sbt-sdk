@@ -12,6 +12,8 @@
 #include <optional>
 #include <queue.h>
 
+#include <CAN_ID.hpp>
+
 struct Hardware;
 
 class CAN
@@ -37,7 +39,7 @@ private:
     bool initialized;
     State state;
     Mode mode;
-    uint32_t deviceID;
+    BoxId deviceID;
     
     class GenericMessage
     {
@@ -50,29 +52,29 @@ private:
 
             struct
             {
-                uint32_t    : 16,
-                parameterID : 16;
+                uint16_t    : 16; // make this bit field because then it can be without name
+                ParameterId parameterID; // : 16
                 int32_t data;
             }integer;
             
             struct
             {
-                uint32_t    : 16,
-                parameterID : 16;
+                uint16_t    : 16; // make this bit field because then it can be without name
+                ParameterId parameterID; // : 16
                 float data;
             }floating;
             
         };
         
-        void ConfigureMessage(uint32_t id);
+        void ConfigureMessage(BoxId id);
         
     public:
     
         GenericMessage() = default;
-        GenericMessage(uint16_t id, int32_t parameter);
-        GenericMessage(uint16_t id, float parameter);
+        GenericMessage(ParameterId id, int32_t parameter);
+        GenericMessage(ParameterId id, float parameter);
         
-        [[nodiscard]] uint16_t GetParameterID() const {return integer.parameterID;}
+        [[nodiscard]] ParameterId GetParameterID() const {return integer.parameterID;}
         [[nodiscard]] int32_t  GetDataInt() const {return integer.data;}
         [[nodiscard]] float    GetDataFloat() const {return floating.data;}
         [[nodiscard]] uint8_t* GetPayload(){ return payload; }
@@ -85,10 +87,10 @@ public:
     
     public:
         TxMessage() = default;
-        TxMessage(uint16_t id, int32_t parameter):  GenericMessage(id, parameter) {};
-        TxMessage(uint16_t id, float parameter):    GenericMessage(id, parameter) {};
+        TxMessage(ParameterId id, int32_t parameter): GenericMessage(id, parameter) {};
+        TxMessage(ParameterId id, float parameter)  : GenericMessage(id, parameter) {};
         
-        void SetParameterID(uint16_t id);
+        void SetParameterID(ParameterId id);
         void SetData(int32_t parameter);
         void SetData(float parameter);
         
@@ -98,13 +100,13 @@ public:
     
     class RxMessage: public GenericMessage
     {
-        uint32_t deviceID;
-        void SetDeviceID(uint32_t _deviceID) {deviceID = _deviceID;}
+        BoxId deviceID;
+        void SetDeviceID(BoxId _deviceID) { deviceID = _deviceID;}
         
     public:
         RxMessage() = default;
         
-        [[nodiscard]] uint32_t GetDeviceID() {return deviceID;}
+        [[nodiscard]] BoxId GetDeviceID() {return deviceID;}
         
         friend CAN;
     };
@@ -130,7 +132,7 @@ public:
      * @param ourBoxID ID with which our box will be sending frames
      * @param acceptedAddresses list of addresses from which we will be receiving frames
      */
-    void Initialize(uint32_t ourBoxID, const std::initializer_list <uint32_t> &acceptedAddresses);
+    void Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &acceptedAddresses);
     
     /**
      * @brief Checks if we can send message
@@ -151,13 +153,13 @@ public:
      * @param id parameter id
      * @param parameter value we want to send
      */
-    void Send(uint16_t id, int32_t parameter);
+    void Send(ParameterId id, int32_t parameter);
     /**
      * @brief Sending message
      * @param id parameter id
      * @param parameter value we want to send
      */
-    void Send(uint16_t id, float parameter);
+    void Send(ParameterId id, float parameter);
     
     /**
      * @brief Gets message from queue of received messages

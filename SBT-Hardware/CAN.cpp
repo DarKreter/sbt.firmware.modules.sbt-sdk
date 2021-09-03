@@ -7,15 +7,15 @@
 #include <stdexcept>
 
 
-void CAN::GenericMessage::ConfigureMessage(uint32_t id)
+void CAN::GenericMessage::ConfigureMessage(BoxId id)
 {
-    header.ExtId = id;
+    header.ExtId = static_cast<uint32_t>(id);
     header.IDE = CAN_ID_EXT;
     header.RTR = CAN_RTR_DATA;
     header.DLC = 8;//payload.size();
 }
 
-void CAN::TxMessage::SetParameterID(uint16_t id)
+void CAN::TxMessage::SetParameterID(ParameterId id)
 {
     integer.parameterID = id;
 }
@@ -30,19 +30,19 @@ void CAN::TxMessage::SetData(float parameter)
     floating.data = parameter;
 }
 
-CAN::GenericMessage::GenericMessage(uint16_t id, int32_t parameter): payload{}
+CAN::GenericMessage::GenericMessage(ParameterId id, int32_t parameter): payload{}
 {
     integer.parameterID = id;
     integer.data = parameter;
 }
 
-CAN::GenericMessage::GenericMessage(uint16_t id, float parameter): payload{}
+CAN::GenericMessage::GenericMessage(ParameterId id, float parameter): payload{}
 {
-    integer.parameterID = id;
+    floating.parameterID = id;
     floating.data = parameter;
 }
 
-void CAN::Initialize(const uint32_t ourBoxID, const std::initializer_list <uint32_t>& acceptedAddresses)
+void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &acceptedAddresses)
 {
     if(initialized)
         throw std::runtime_error("CAN already initialized!");
@@ -86,7 +86,7 @@ void CAN::Initialize(const uint32_t ourBoxID, const std::initializer_list <uint3
     
     for(uint32_t idx = 0; idx < acceptedAddresses.size(); ++idx) {
         // RM0008 p. 665
-        const uint32_t address = *(acceptedAddresses.begin() + idx);
+        const uint32_t address = static_cast<uint32_t>( *(acceptedAddresses.begin() + idx) );
         const uint32_t lowerPortion = (address & 0b1111111111111u) << 3u;
         const uint32_t upperPortion = (address & 0b111110000000000000u) >> 13u;
         filter.FilterMaskIdLow = (0x1FFFFFFFu & 0b1111111111111u) << 3u;;
@@ -116,7 +116,8 @@ bool CAN::IsAnyTxMailboxFree()
     return HAL_CAN_GetTxMailboxesFreeLevel(&state.handle) > 0;
 }
 
-std::optional<CAN::RxMessage> CAN::GetMessage() {
+std::optional<CAN::RxMessage> CAN::GetMessage()
+{
     if(!initialized)
         throw std::runtime_error("CAN not initialized!");
     
@@ -148,9 +149,10 @@ void CAN::Send(CAN::TxMessage &message)
     
     message.ConfigureMessage(deviceID);
     [[maybe_unused]] uint32_t usedMailbox;
-    if(IsAnyTxMailboxFree()) {
-        HAL_CAN_AddTxMessage(&GetState().handle, &message.header, message.GetPayload(), &usedMailbox);
-    }
+    
+    while(!IsAnyTxMailboxFree())    ;
+    
+    HAL_CAN_AddTxMessage(&GetState().handle, &message.header, message.GetPayload(), &usedMailbox);
 }
 
 void CAN::Send(TxMessage &&message)
@@ -158,12 +160,12 @@ void CAN::Send(TxMessage &&message)
     Send(message);
 }
 
-void CAN::Send(uint16_t id, int32_t parameter)
+void CAN::Send(ParameterId id, int32_t parameter)
 {
     Send(TxMessage(id, parameter));
 }
 
-void CAN::Send(uint16_t id, float parameter)
+void CAN::Send(ParameterId id, float parameter)
 {
     Send(TxMessage(id, parameter));
 }
@@ -172,7 +174,8 @@ void CAN::saveMessageToQueue(uint32_t fifoId){
     CAN::RxMessage message{};
     CAN_RxHeaderTypeDef header{};
     HAL_CAN_GetRxMessage( &Hardware::can.GetState().handle, fifoId, &header, message.GetPayload() );
-    message.SetDeviceID( header.IDE == CAN_ID_STD ? header.StdId : header.ExtId );
+    uint32_t boxid = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
+    message.SetDeviceID(static_cast<BoxId>(boxid));
     
     xQueueSendToBackFromISR(Hardware::can.GetState().queueHandle, &message, NULL);
 }
