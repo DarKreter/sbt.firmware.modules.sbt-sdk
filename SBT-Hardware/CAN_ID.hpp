@@ -6,6 +6,14 @@
  */
 enum class BoxId : uint32_t
 {
+    BOX1 = 0x001, //KLS
+    BOX2 = 0x002, //MPPT
+    BOX3 = 0x004, //Battery
+    BOX4 = 0x008, //Raspberry Pi, RFD, 4G
+    BOX5 = 0x010, //QNA
+    BOX6 = 0x020, //Pitot, forward draft, valve pump,
+    BOX7 = 0x040, //rear draft, pump with valve
+    BOX8 = 0x080, //Electric hub - fuses
     AHRS = 0x100,
 };
 
