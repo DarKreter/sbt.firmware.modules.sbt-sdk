@@ -45,7 +45,7 @@ CAN::GenericMessage::GenericMessage(ParameterId id, float parameter): payload{}
 void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &acceptedAddresses)
 {
     if(initialized)
-        throw std::runtime_error("CAN already initialized!");
+        softfault(__FILE__, __LINE__, "CAN already initialized!");
     
     deviceID = ourBoxID;
     
@@ -111,7 +111,7 @@ void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &accepte
 bool CAN::IsAnyTxMailboxFree()
 {
     if(!initialized)
-        throw std::runtime_error("CAN not initialized!");
+        softfault(__FILE__, __LINE__, "CAN not initialized!");
     
     return HAL_CAN_GetTxMailboxesFreeLevel(&state.handle) > 0;
 }
@@ -119,7 +119,7 @@ bool CAN::IsAnyTxMailboxFree()
 std::optional<CAN::RxMessage> CAN::GetMessage()
 {
     if(!initialized)
-        throw std::runtime_error("CAN not initialized!");
+        softfault(__FILE__, __LINE__, "CAN not initialized!");
     
     RxMessage rxMessage{};
     if(xQueueReceive(GetState().queueHandle, &rxMessage, 0) == pdTRUE){
@@ -137,7 +137,7 @@ CAN::CAN()
 void CAN::SetMode(CAN::Mode _mode)
 {
     if(initialized)
-        throw std::runtime_error("CAN already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "CAN already initialized!");// Too late
     
     mode = _mode;
 }
@@ -145,7 +145,7 @@ void CAN::SetMode(CAN::Mode _mode)
 void CAN::Send(CAN::TxMessage &message)
 {
     if(!initialized)
-        throw std::runtime_error("CAN not initialized!");
+        softfault(__FILE__, __LINE__, "CAN not initialized!");
     
     message.ConfigureMessage(deviceID);
     [[maybe_unused]] uint32_t usedMailbox;

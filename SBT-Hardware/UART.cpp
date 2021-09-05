@@ -11,10 +11,10 @@
 void UART::Initialize() {
     
     if(initialized)
-        throw std::runtime_error("UART already initialized!");
+        softfault(__FILE__, __LINE__, "UART already initialized!");
     
     if(instance == Instance::UART_3 && Hardware::i2c2.IsInitialized())
-        throw std::runtime_error("Cannot initialize UART3 along with I2C2!");
+        softfault(__FILE__, __LINE__, "Cannot initialize UART3 along with I2C2!");
     
     switch (instance) {
         case Instance::UART_1:
@@ -69,7 +69,8 @@ void UART::Initialize() {
             state.handle.Instance = USART3;
             break;
     case Instance::NONE:
-        throw std::runtime_error("Somehow instance not set to any UART...");
+        softfault(__FILE__, __LINE__, "Somehow instance not set to any UART...");
+        
         
     }
     
@@ -99,7 +100,7 @@ void UART::Initialize() {
 void UART::Send(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("UART not initialized!");
+        softfault(__FILE__, __LINE__, "UART not initialized!");
     
     switch(mode)
     {
@@ -113,7 +114,7 @@ void UART::Send(uint8_t *data, size_t numOfBytes)
             //SendDMA(data,numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -138,7 +139,7 @@ void UART::SendIT(uint8_t *data, size_t numOfBytes)
 void UART::Receive(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("SPI not initialized!");
+        softfault(__FILE__, __LINE__, "SPI not initialized!");
     
     switch(mode)
     {
@@ -152,7 +153,7 @@ void UART::Receive(uint8_t *data, size_t numOfBytes)
             //ReceiveDMA(data,numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -254,7 +255,7 @@ UART::UART(USART_TypeDef *usart)
     else if (usart == USART3)
         instance = Instance::UART_3;
     else
-        throw std::runtime_error("Please choose UART_1, UART_2 or UART_3");
+        softfault(__FILE__, __LINE__, "Please choose UART_1, UART_2 or UART_3");
     
     mode = OperatingMode::INTERRUPTS;
     wordLength = WordLength::_8BITS;
@@ -268,7 +269,7 @@ UART::UART(USART_TypeDef *usart)
 void UART::SetWordLength(UART::WordLength _wordLength)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "UART already initialized!"); //Too late
     
     wordLength = _wordLength;
 }
@@ -276,7 +277,7 @@ void UART::SetWordLength(UART::WordLength _wordLength)
 void UART::SetParity(UART::Parity _parity)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "UART already initialized!"); // Too late
     
     parity = _parity;
 }
@@ -284,7 +285,7 @@ void UART::SetParity(UART::Parity _parity)
 void UART::SetStopBits(UART::StopBits _stopBits)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__,"UART already initialized!" );// Too late
     
     stopBits = _stopBits;
 }
@@ -292,7 +293,7 @@ void UART::SetStopBits(UART::StopBits _stopBits)
 void UART::SetBaudRate(uint32_t _baudRate)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "UART already initialized!");// Too late
     
     baudRate = _baudRate;
 }
@@ -300,7 +301,7 @@ void UART::SetBaudRate(uint32_t _baudRate)
 void UART::ChangeModeToBlocking(uint32_t Timeout)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "UART already initialized!"); // Too late
     
     mode = OperatingMode::BLOCKING;
     timeout = Timeout;
@@ -309,7 +310,7 @@ void UART::ChangeModeToBlocking(uint32_t Timeout)
 void UART::ChangeModeToInterrupts()
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "UART already initialized!");// Too late
     
     mode = OperatingMode::INTERRUPTS;
 }
@@ -347,8 +348,7 @@ void UART::DisablePrintf()
 void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 {
     if(initialized)
-        throw std::runtime_error("UART already initialized!"); // Too late
-    
+        softfault(__FILE__, __LINE__, "UART already initialized!"); // Too late
+
     transmissionMode = _transmissionMode;
-    
 }

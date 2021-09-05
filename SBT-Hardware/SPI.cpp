@@ -9,7 +9,7 @@
 void SPI_t::Initialize()
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!");
+        softfault(__FILE__, __LINE__, "SPI already initialized!");
     
     CalculateMisoMosi();
     
@@ -49,7 +49,7 @@ void SPI_t::Initialize()
             }
             break;
         case Instance::NONE:
-            throw std::runtime_error("Somehow instance not set to any SPI...");
+            softfault(__FILE__, __LINE__, "Somehow instance not set to any SPI...");
     }
     
     auto& handle = state.handle;
@@ -86,7 +86,7 @@ void SPI_t::Initialize()
 void SPI_t::Send(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("SPI not initialized!");
+        softfault(__FILE__, __LINE__, "SPI not initialized!");
     
     switch(mode)
     {
@@ -100,7 +100,7 @@ void SPI_t::Send(uint8_t *data, size_t numOfBytes)
             //SendDMA(data,numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
     
 }
@@ -126,7 +126,7 @@ void SPI_t::SendRCC(uint8_t *data, size_t numOfBytes)
 void SPI_t::Receive(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("SPI not initialized!");
+        softfault(__FILE__, __LINE__, "SPI not initialized!");
     
     switch(mode)
     {
@@ -140,7 +140,7 @@ void SPI_t::Receive(uint8_t *data, size_t numOfBytes)
             //ReceiveDMA(data,numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
     
 }
@@ -187,7 +187,7 @@ SPI_t::SPI_t(SPI_TypeDef *spii)
     else if (spii == SPI2)
         instance = Instance::SPI_2;
     else
-        throw std::runtime_error("Please choose SPI_1 or SPI_2");
+        softfault(__FILE__, __LINE__, "Please choose SPI_1 or SPI_2");
     
     mode = OperatingMode::INTERRUPTS;
     prescaler = Prescaler::PRESCALER_2;
@@ -203,7 +203,7 @@ SPI_t::SPI_t(SPI_TypeDef *spii)
 void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");
         
     prescaler = _prescaler;
 }
@@ -211,7 +211,7 @@ void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 void SPI_t::SetDataSize(DataSize _dataSize)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!"); // Too late
         
     dataSize = _dataSize;
 }
@@ -219,7 +219,7 @@ void SPI_t::SetDataSize(DataSize _dataSize)
 void SPI_t::SetFirstBit(FirstBit _firstBit)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
         
     firstBit = _firstBit;
 }
@@ -227,7 +227,7 @@ void SPI_t::SetFirstBit(FirstBit _firstBit)
 void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
         
     clockPolarity = _clockPolarity;
 }
@@ -235,7 +235,7 @@ void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     clockPhase = _clockPhase;
 }
@@ -243,7 +243,7 @@ void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     mode = OperatingMode::BLOCKING;
     timeout = _timeout;
@@ -252,7 +252,7 @@ void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 void SPI_t::ChangeModeToInterrupts()
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     mode = OperatingMode::INTERRUPTS;
 }
@@ -260,7 +260,7 @@ void SPI_t::ChangeModeToInterrupts()
 void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     transmissionMode = _transmissionMode;
 }
@@ -268,7 +268,7 @@ void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
 {
     if(initialized)
-        throw std::runtime_error("SPI already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     deviceType = _deviceType;
 }

@@ -1,5 +1,6 @@
 #ifndef HARDWARE_HPP
 #define HARDWARE_HPP
+#include <string>
 #include <UART.hpp>
 #include <SPI.hpp>
 #include <I2C.hpp>
@@ -49,5 +50,6 @@ struct Hardware
     static CAN can;
 };
 
+void softfault(const std::string& fileName, const int& lineNumber, const std::string& comment);
 
 #endif //HARDWARE_HPP

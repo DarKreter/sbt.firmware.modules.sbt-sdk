@@ -9,10 +9,10 @@
 void I2C::Initialize(uint32_t ownAddress)
 {
     if(initialized)
-        throw std::runtime_error("I2C already initialized!");
+        softfault(__FILE__, __LINE__, "I2C already initialized!");
 
     if(instance == Instance::I2C_2 && Hardware::uart3.IsInitialized())
-        throw std::runtime_error("Cannot initialize I2C2 along with UART3!");
+        softfault(__FILE__, __LINE__, "Cannot initialize I2C2 along with UART3!");
     
     switch (instance)
     {
@@ -55,7 +55,7 @@ void I2C::Initialize(uint32_t ownAddress)
             break;
 
         case Instance::NONE:
-            throw std::runtime_error("Somehow instance not set to any I2C...");
+            softfault(__FILE__, __LINE__, "Somehow instance not set to any I2C...");
     }
 
     auto& handle = state.handle;
@@ -89,7 +89,7 @@ void I2C::Initialize(uint32_t ownAddress)
 void I2C::SendMaster(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -103,7 +103,8 @@ void I2C::SendMaster(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
             //SendMasterDMA(slaveAddress, data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
+            
     }
 }
 
@@ -128,7 +129,7 @@ void I2C::SendMasterRCC(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
  void I2C::SendSlave(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -142,7 +143,7 @@ void I2C::SendMasterRCC(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
             //SendSlaveDMA(data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -169,7 +170,7 @@ void I2C::SendSlaveRCC(uint8_t *data, size_t numOfBytes)
 void I2C::ReceiveMaster(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -183,7 +184,7 @@ void I2C::ReceiveMaster(uint16_t slaveAddress, uint8_t *data, size_t numOfBytes)
             //ReceiveMasterDMA(slaveAddress, data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -208,7 +209,7 @@ void I2C::ReceiveMasterRCC(uint16_t slaveAddress, uint8_t *data, size_t numOfByt
 void I2C::ReceiveSlave(uint8_t *data, size_t numOfBytes)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -222,7 +223,7 @@ void I2C::ReceiveSlave(uint8_t *data, size_t numOfBytes)
             //ReceiveSlaveDMA(data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -248,7 +249,7 @@ void I2C::ReceiveSlaveRCC(uint8_t *data, size_t numOfBytes)
 void I2C::ReadRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t registerSize, uint8_t* data, uint16_t dataSize)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -262,7 +263,7 @@ void I2C::ReadRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t 
             //ReceiveSlaveDMA(data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -287,7 +288,7 @@ void I2C::ReadRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress, uint8
 void I2C::WriteRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t registerSize, uint8_t* data, uint16_t dataSize)
 {
     if(!initialized)
-        throw std::runtime_error("I2C not initialized!");
+        softfault(__FILE__, __LINE__, "I2C not initialized!");
 
     switch(mode)
     {
@@ -301,7 +302,7 @@ void I2C::WriteRegister(uint16_t slaveAddress, uint16_t registerAddress, uint8_t
             //ReceiveSlaveDMA(data, numOfBytes);
             //break;
         default:
-            throw std::runtime_error("How that even happen");
+            softfault(__FILE__, __LINE__, "How that even happen");
     }
 }
 
@@ -326,7 +327,7 @@ void I2C::WriteRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress, uint
 void I2C::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
-        throw std::runtime_error("I2C already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "I2C already initialized!");// Too late
 
     mode = OperatingMode::BLOCKING;
     timeout = _timeout;
@@ -335,7 +336,7 @@ void I2C::ChangeModeToBlocking(uint32_t _timeout)
 void I2C::ChangeModeToInterrupts()
 {
     if(initialized)
-        throw std::runtime_error("I2C already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "I2C already initialized!");// Too late
 
     mode = OperatingMode::INTERRUPTS;
 }
@@ -343,7 +344,7 @@ void I2C::ChangeModeToInterrupts()
 void I2C::SetAddressingMode(AddressingMode _addressingMode)
 {
     if(initialized)
-        throw std::runtime_error("I2C already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "I2C already initialized!"); // Too late
 
     addressingMode = _addressingMode;
 }
@@ -351,7 +352,7 @@ void I2C::SetAddressingMode(AddressingMode _addressingMode)
 void I2C::SetSpeed(uint32_t _speed)
 {
     if(initialized)
-        throw std::runtime_error("I2C already initialized!"); // Too late
+        softfault(__FILE__, __LINE__, "I2C already initialized!");// Too late
 
     speed = _speed;
 }
@@ -365,7 +366,7 @@ I2C::I2C(I2C_TypeDef *i2cc)
     else if (i2cc == I2C2)
         instance = Instance::I2C_2;
     else
-        throw std::runtime_error("Please choose I2C_1 or I2C_2");
+        softfault(__FILE__, __LINE__, "Please choose I2C_1 or I2C_2");
 
     mode = OperatingMode::INTERRUPTS;
     addressingMode = AddressingMode::_7BIT;
