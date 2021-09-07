@@ -28,19 +28,56 @@ enum class ParameterId : uint16_t
     throtleSignal,         //Throtle signal         type: int;  range: "0~255 maps 0~5V";
     controllerTemperature, //Controller temperature type: int;  unit: *C (offset 40)
     motorTemperature,      //Controller temperature type: int;  unit: *C (offset 30)
-    //MPPT 1
-    //....... =0x10
+
+    /*** BOX 2 ***/
+    //MPPT 1                        //  ID     Description                    Scale   Type    Unit
+     mppt1_panelPower=0x10,         //  0xEDBC Panel power                    0.01     un32    W
+     mppt1_panelVoltage,            //  0xEDBB Panel voltage                  0.01     un16    V
+     mppt1_panelCurrent,            //  0xEDBD Panel current (*1)             0.1      un16    A
+     mppt1_panelMaximumVoltage,     //  0xEDB8 Panel maximum voltage (*2)     0.01     un16    V .....
+     mppt1_chargerMaximumCurrent,   //  0xEDDF Charger maximum current (*1)   0.01     un16    A
+     mppt1_batteryMaximumCurrent,   //  0xEDF0 Battery maximum current        0.1      un16    A .......
+     mppt1_chargerCurrent,          //  0xEDD7 Charger current (3)            0.1      un16    A
+     mppt1_chargerVoltage,          //  0xEDD5 Charger voltage (3)            0.01     un16    V
+     mppt1_batteryVoltage,          //  0xEDEF Battery voltage (4)            1        un8     V
+
     //MPPT 2
-    //....... =0x20
+     mppt2_panelPower = 0x20,       //  0xEDBC Panel power                    0.01    un32   W
+     mppt2_panelVoltage,            //  0xEDBB Panel voltage                  0.01    un16   V
+     mppt2_panelCurrent,            //  0xEDBD Panel current (1)              0.1     un16   A
+     mppt2_panelMaximumVoltage,     //  0xEDB8 Panel maximum voltage (*2)     0.01    un16   V
+     mppt2_chargerMaximumCurrent,   //  0xEDDF Charger maximum current (*1)   0.01    un16   A
+     mppt2_batteryMaximumCurrent,   //  0xEDF0 Battery maximum current        0.1     un16   A .......
+     mppt2_chargerCurrent,          //  0xEDD7 Charger current (3)            0.1     un16   A
+     mppt2_chargerVoltage,          //  0xEDD5 Charger voltage (3)            0.01    un16   V
+     mppt2_batteryVoltage,          //  0xEDEF Battery voltage (4)            1       un8    V
+
     //MPPT 3
-    //....... =0x30
+    mppt3_panelPower = 0x30,       //  0xEDBC Panel power                     0.01    un32   W
+    mppt3_panelVoltage,            //  0xEDBB Panel voltage                   0.01    un16   V
+    mppt3_panelCurrent,            //  0xEDBD Panel current (1)               0.1     un16   A
+    mppt3_panelMaximumVoltage,     //  0xEDB8 Panel maximum voltage (*2)      0.01    un16   V
+    mppt3_chargerMaximumCurrent,   //  0xEDDF Charger maximum current (*1)    0.01    un16   A
+    mppt3_batteryMaximumCurrent,   //  0xEDF0 Battery maximum current         0.1     un16   A .......
+    mppt3_chargerCurrent,          //  0xEDD7 Charger current (3)             0.1     un16   A
+    mppt3_chargerVoltage,          //  0xEDD5 Charger voltage (3)             0.01    un16   V
+    mppt3_batteryVoltage,          //  0xEDEF Battery voltage (4)             1       un8    V
+
     //MPPT 4
-    //....... =0x40
+    mppt4_panelPower = 0x40,       //  0xEDBC Panel power                     0.01    un32   W
+    mppt4_panelVoltage,            //  0xEDBB Panel voltage                   0.01    un16   V
+    mppt4_panelCurrent,            //  0xEDBD Panel current (1)               0.1     un16   A
+    mppt4_panelMaximumVoltage,     //  0xEDB8 Panel maximum voltage (*2)      0.01    un16   V
+    mppt4_chargerMaximumCurrent,   //  0xEDDF Charger maximum current (*1)    0.01    un16   A
+    mppt4_batteryMaximumCurrent,   //  0xEDF0 Battery maximum current         0.1     un16   A .......
+    mppt4_chargerCurrent,          //  0xEDD7 Charger current (3)             0.1     un16   A
+    mppt4_chargerVoltage,          //  0xEDD5 Charger voltage (3)             0.01    un16   V
+    mppt4_batteryVoltage,          //  0xEDEF Battery voltage (4)             1       un8    V
+
+
     //Temp&higro
     //...... = 0x90
 
-    /*** BOX 2 ***/
-    //Currently not used
 
     /*** BOX 3 ***/
     //Bat (LIFePO4) 1
@@ -87,6 +124,8 @@ enum class ParameterId : uint16_t
     bat4_cellVoltage2,           //Cell Voltage  2       type: int;
     bat4_cellVoltage3,           //Cell Voltage  3       type: int;
 
+
+    /*** BOX OTHER ***/
     // AHRS
     ACCEL_X = 0xA0, // float
     ACCEL_Y,
