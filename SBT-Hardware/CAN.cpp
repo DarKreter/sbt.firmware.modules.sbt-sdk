@@ -5,6 +5,7 @@
 #include <CAN.hpp>
 #include <Hardware.hpp>
 #include <stdexcept>
+#include <tuple>
 
 
 void CAN::GenericMessage::ConfigureMessage(BoxId id)
@@ -47,6 +48,8 @@ void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &accepte
     if(initialized)
         softfault(__FILE__, __LINE__, "CAN already initialized!");
     
+    CalculateTQ();
+    
     deviceID = ourBoxID;
     
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -64,10 +67,10 @@ void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &accepte
     
     handle.Instance = CAN1;
     handle.Init.Mode = static_cast<uint32_t>(mode);
-    handle.Init.Prescaler = 1;
-    handle.Init.SyncJumpWidth = CAN_SJW_1TQ;
-    handle.Init.TimeSeg1 = CAN_BS1_6TQ;
-    handle.Init.TimeSeg2 = CAN_BS2_1TQ;
+    handle.Init.Prescaler = prescaler;
+    handle.Init.SyncJumpWidth = static_cast<uint32_t>(swj);
+    handle.Init.TimeSeg1 = static_cast<uint32_t>(bs1);
+    handle.Init.TimeSeg2 = static_cast<uint32_t>(bs2);
     handle.Init.TimeTriggeredMode = DISABLE;
     handle.Init.AutoBusOff = DISABLE;
     handle.Init.AutoWakeUp = DISABLE;
@@ -132,6 +135,84 @@ CAN::CAN()
 {
     initialized = false;
     mode = Mode::NORMAL;
+    baudRate = 250'000;
+}
+
+void CAN::CalculateTQ()
+{
+    struct TQ
+    {
+        uint8_t divider;
+        CAN::SWJ _swj;
+        CAN::BS1 _bs1;
+        CAN::BS2 _bs2;
+        
+        constexpr TQ(uint8_t a, CAN::SWJ b, CAN::BS1 c, CAN::BS2 d) : divider{a}, _swj{b}, _bs1{c}, _bs2{d} {;}
+    };
+    
+    constexpr std::array TQ_possibilities =
+            { TQ(8, SWJ::_1TQ, BS1::_6TQ, BS2::_1TQ),              TQ  (9, SWJ::_1TQ, BS1::_7TQ, BS2::_1TQ),
+              TQ(10, SWJ::_1TQ, BS1::_8TQ, BS2::_1TQ),              TQ (11, SWJ::_1TQ, BS1::_9TQ, BS2::_1TQ),
+              TQ(12, SWJ::_1TQ, BS1::_9TQ, BS2::_2TQ),              TQ (13, SWJ::_1TQ, BS1::_10TQ, BS2::_2TQ),
+              TQ(14, SWJ::_1TQ, BS1::_11TQ, BS2::_2TQ),              TQ (15, SWJ::_1TQ, BS1::_12TQ, BS2::_2TQ),
+              TQ(16, SWJ::_1TQ, BS1::_13TQ, BS2::_2TQ),              TQ (17, SWJ::_1TQ, BS1::_14TQ, BS2::_2TQ),
+              TQ(18, SWJ::_1TQ, BS1::_15TQ, BS2::_2TQ),              TQ(19, SWJ::_1TQ, BS1::_16TQ, BS2::_2TQ),
+              TQ(20, SWJ::_2TQ, BS1::_16TQ, BS2::_2TQ),              TQ(21, SWJ::_2TQ, BS1::_16TQ, BS2::_3TQ),
+              TQ(22, SWJ::_3TQ, BS1::_16TQ, BS2::_3TQ),              TQ(23, SWJ::_4TQ, BS1::_16TQ, BS2::_3TQ),
+              TQ(24, SWJ::_4TQ, BS1::_16TQ, BS2::_4TQ),              TQ(25, SWJ::_4TQ, BS1::_16TQ, BS2::_5TQ)
+            };
+    
+    TQ bestTQ(8, SWJ::_1TQ, BS1::_6TQ, BS2::_1TQ);
+    int32_t lowestAbsError = baudRate;
+    uint32_t _bestPrescaler = 0;
+    
+    
+    static const auto calculatePrescaler = [AHB_Freq = Hardware::GetAPB1_Freq(), _baudRate = baudRate]  (uint8_t divider) -> std::optional<uint32_t>
+            {
+                uint32_t _prescaler = AHB_Freq / (divider * _baudRate);
+                if(_prescaler > 1024)
+                    return std::nullopt;
+                
+                return _prescaler;
+            };
+    
+    static const auto calculateBaudRate = [AHB_Freq = Hardware::GetAPB1_Freq()]  (uint8_t divider, uint32_t _prescaler) -> int32_t
+    {
+        return AHB_Freq / (divider * _prescaler);
+    };
+    
+    for(auto TQ_possibility: TQ_possibilities)
+    {
+        if(const auto _prsclr = calculatePrescaler(TQ_possibility.divider) )
+        {
+            const auto actualAbsError = std::abs( static_cast<int32_t>(calculateBaudRate(TQ_possibility.divider, _prsclr.value()) - baudRate) );
+            if( actualAbsError < lowestAbsError )
+            {
+                bestTQ = TQ_possibility;
+                lowestAbsError = actualAbsError;
+                _bestPrescaler = _prsclr.value();
+            }
+        }
+        if(!lowestAbsError)
+            break;
+    }
+    
+    swj = bestTQ._swj;
+    bs1 = bestTQ._bs1;
+    bs2 = bestTQ._bs2;
+    prescaler = _bestPrescaler;
+}
+
+void CAN::SetBaudRate([[maybe_unused]] uint32_t _baudRate)
+{
+    if(initialized)
+        softfault(__FILE__, __LINE__, "CAN already initialized!"); // Too late
+    else if(_baudRate > 1'000'000)
+        softfault(__FILE__, __LINE__, "CAN BUS speed must be below 1MHz!");
+    else if(_baudRate > Hardware::GetAPB1_Freq() / 8)
+        softfault(__FILE__, __LINE__, "Too high baud rate for this clock speed!");
+    
+    baudRate = _baudRate;
 }
 
 void CAN::SetMode(CAN::Mode _mode)

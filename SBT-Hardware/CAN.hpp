@@ -36,10 +36,44 @@ public:
     };
     
 private:
+    enum class SWJ: uint32_t
+    {
+        _1TQ = CAN_SJW_1TQ,        _2TQ = CAN_SJW_2TQ,
+        _3TQ = CAN_SJW_3TQ,        _4TQ = CAN_SJW_4TQ,
+    }swj;
+    
+    enum class BS1: uint32_t
+    {
+        _1TQ  = CAN_BS1_1TQ,        _2TQ  = CAN_BS1_2TQ,        _3TQ  = CAN_BS1_3TQ,
+        _4TQ  = CAN_BS1_4TQ,        _5TQ  = CAN_BS1_5TQ,        _6TQ  = CAN_BS1_6TQ,
+        _7TQ  = CAN_BS1_7TQ,        _8TQ  = CAN_BS1_8TQ,        _9TQ  = CAN_BS1_9TQ,
+        _10TQ = CAN_BS1_10TQ,        _11TQ = CAN_BS1_11TQ,        _12TQ = CAN_BS1_12TQ,
+        _13TQ = CAN_BS1_13TQ,        _14TQ = CAN_BS1_14TQ,        _15TQ = CAN_BS1_15TQ,
+        _16TQ = CAN_BS1_16TQ,
+    }bs1;
+    
+    enum class BS2: uint32_t
+    {
+        _1TQ  = CAN_BS2_1TQ,        _2TQ  = CAN_BS2_2TQ,        _3TQ  = CAN_BS2_3TQ,
+        _4TQ  = CAN_BS2_4TQ,        _5TQ  = CAN_BS2_5TQ,        _6TQ  = CAN_BS2_6TQ,
+        _7TQ  = CAN_BS2_7TQ,        _8TQ  = CAN_BS2_8TQ
+    }bs2;
+    
+    uint16_t prescaler; //1-1024
+    
+
+    
+    /**
+     * @brief Set swj, bs1, bs2 and prescaler to values which gives us certain speed
+     *        based on clock speed
+     */
+    void CalculateTQ();
+    
     bool initialized;
     State state;
     Mode mode;
     BoxId deviceID;
+    uint32_t baudRate;
     
     class GenericMessage
     {
@@ -110,6 +144,13 @@ public:
         
         friend CAN;
     };
+    
+    /**
+     * @brief Set speed of CAN BUS (Default: 250KHz)
+     * @param _baudRate values from range [1, 1MHz]
+     */
+     
+    void SetBaudRate(uint32_t _baudRate);
     
     /**
      * @brief Set mode (Default: NORMAL)

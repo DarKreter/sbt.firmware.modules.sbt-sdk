@@ -105,7 +105,8 @@ public:
     /**
     * @brief Changes operating mode of SPI to interrupts (Default: Interrupts)
     */
-    void ChangeModeToInterrupts();
+    //NOT WORKING YET
+//    void ChangeModeToInterrupts();
     
     /**
     * @brief Return state handler for this object

@@ -42,12 +42,17 @@ struct Hardware
     /**
      * @brief Configure system clock
      */
-    static void configureClocks();
+    static void configureClocks(uint32_t ahbFreq = 72'000'000);
 
     static UART uart1, uart2, uart3;
     static I2C i2c1, i2c2;
     static SPI_t spi1, spi2;
     static CAN can;
+    
+    static uint32_t GetAHB_Freq()  { return HAL_RCC_GetHCLKFreq(); }     //100'000 - 72'000'000
+    static uint32_t GetAPB1_Freq() { return HAL_RCC_GetPCLK1Freq(); }    //100'000 - 36'000'000
+    static uint32_t GetAPB2_Freq() { return HAL_RCC_GetPCLK2Freq(); }    //100'000 - 72'000'000
+    
 };
 
 void softfault(const std::string& fileName, const int& lineNumber, const std::string& comment);

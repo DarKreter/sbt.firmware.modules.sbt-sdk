@@ -333,13 +333,14 @@ void I2C::ChangeModeToBlocking(uint32_t _timeout)
     timeout = _timeout;
 }
 
-void I2C::ChangeModeToInterrupts()
-{
-    if(initialized)
-        softfault(__FILE__, __LINE__, "I2C already initialized!");// Too late
-
-    mode = OperatingMode::INTERRUPTS;
-}
+//void I2C::ChangeModeToInterrupts()
+//{
+//    if(initialized)
+//        softfault(__FILE__, __LINE__, "I2C already initialized!");// Too late
+//
+//
+//    mode = OperatingMode::INTERRUPTS;
+//}
 
 void I2C::SetAddressingMode(AddressingMode _addressingMode)
 {
@@ -368,7 +369,7 @@ I2C::I2C(I2C_TypeDef *i2cc)
     else
         softfault(__FILE__, __LINE__, "Please choose I2C_1 or I2C_2");
 
-    mode = OperatingMode::INTERRUPTS;
+    mode = OperatingMode::BLOCKING;
     addressingMode = AddressingMode::_7BIT;
     speed = 100'000;
 

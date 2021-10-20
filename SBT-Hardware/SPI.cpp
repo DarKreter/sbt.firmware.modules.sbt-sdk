@@ -12,6 +12,7 @@ void SPI_t::Initialize()
         softfault(__FILE__, __LINE__, "SPI already initialized!");
     
     CalculateMisoMosi();
+    CalculateSpeed();
     
     switch (instance) {
         case Instance::SPI_1:
@@ -181,7 +182,7 @@ void SPI_t::Abort() {
 SPI_t::SPI_t(SPI_TypeDef *spii)
 {
     initialized = false;
-    
+
     if (spii == SPI1)
         instance = Instance::SPI_1;
     else if (spii == SPI2)
@@ -190,13 +191,16 @@ SPI_t::SPI_t(SPI_TypeDef *spii)
         softfault(__FILE__, __LINE__, "Please choose SPI_1 or SPI_2");
     
     mode = OperatingMode::INTERRUPTS;
-    prescaler = Prescaler::PRESCALER_2;
     dataSize = DataSize::_8BIT;
     firstBit = FirstBit::MSB;
     clockPolarity = ClockPolarity::HIGH;
     clockPhase = ClockPhase::_2EDGE;
     transmissionMode = TransmissionMode::FULL_DUPLEX;
     deviceType = DeviceType::MASTER;
+    
+    prescaler = Prescaler::PRESCALER_8;
+    
+    baudRate = 1'000'000;
     timeout = 500;
 }
 
@@ -206,6 +210,17 @@ void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
         softfault(__FILE__, __LINE__, "SPI already initialized!");
         
     prescaler = _prescaler;
+}
+
+void SPI_t::SetBaudRate(int32_t _baudRate)
+{
+    if(initialized)
+        softfault(__FILE__, __LINE__, "SPI already initialized!");
+    
+    if(_baudRate < 1 || 18'000'000 < _baudRate)
+        softfault(__FILE__, __LINE__, "Baud rate for SPI must be between 1 and 18'000'000");
+    
+    baudRate = _baudRate;
 }
 
 void SPI_t::SetDataSize(DataSize _dataSize)
@@ -271,6 +286,39 @@ void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
         softfault(__FILE__, __LINE__, "SPI already initialized!");// Too late
     
     deviceType = _deviceType;
+}
+
+void SPI_t::CalculateSpeed()
+{
+    constexpr std::array possiblePrescalers = {
+            std::make_pair(2, Prescaler::PRESCALER_2),
+            std::make_pair(4, Prescaler::PRESCALER_4),
+            std::make_pair(8, Prescaler::PRESCALER_8),
+            std::make_pair(16, Prescaler::PRESCALER_16),
+            std::make_pair(32, Prescaler::PRESCALER_32),
+            std::make_pair(64, Prescaler::PRESCALER_64),
+            std::make_pair(128, Prescaler::PRESCALER_128),
+            std::make_pair(256, Prescaler::PRESCALER_256)};
+    
+    Prescaler bestPrescalerSet = static_cast<Prescaler>(0);
+    int32_t bestPrescalerValue = 0;
+    int32_t lowestAbsoluteError = baudRate;
+    const int32_t clkSpeed = ( instance == Instance::SPI_1 ?  Hardware::GetAPB2_Freq() : Hardware::GetAPB1_Freq());
+    
+    for(auto [prescalerValue, prescalerSet] : possiblePrescalers )
+    {
+        if( std::abs( static_cast<int32_t>(baudRate - (clkSpeed / prescalerValue)) ) < lowestAbsoluteError)
+        {
+            bestPrescalerSet = prescalerSet;
+            bestPrescalerValue = prescalerValue;
+            lowestAbsoluteError = std::abs( static_cast<int32_t>(baudRate - (clkSpeed / prescalerValue)) );
+        }
+        if(!lowestAbsoluteError)
+            break;
+    }
+    
+    prescaler = bestPrescalerSet;
+    baudRate = clkSpeed / bestPrescalerValue;
 }
 
 void SPI_t::CalculateMisoMosi()

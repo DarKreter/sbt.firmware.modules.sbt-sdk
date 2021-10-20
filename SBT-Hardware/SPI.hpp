@@ -102,6 +102,13 @@ private:
     ClockPhase clockPhase;
     TransmissionMode transmissionMode;
     uint32_t direction;
+    uint32_t baudRate;
+    
+    /**
+     * @brief Set prescaler to value which gives us certain speed
+     *        based on clock speed
+     */
+    void CalculateSpeed();
     
     DeviceType deviceType;
     uint32_t timeout;
@@ -135,7 +142,7 @@ public:
     void ChangeModeToInterrupts();
     
     /**
-     * @brief Set prescaler (Default: PRESCALER_2)
+     * @brief Set prescaler (Default: PRESCALER_8)
      * @param _prescaler PRESCALER_2, PRESCALER_4, ..., PRESCALER_256
      */
     void SetPrescaler(Prescaler _prescaler);
@@ -169,6 +176,11 @@ public:
      * @param _deviceType MASTER or SLAVE
      */
     void SetDeviceType(DeviceType _deviceType);
+    /**
+     * @brief Set baudRate (Default: 1'000'000)
+     * @param _baudRate (1 - 18'000'000)
+     */
+    void SetBaudRate(int32_t _baudRate);
     
     /**
      * @brief Return state handler for this object
