@@ -54,8 +54,8 @@ void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &accepte
     
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_CAN1_CLK_ENABLE();
-    Hardware::enableGpio(GPIOA, GPIO_PIN_11, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // RX
-    Hardware::enableGpio(GPIOA, GPIO_PIN_12, Gpio::Mode::AlternateOD, Gpio::Pull::NoPull); // TX
+    Hardware::enableGpio(GPIOA, GPIO_PIN_11, Gpio::Mode::Input, Gpio::Pull::NoPull); // RX
+    Hardware::enableGpio(GPIOA, GPIO_PIN_12, Gpio::Mode::AlternatePP, Gpio::Pull::NoPull); // TX
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 5);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
     HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 5);
