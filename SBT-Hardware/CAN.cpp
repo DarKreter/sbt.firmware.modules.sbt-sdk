@@ -74,7 +74,7 @@ void CAN::Initialize(BoxId ourBoxID, const std::initializer_list<BoxId> &accepte
     handle.Init.TimeTriggeredMode = DISABLE;
     handle.Init.AutoBusOff = DISABLE;
     handle.Init.AutoWakeUp = DISABLE;
-    handle.Init.AutoRetransmission = ENABLE;
+    handle.Init.AutoRetransmission = DISABLE;
     handle.Init.ReceiveFifoLocked = DISABLE;
     handle.Init.TransmitFifoPriority = DISABLE;
     
