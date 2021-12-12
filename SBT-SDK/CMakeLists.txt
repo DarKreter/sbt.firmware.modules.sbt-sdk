@@ -8,13 +8,15 @@ set(HEADER_LIST
 set(SRC_LIST
         SBT-SDK.cpp
         Hardware/Hardware.cpp
+        Hardware/GPIO.cpp
         Hardware/UART.cpp
         Hardware/SPI.cpp
         Hardware/CAN.cpp
         Hardware/I2C.cpp
         System/Task.cpp
         System/TaskManager.cpp
-        )
+        Hardware/DMA.cpp
+        Hardware/ADC.cpp)
 
 add_library(SBT-SDK ${SRC_LIST} ${HEADER_LIST})
 

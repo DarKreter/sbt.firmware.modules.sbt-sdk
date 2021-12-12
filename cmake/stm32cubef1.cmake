@@ -16,9 +16,12 @@ set(SRC_LIST
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_i2c.c
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_spi.c
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc.c
+        STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_dma.c
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_can.c
         STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c
+        STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc.c
+        STM32CubeF1/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc_ex.c
 )
 
 add_library(STM32Cube-F1 ${SRC_LIST} ${HEADER_FILES})
