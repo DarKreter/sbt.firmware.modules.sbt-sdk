@@ -6,14 +6,13 @@
 #define F1XX_PROJECT_TEMPLATE_UART_HPP
 
 #include <FreeRTOS.h>
+#include <array>
 #include <event_groups.h>
 #include <stm32f1xx_hal.h>
-#include <array>
 
 struct Hardware;
 
-class UART
-{
+class UART {
     /**
      * @brief Set to true after calling Initialize() function
      */
@@ -23,63 +22,56 @@ class UART
      * If printfEnabled is true then buffor should exist
      */
     bool printfEnabled;
-    
+
     /**
      * @brief buffer for Print function
      */
     char* buffer;
-    
+
     /*-------HANDLERS---------*/
-    struct State
-    {
+    struct State {
         EventGroupHandle_t txRxState;
         UART_HandleTypeDef handle;
     };
     State state;
-    
+
     /*-------ENUMS---------*/
-    enum class Instance
-    {
+    enum class Instance {
         NONE,
         UART_1,
         UART_2,
         UART_3
     };
-    
+
 public:
-    enum class OperatingMode
-    {
+    enum class OperatingMode {
         BLOCKING,
         INTERRUPTS,
         DMA
     };
-    
-    enum class WordLength
-    {
+
+    enum class WordLength {
         _8BITS = UART_WORDLENGTH_8B,
         _9BITS = UART_WORDLENGTH_9B
     };
-    
-    enum class Parity
-    {
+
+    enum class Parity {
         NONE = UART_PARITY_NONE,
         EVEN = UART_PARITY_EVEN,
-        ODD  = UART_PARITY_ODD
+        ODD = UART_PARITY_ODD
     };
-    
-    enum class StopBits
-    {
+
+    enum class StopBits {
         STOP_BITS_1 = UART_STOPBITS_1,
         STOP_BITS_2 = UART_STOPBITS_2
     };
-    
-    enum class TransmissionMode
-    {
-        FULL_DUPLEX   = UART_MODE_TX_RX,
-        RECEIVE_ONLY  = UART_MODE_RX,
+
+    enum class TransmissionMode {
+        FULL_DUPLEX = UART_MODE_TX_RX,
+        RECEIVE_ONLY = UART_MODE_RX,
         TRANSMIT_ONLY = UART_MODE_TX
     };
-    
+
 private:
     Instance instance;
     OperatingMode mode;
@@ -89,22 +81,22 @@ private:
     TransmissionMode transmissionMode;
     uint32_t baudRate;
     uint32_t timeout;
-    
-    //setting default settings
+
+    // setting default settings
     explicit UART(USART_TypeDef* usart);
-    //To avoid creating objects with different constructor than one above
+    // To avoid creating objects with different constructor than one above
     UART() = delete;
-    
-    //Send functions
+
+    // Send functions
     void SendRCC(uint8_t* data, size_t numOfBytes);
     void SendIT(uint8_t* data, size_t numOfBytes);
     void SendDMA(uint8_t* data, size_t numOfBytes);
-    
-    //Receive functions
+
+    // Receive functions
     void ReceiveRCC(uint8_t* data, size_t numOfBytes);
     void ReceiveIT(uint8_t* data, size_t numOfBytes);
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
-    
+
 public:
     /**
      * @brief Set buffer(for using printf function) to sent size
@@ -116,7 +108,7 @@ public:
      * @brief delete the buffer table
      */
     void DisablePrintf();
-    
+
     /**
      * @brief Changes operating mode of UART to blocking (Default: Interrupts)
      * @param Timeout timeout
@@ -126,7 +118,7 @@ public:
      * @brief Changes operating mode of UART to interrupts (Default: Interrupts)
      */
     void ChangeModeToInterrupts();
-    
+
     /**
      * @brief Sets transmission mode (Default: FULL_DUPLEX)
      * @param _transmissionMode FULL_DUPLEX, RECEIVE_ONLY or TRANSMIT_ONLY
@@ -152,42 +144,46 @@ public:
      * @param _baudRate
      */
     void SetBaudRate(uint32_t _baudRate);
-    
+
     /**
      * @brief Return state handler for this object
      */
-    State& GetState() {return state;}
-    
+    State& GetState() { return state; }
+
     /**
-     * @brief Tells if object was already Initialized (by calling Initialize function)
+     * @brief Tells if object was already Initialized (by calling Initialize
+     * function)
      * @return true if was, false if not
      */
-    [[nodiscard]] bool IsInitialized() const {return initialized;}
-    
+    [[nodiscard]] bool IsInitialized() const { return initialized; }
+
     /**
-     * @brief Initialize function, needs to be called after configuration and before using Send of Receive
+     * @brief Initialize function, needs to be called after configuration and
+     * before using Send of Receive
      */
     void Initialize();
-    
+
     /**
-     * @brief Sending data. Way of sending is defined by your configuration before Initialize()
+     * @brief Sending data. Way of sending is defined by your configuration
+     * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes to send
      */
-    void Send(uint8_t *data, size_t numOfBytes);
+    void Send(uint8_t* data, size_t numOfBytes);
     /**
      * @brief Sends string
      * @param fmt string to send
      * @param ... additional parameters
      */
-    void printf(const char *fmt, ...);
+    void printf(const char* fmt, ...);
     /**
-     * @brief Receiving data. Way of receiving is defined by your configuration before Initialize()
+     * @brief Receiving data. Way of receiving is defined by your configuration
+     * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes expected to receive
      */
-    void Receive(uint8_t *data, size_t numOfBytes);
-    
+    void Receive(uint8_t* data, size_t numOfBytes);
+
     /**
      * @brief Checks if Transmission is completed
      */
@@ -196,19 +192,18 @@ public:
      * @brief Checks if receiving is completed
      */
     [[nodiscard]] bool IsRxComplete() const;
-    
+
     /**
      * @brief Abort Transmission
      */
     void AbortTx();
-    
+
     /**
      * @brief Abort receiving
      */
     void AbortRx();
-    
+
     friend Hardware;
 };
 
-
-#endif //F1XX_PROJECT_TEMPLATE_UART_HPP
+#endif // F1XX_PROJECT_TEMPLATE_UART_HPP

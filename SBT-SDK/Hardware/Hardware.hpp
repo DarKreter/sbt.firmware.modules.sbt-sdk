@@ -38,10 +38,11 @@ struct Hardware {
      * @param direction Mode of operation
      * @param pull Pulling resistor configuration
      */
-    static void enableGpio(GPIO_TypeDef* gpio, uint32_t pin,
-                           Gpio::Mode direction,
-                           Gpio::Pull pull = Gpio::Pull::NoPull);
-    static void toggle(GPIO_TypeDef* gpio, uint32_t pin);
+    [[deprecated("Use SBT::Hardware::GPIO::Enable() instead")]] static void
+    enableGpio(GPIO_TypeDef* gpio, uint32_t pin, Gpio::Mode direction,
+               Gpio::Pull pull = Gpio::Pull::NoPull);
+    [[deprecated("Use SBT::Hardware::GPIO::Toggle() instead")]] static void
+    toggle(GPIO_TypeDef* gpio, uint32_t pin);
 
     /**
      * @brief Configure system clock
