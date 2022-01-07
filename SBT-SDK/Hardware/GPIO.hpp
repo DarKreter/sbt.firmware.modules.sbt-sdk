@@ -12,23 +12,24 @@ namespace SBT::Hardware {
 class GPIO {
 public:
     enum class Mode {
-        Input,
-        Output,
-        AlternateInput,
-        AlternatePP,
-        AlternateOD,
-        AnalogInput
+        Input = GPIO_MODE_INPUT,
+        Output = GPIO_MODE_OUTPUT_PP,
+        OutputOD = GPIO_MODE_OUTPUT_OD,
+        AlternateInput = GPIO_MODE_AF_INPUT,
+        AlternatePP = GPIO_MODE_AF_PP,
+        AlternateOD = GPIO_MODE_AF_OD,
+        AnalogInput = GPIO_MODE_ANALOG
     };
 
     enum class Pull {
-        PullUp = 1,
-        PullDown = 2,
-        NoPull = 0
+        PullUp = GPIO_PULLUP,
+        PullDown = GPIO_PULLDOWN,
+        NoPull = GPIO_NOPULL
     };
 
     enum class State {
-        LOW = 0,
-        HIGH = 1,
+        LOW = GPIO_PIN_RESET,
+        HIGH = GPIO_PIN_SET,
         UNDEFINED = -1
     };
 
