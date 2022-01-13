@@ -12,32 +12,14 @@ void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
 {
     GPIO_InitTypeDef initTypeDef;
     initTypeDef.Pin = gpioPin;
-    switch(mode) {
-    case Mode::Input:
-        initTypeDef.Mode = GPIO_MODE_INPUT;
-        break;
-    case Mode::Output:
-        initTypeDef.Mode = GPIO_MODE_OUTPUT_PP;
-        break;
-    case Mode::AlternateInput:
-        initTypeDef.Mode = GPIO_MODE_AF_INPUT;
-        break;
-    case Mode::AlternatePP:
-        initTypeDef.Mode = GPIO_MODE_AF_PP;
-        break;
-    case Mode::AlternateOD:
-        initTypeDef.Mode = GPIO_MODE_AF_OD;
-        break;
-    case Mode::AnalogInput:
-        initTypeDef.Mode = GPIO_MODE_ANALOG;
+    initTypeDef.Mode = static_cast<uint32_t>(mode);
+    if(mode == Mode::AnalogInput) {
         auto [adc, channel] = GetAnalogChannel(gpioPort, gpioPin);
         if(!adc->IsConverterInited())
             adc->InitConverter();
         adc->CreateChannel(channel);
         adc->InitChannels();
-        break;
     }
-
     initTypeDef.Pull = static_cast<uint32_t>(pull);
     initTypeDef.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(gpioPort, &initTypeDef);
@@ -49,27 +31,16 @@ void GPIO::Toggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 void GPIO::DigitalWrite(GPIO_TypeDef* gpioPort, uint32_t gpioPin,
                         GPIO::State state)
 {
-    switch(state) {
-    case State::HIGH:
-        HAL_GPIO_WritePin(gpioPort, gpioPin, GPIO_PIN_SET);
-        break;
-    case State::LOW:
-        HAL_GPIO_WritePin(gpioPort, gpioPin, GPIO_PIN_RESET);
-        break;
-    case State::UNDEFINED:
-        break;
-    }
+    if(state == State::UNDEFINED)
+        return;
+    HAL_GPIO_WritePin(gpioPort, gpioPin, static_cast<GPIO_PinState>(state));
 }
 GPIO::State GPIO::DigitalRead(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 {
-    switch(HAL_GPIO_ReadPin(gpioPort, gpioPin)) {
-    case GPIO_PIN_SET:
-        return State::HIGH;
-    case GPIO_PIN_RESET:
-        return State::LOW;
-    }
-
-    return State::UNDEFINED;
+    auto state = static_cast<GPIO::State>(HAL_GPIO_ReadPin(gpioPort, gpioPin));
+    if(!(state == State::LOW || state == State::HIGH))
+        return State::UNDEFINED;
+    return state;
 }
 
 uint16_t GPIO::AnalogRead(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
