@@ -239,6 +239,25 @@ void CAN::SetMode(CAN::Mode _mode)
     mode = _mode;
 }
 
+void CAN::Send(const uint32_t& id, uint8_t (&data)[8])
+{
+    if(!initialized)
+        softfault(__FILE__, __LINE__, "CAN not initialized!");
+
+    [[maybe_unused]] uint32_t usedMailbox;
+
+    CAN_TxHeaderTypeDef header;
+    header.ExtId = id;
+    header.IDE = CAN_ID_EXT;
+    header.RTR = CAN_RTR_DATA;
+    header.DLC = 8;
+
+    while(!IsAnyTxMailboxFree())
+        ;
+
+    HAL_CAN_AddTxMessage(&GetState().handle, &header, data, &usedMailbox);
+}
+
 void CAN::Send(CAN::TxMessage& message)
 {
     if(!initialized)

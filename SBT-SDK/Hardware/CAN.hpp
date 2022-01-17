@@ -190,6 +190,13 @@ public:
      */
     bool IsAnyTxMailboxFree();
     /**
+     * @brief Send raw CAN message
+     *
+     * @param id CAN ext_id
+     * @param data 8-byte long CAN data
+     */
+    void Send(const uint32_t& id, uint8_t (&data)[8]);
+    /**
      * @brief Sending message
      * @param message We need to provide object of that message
      */
