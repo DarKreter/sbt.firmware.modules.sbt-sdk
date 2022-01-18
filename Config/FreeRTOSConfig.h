@@ -63,8 +63,14 @@ extern uint32_t SystemCoreClock;
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
 
 /* Interrupt nesting behaviour configuration. */
-#define configKERNEL_INTERRUPT_PRIORITY         0
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    5
+
+// configKERNEL_INTERRUPT_PRIORITY should be set to the lowest possible priority
+// See https://www.freertos.org/RTOS-Cortex-M3-M4.html
+#define configKERNEL_INTERRUPT_PRIORITY         255
+
+// Allow all interrupts to be suspended in FreeRTOS critical sections so that
+// they can call FreeRTOS API "FromISR" functions safely
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    0
 #define configMAX_API_CALL_INTERRUPT_PRIORITY                                  \
     configMAX_SYSCALL_INTERRUPT_PRIORITY
 
