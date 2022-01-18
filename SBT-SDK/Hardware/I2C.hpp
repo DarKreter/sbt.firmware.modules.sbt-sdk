@@ -7,6 +7,7 @@
 
 #include <FreeRTOS.h>
 #include <event_groups.h>
+#include <functional>
 #include <stm32f1xx_hal.h>
 
 struct Hardware;
@@ -16,7 +17,8 @@ class I2C {
 
     /*-------HANDLERS---------*/
     struct State {
-        EventGroupHandle_t txRxState;
+        [[deprecated(
+            "Use State field in handle instead")]] EventGroupHandle_t txRxState;
         I2C_HandleTypeDef handle;
     };
     State state;
@@ -40,6 +42,20 @@ public:
         _10BIT = I2C_ADDRESSINGMODE_10BIT
     };
 
+    enum class CallbackType {
+        MasterTxComplete = HAL_I2C_MASTER_TX_COMPLETE_CB_ID,
+        MasterRxComplete = HAL_I2C_MASTER_RX_COMPLETE_CB_ID,
+        SlaveTxComplete = HAL_I2C_SLAVE_TX_COMPLETE_CB_ID,
+        SlaveRxComplete = HAL_I2C_SLAVE_RX_COMPLETE_CB_ID,
+        ListenComplete = HAL_I2C_LISTEN_COMPLETE_CB_ID,
+        MemTxComplete = HAL_I2C_MEM_TX_COMPLETE_CB_ID,
+        MemRxComplete = HAL_I2C_MEM_RX_COMPLETE_CB_ID,
+        Error = HAL_I2C_ERROR_CB_ID,
+        Abort = HAL_I2C_ABORT_CB_ID,
+        MspInit = HAL_I2C_MSPINIT_CB_ID,
+        MspDeInit = HAL_I2C_MSPDEINIT_CB_ID
+    };
+
 private:
     Instance instance;
     OperatingMode mode;
@@ -48,8 +64,10 @@ private:
 
     uint32_t timeout;
 
+    DMA* dmaController;
+    DMA::Channel dmaChannelTx, dmaChannelRx;
+
     explicit I2C(I2C_TypeDef* i2cc);
-    I2C() = delete;
 
     void SendMasterRCC(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
     void SendMasterIT(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
@@ -90,6 +108,9 @@ private:
                           uint16_t dataSize);
 
 public:
+    I2C() = delete;
+    I2C(I2C&) = delete;
+
     /**
      * @brief Set addressing mode (Default: _7BIT)
      * @param _addressingMode _7BIT or _10BIT
@@ -102,15 +123,20 @@ public:
      */
     void SetSpeed(uint32_t _speed);
     /**
-     * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
+     * @brief Changes operating mode of I2C to blocking (Default: Interrupts)
      * @param Timeout timeout
      */
     void ChangeModeToBlocking(uint32_t _timeout = 500);
+
     /**
-     * @brief Changes operating mode of SPI to interrupts (Default: Interrupts)
+     * @brief Changes operating mode of I2C to interrupts (Default: Interrupts)
      */
-    // NOT WORKING YET
-    //    void ChangeModeToInterrupts();
+    void ChangeModeToInterrupts();
+
+    /**
+     * @brief Changes operating mode of I2C to DMA (Default: Interrupts)
+     */
+    void ChangeModeToDMA();
 
     /**
      * @brief Return state handler for this object
@@ -183,6 +209,45 @@ public:
      * 100000Hz and 400000Hz
      */
     void Initialize(uint32_t ownAddress);
+
+    /**
+     * @brief Register a custom callback
+     * @param callbackType Event which triggers the callback
+     * @param callbackFunction Void function taking no arguments. A regular
+     * function pointer will be casted to std::function implicitly. For a
+     * non-static class member function use the template version of
+     * RegisterCallback.
+     */
+    void RegisterCallback(CallbackType callbackType,
+                          std::function<void()> callbackFunction);
+
+    /**
+     * @brief Register a non-static class member function as a custom callback
+     * @tparam T Class name
+     * @param callbackType Event which triggers the callback
+     * @param callbackObject A pointer to the object in context of which the
+     * callbackFunction will be called
+     * @param callbackFunction A pointer to the callback function called in the
+     * context of the callbackObject
+     * @example // When called from any function
+     * @example RegisterCallback(CallbackType::MasterTxComplete,
+     * &myTaskTypeObject, &myTask::myCallback);
+     * @example
+     * @example // When called from a function being a member of the
+     * callbackObject
+     * @example RegisterCallback(CallbackType::MasterTxComplete, this,
+     * &myTask::myCallback);
+     */
+    // This template envelopes the call of the member callback function in a
+    // lambda and passes it as an independent callback function.
+    template <class T>
+    void RegisterCallback(CallbackType callbackType, T* callbackObject,
+                          void (T::*callbackFunction)())
+    {
+        RegisterCallback(callbackType, [callbackObject, callbackFunction]() {
+            (callbackObject->*callbackFunction)();
+        });
+    }
 
     /**
      * @brief Checks if Transmission is completed

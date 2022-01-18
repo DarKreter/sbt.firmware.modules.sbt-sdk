@@ -14,35 +14,39 @@ void xPortSysTickHandler();
 }
 
 namespace SBT::System {
-void Init() {
-  HAL_Init();
-  Hardware::configureClocks();
-  NVIC_SetPriorityGrouping(0U);
+void Init()
+{
+    HAL_Init();
+    Hardware::configureClocks();
+    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 }
 
-void Start() {
-  TaskManager::startTasks();
+void Start()
+{
+    TaskManager::startTasks();
 
-  // Start FreeRTOS Kernel
-  // should never return
-  vTaskStartScheduler();
+    // Start FreeRTOS Kernel
+    // should never return
+    vTaskStartScheduler();
 }
 
-void SystickHandler() {
-  HAL_IncTick();
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+void SystickHandler()
+{
+    HAL_IncTick();
+#if(INCLUDE_xTaskGetSchedulerState == 1)
+    if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 #endif /* INCLUDE_xTaskGetSchedulerState */
-    xPortSysTickHandler();
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-  }
+        xPortSysTickHandler();
+#if(INCLUDE_xTaskGetSchedulerState == 1)
+    }
 #endif /* INCLUDE_xTaskGetSchedulerState */
 }
 
 [[maybe_unused]] void softfault([[maybe_unused]] const std::string& fileName,
                                 [[maybe_unused]] const int& lineNumber,
-                                [[maybe_unused]] const std::string& comment) {
-  while (true)
-    ;
+                                [[maybe_unused]] const std::string& comment)
+{
+    while(true)
+        ;
 }
 } // namespace SBT::System
