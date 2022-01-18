@@ -9,6 +9,13 @@
     softfault(__FILE__, __LINE__, std::string("DMA: ") + std::string(comment))
 
 #define DMA_ERROR_CTRL_NI DMA_ERROR("Controller not implemented")
+#define DMA_HAL_ERROR_GUARD(function)                                          \
+    {                                                                          \
+        HAL_StatusTypeDef halStatus = function;                                \
+        if(halStatus != HAL_OK)                                                \
+            DMA_ERROR(std::string("HAL function failed with code ") +          \
+                      std::to_string(halStatus));                              \
+    }
 
 DMA::DMA(DMA_TypeDef* const dma) : dma(dma) {}
 
@@ -114,8 +121,7 @@ void DMA::SetChannelPriority(const Channel channel, const Priority priority)
 DMA_HandleTypeDef* DMA::InitChannel(const Channel channel)
 {
     DMA_HandleTypeDef* handle = GetChannelHandle(channel);
-    if(HAL_DMA_Init(handle) != HAL_OK)
-        DMA_ERROR("HAL_DMA_Init failed");
+    DMA_HAL_ERROR_GUARD(HAL_DMA_Init(handle))
     IRQn_Type irq = GetChannelIRQ(channel);
     HAL_NVIC_SetPriority(irq, 8, 0);
     HAL_NVIC_EnableIRQ(irq);

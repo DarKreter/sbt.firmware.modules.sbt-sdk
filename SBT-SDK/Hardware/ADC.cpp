@@ -10,6 +10,13 @@
     softfault(__FILE__, __LINE__, std::string("ADC: ") + std::string(comment))
 
 #define ADC_ERROR_CONV_NI ADC_ERROR("Converter not implemented")
+#define ADC_HAL_ERROR_GUARD(function)                                          \
+    {                                                                          \
+        HAL_StatusTypeDef halStatus = function;                                \
+        if(halStatus != HAL_OK)                                                \
+            ADC_ERROR(std::string("HAL function failed with code ") +          \
+                      std::to_string(halStatus));                              \
+    }
 
 ADC::ADCChannel::ADCChannel(const Channel channel)
     : channel(channel), config(new ADC_ChannelConfTypeDef)
@@ -125,8 +132,7 @@ void ADC::InitChannels()
         ADC_ERROR("Converter is not initialized");
     if(handle->Init.NbrOfConversion == 0)
         ADC_ERROR("No channels exist");
-    if(HAL_ADC_Stop_DMA(handle) != HAL_OK)
-        ADC_ERROR("HAL_ADC_Stop_DMA failed");
+    ADC_HAL_ERROR_GUARD(HAL_ADC_Stop_DMA(handle))
 
     // (Re)allocate value storage
     delete values;
@@ -138,21 +144,16 @@ void ADC::InitChannels()
         for(auto i : channels) {
             i->config->Rank = c + 1;
             i->value = &values[c];
-            if(HAL_ADC_ConfigChannel(handle, i->config) != HAL_OK)
-                ADC_ERROR("HAL_ADC_ConfigChannel failed");
+            ADC_HAL_ERROR_GUARD(HAL_ADC_ConfigChannel(handle, i->config))
             c++;
         }
     }
 
-    if(HAL_ADC_Init(handle) != HAL_OK)
-        ADC_ERROR("HAL_ADC_Init failed");
-
-    if(HAL_ADCEx_Calibration_Start(handle) != HAL_OK)
-        ADC_ERROR("HAL_ADCEx_Calibration_Start failed");
-
-    if(HAL_ADC_Start_DMA(handle, reinterpret_cast<uint32_t*>(values),
-                         handle->Init.NbrOfConversion) != HAL_OK)
-        ADC_ERROR("HAL_ADC_Start_DMA failed");
+    ADC_HAL_ERROR_GUARD(HAL_ADC_Init(handle))
+    ADC_HAL_ERROR_GUARD(HAL_ADCEx_Calibration_Start(handle))
+    ADC_HAL_ERROR_GUARD(HAL_ADC_Start_DMA(handle,
+                                          reinterpret_cast<uint32_t*>(values),
+                                          handle->Init.NbrOfConversion))
 }
 
 uint16_t ADC::GetChannelValue(const Channel channel)
