@@ -7,6 +7,7 @@
 
 #include <FreeRTOS.h>
 #include <event_groups.h>
+#include <functional>
 #include <stm32f1xx_hal.h>
 
 struct Hardware;
@@ -18,7 +19,8 @@ class SPI_t {
 
     /*-------HANDLERS---------*/
     struct State {
-        EventGroupHandle_t txRxState;
+        [[deprecated(
+            "Use State field in handle instead")]] EventGroupHandle_t txRxState;
         SPI_HandleTypeDef handle;
     };
     State state;
@@ -50,7 +52,8 @@ public:
 
     enum class DataSize {
         _8BIT = SPI_DATASIZE_8BIT,
-        _9BIT = SPI_DATASIZE_16BIT
+        _9BIT [[deprecated("Use _16BIT instead")]] = SPI_DATASIZE_16BIT,
+        _16BIT = SPI_DATASIZE_16BIT
     };
 
     enum class FirstBit {
@@ -80,6 +83,19 @@ public:
         SLAVE = SPI_MODE_SLAVE
     };
 
+    enum class CallbackType {
+        TxComplete = HAL_SPI_TX_COMPLETE_CB_ID,
+        RxComplete = HAL_SPI_RX_COMPLETE_CB_ID,
+        TxRxComplete = HAL_SPI_TX_RX_COMPLETE_CB_ID,
+        TxHalfComplete = HAL_SPI_TX_HALF_COMPLETE_CB_ID,
+        RxHalfComplete = HAL_SPI_RX_HALF_COMPLETE_CB_ID,
+        TxRxHalfComplete = HAL_SPI_TX_RX_HALF_COMPLETE_CB_ID,
+        Error = HAL_SPI_ERROR_CB_ID,
+        Abort = HAL_SPI_ABORT_CB_ID,
+        MspInit = HAL_SPI_MSPINIT_CB_ID,
+        MspDeInit = HAL_SPI_MSPDEINIT_CB_ID
+    };
+
 private:
     Instance instance;
     OperatingMode mode;
@@ -101,8 +117,10 @@ private:
     DeviceType deviceType;
     uint32_t timeout;
 
+    DMA* dmaController;
+    DMA::Channel dmaChannelTx, dmaChannelRx;
+
     explicit SPI_t(SPI_TypeDef* spii);
-    SPI_t() = delete;
 
     /**
      * @brief Set mosiEnabled, misoEnabled and direction based on deviceType and
@@ -119,6 +137,9 @@ private:
     void ReceiveDMA(uint8_t* data, size_t numOfBytes);
 
 public:
+    SPI_t() = delete;
+    SPI_t(SPI_t&) = delete;
+
     /**
      * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
      * @param Timeout timeout
@@ -128,6 +149,10 @@ public:
      * @brief Changes operating mode of SPI to interrupts (Default: Interrupts)
      */
     void ChangeModeToInterrupts();
+    /**
+     * @brief Changes operating mode of SPI to DMA (Default: Interrupts)
+     */
+    void ChangeModeToDMA();
 
     /**
      * @brief Set prescaler (Default: PRESCALER_8)
@@ -188,6 +213,45 @@ public:
      * before using Send of Receive
      */
     void Initialize();
+
+    /**
+     * @brief Register a custom callback
+     * @param callbackType Event which triggers the callback
+     * @param callbackFunction Void function taking no arguments. A regular
+     * function pointer will be casted to std::function implicitly. For a
+     * non-static class member function use the template version of
+     * RegisterCallback.
+     */
+    void RegisterCallback(CallbackType callbackType,
+                          std::function<void()> callbackFunction);
+
+    /**
+     * @brief Register a non-static class member function as a custom callback
+     * @tparam T Class name
+     * @param callbackType Event which triggers the callback
+     * @param callbackObject A pointer to the object in context of which the
+     * callbackFunction will be called
+     * @param callbackFunction A pointer to the callback function called in the
+     * context of the callbackObject
+     * @example // When called from any function
+     * @example RegisterCallback(CallbackType::TxComplete,
+     * &myTaskTypeObject, &myTask::myCallback);
+     * @example
+     * @example // When called from a function being a member of the
+     * callbackObject
+     * @example RegisterCallback(CallbackType::TxComplete, this,
+     * &myTask::myCallback);
+     */
+    // This template envelopes the call of the member callback function in a
+    // lambda and passes it as an independent callback function.
+    template <class T>
+    void RegisterCallback(CallbackType callbackType, T* callbackObject,
+                          void (T::*callbackFunction)())
+    {
+        RegisterCallback(callbackType, [callbackObject, callbackFunction]() {
+            (callbackObject->*callbackFunction)();
+        });
+    }
 
     /**
      * @brief Sending data. Way of sending is defined by your configuration
