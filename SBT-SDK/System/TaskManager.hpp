@@ -18,16 +18,16 @@ namespace SBT {
 namespace System {
 class TaskManager {
 public:
-  static void registerTask(std::shared_ptr<Task> task);
+    static void registerTask(std::shared_ptr<Task> task);
 
-  // Register all tasks in FreeRTOS - allocate local stack etc.
-  static void startTasks();
-  //
-  //  // Start scheduler - this function theoretically should not return
-  //  static void startRtos();
+    // Register all tasks in FreeRTOS - allocate local stack etc.
+    static void startTasks();
+    //
+    //  // Start scheduler - this function theoretically should not return
+    //  static void startRtos();
 
 private:
-  static std::vector<std::shared_ptr<Task>> _tasks;
+    static std::vector<std::shared_ptr<Task>> _tasks;
 };
 } // namespace System
 } // namespace SBT
