@@ -12,7 +12,10 @@
 
 namespace SBT {
 namespace System {
-enum class SystemState { Running, SoftFault };
+enum class SystemState {
+    Running,
+    SoftFault
+};
 
 void Init();
 

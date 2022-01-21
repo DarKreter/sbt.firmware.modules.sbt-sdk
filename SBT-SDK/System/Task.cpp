@@ -8,15 +8,17 @@
 
 namespace SBT::System {
 
-Task::Task(std::string name, size_t priority)
-    : _name(name), _priority(priority) {}
+Task::Task(std::string name, size_t priority) : _name(name), _priority(priority)
+{
+}
 
-void Task ::executeTask() {
-  initialize();
+void Task ::executeTask()
+{
+    initialize();
 
-  while (true) {
-    run();
-  }
+    while(true) {
+        run();
+    }
 }
 
 const char* Task::getName() const { return _name.c_str(); }
@@ -25,15 +27,18 @@ size_t Task::getPriority() const { return _priority; }
 
 PeriodicTask::PeriodicTask(std::string name, size_t priority,
                            size_t periodicity)
-    : Task(name, priority), _periodicity(periodicity) {}
+    : Task(name, priority), _periodicity(periodicity)
+{
+}
 
-void PeriodicTask::executeTask() {
-  initialize();
+void PeriodicTask::executeTask()
+{
+    initialize();
 
-  while (true) {
-    run();
-    vTaskDelay(_periodicity);
-  }
+    while(true) {
+        run();
+        vTaskDelay(_periodicity);
+    }
 }
 
 } // namespace SBT::System
