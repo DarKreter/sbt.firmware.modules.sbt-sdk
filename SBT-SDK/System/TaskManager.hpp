@@ -14,11 +14,10 @@
 // Implement initialize() and run()
 // Add this new task to TaskManager's tasks vector in registerTasks method
 
-namespace SBT {
-namespace System {
+namespace SBT::System {
 class TaskManager {
 public:
-    static void registerTask(std::shared_ptr<Task> task);
+    static void registerTask(const std::shared_ptr<Task>& task);
 
     // Register all tasks in FreeRTOS - allocate local stack etc.
     static void startTasks();
@@ -29,7 +28,6 @@ public:
 private:
     static std::vector<std::shared_ptr<Task>> _tasks;
 };
-} // namespace System
-} // namespace SBT
+} // namespace SBT::System
 
 #endif // TASKMANAGER_HPP
