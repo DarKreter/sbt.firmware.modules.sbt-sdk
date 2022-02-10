@@ -130,6 +130,7 @@ public:
 
     /**
      * @brief Changes operating mode of I2C to interrupts (Default: Interrupts)
+     * @note Before using I2C in interrupt mode see ES096, section 2.14.1
      */
     void ChangeModeToInterrupts();
 

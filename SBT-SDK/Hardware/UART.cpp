@@ -43,10 +43,13 @@ static std::unordered_map<
 template <UART::CallbackType callbackType>
 void UARTUniversalCallback(UART_HandleTypeDef* huart)
 {
-    auto callbackFunction = callbackFunctions[huart->Instance][callbackType];
-    // Check if the function is actually able to be called (not empty)
-    if(callbackFunction)
-        callbackFunction();
+    // Check if any entry with given key exists. Necessary to avoid allocating
+    // memory (which is not allowed in an ISR).
+    if(callbackFunctions.count(huart->Instance)) {
+        auto cfInstance = &callbackFunctions.at(huart->Instance);
+        if(cfInstance->count(callbackType))
+            cfInstance->at(callbackType)();
+    }
 }
 
 void UART::Initialize()
@@ -76,7 +79,7 @@ void UART::Initialize()
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART1_IRQn, 10, 0);
+                HAL_NVIC_SetPriority(USART1_IRQn, 11, 0);
                 HAL_NVIC_EnableIRQ(USART1_IRQn);
             }
             state.handle.Instance = USART1;
@@ -95,7 +98,7 @@ void UART::Initialize()
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART2_IRQn, 10, 0);
+                HAL_NVIC_SetPriority(USART2_IRQn, 11, 0);
                 HAL_NVIC_EnableIRQ(USART2_IRQn);
             }
             state.handle.Instance = USART2;
@@ -114,7 +117,7 @@ void UART::Initialize()
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART3_IRQn, 10, 0);
+                HAL_NVIC_SetPriority(USART3_IRQn, 11, 0);
                 HAL_NVIC_EnableIRQ(USART3_IRQn);
             }
             state.handle.Instance = USART3;

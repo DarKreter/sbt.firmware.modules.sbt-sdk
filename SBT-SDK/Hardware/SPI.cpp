@@ -41,10 +41,13 @@ static std::unordered_map<
 template <SPI_t::CallbackType callbackType>
 void SPIUniversalCallback(SPI_HandleTypeDef* hspi)
 {
-    auto callbackFunction = callbackFunctions[hspi->Instance][callbackType];
-    // Check if the function is actually able to be called (not empty)
-    if(callbackFunction)
-        callbackFunction();
+    // Check if any entry with given key exists. Necessary to avoid allocating
+    // memory (which is not allowed in an ISR).
+    if(callbackFunctions.count(hspi->Instance)) {
+        auto cfInstance = &callbackFunctions.at(hspi->Instance);
+        if(cfInstance->count(callbackType))
+            cfInstance->at(callbackType)();
+    }
 }
 
 void SPI_t::Initialize()
@@ -75,7 +78,7 @@ void SPI_t::Initialize()
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(SPI1_IRQn, 5, 5);
+                HAL_NVIC_SetPriority(SPI1_IRQn, 7, 0);
                 HAL_NVIC_EnableIRQ(SPI1_IRQn);
             }
             break;
@@ -95,7 +98,7 @@ void SPI_t::Initialize()
             // Enable interrupts with low priority
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(SPI2_IRQn, 5, 5);
+                HAL_NVIC_SetPriority(SPI2_IRQn, 7, 0);
                 HAL_NVIC_EnableIRQ(SPI2_IRQn);
             }
             break;
