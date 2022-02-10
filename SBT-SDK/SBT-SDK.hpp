@@ -19,7 +19,7 @@ enum class SystemState {
 
 void Init();
 
-void Start();
+void Start(unsigned watchdogTimeout_ms = 1000);
 
 void SystickHandler();
 
