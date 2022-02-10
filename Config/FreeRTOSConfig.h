@@ -43,40 +43,55 @@ extern uint32_t SystemCoreClock;
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0
-#define configCHECK_FOR_STACK_OVERFLOW          0
-#define configUSE_MALLOC_FAILED_HOOK            0
-#define configUSE_DAEMON_TASK_STARTUP_HOOK      0
+
+#ifdef SBT_DEBUG
+#define configCHECK_FOR_STACK_OVERFLOW 2
+#define configUSE_MALLOC_FAILED_HOOK   1
+#else
+#define configCHECK_FOR_STACK_OVERFLOW 0
+#define configUSE_MALLOC_FAILED_HOOK   0
+#endif
+
+#define configUSE_DAEMON_TASK_STARTUP_HOOK 0
+
+void vApplicationMallocFailedHook(void);
 
 /* Run time and task stats gathering related definitions. */
-#define configGENERATE_RUN_TIME_STATS           0
-#define configUSE_TRACE_FACILITY                0
-#define configUSE_STATS_FORMATTING_FUNCTIONS    0
+#define configGENERATE_RUN_TIME_STATS        0
+#define configUSE_TRACE_FACILITY             0
+#define configUSE_STATS_FORMATTING_FUNCTIONS 0
 
 /* Co-routine related definitions. */
-#define configUSE_CO_ROUTINES                   0
-#define configMAX_CO_ROUTINE_PRIORITIES         1
+#define configUSE_CO_ROUTINES                0
+#define configMAX_CO_ROUTINE_PRIORITIES      1
 
 /* Software timer related definitions. */
-#define configUSE_TIMERS                        1
-#define configTIMER_TASK_PRIORITY               3
-#define configTIMER_QUEUE_LENGTH                10
-#define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
+#define configUSE_TIMERS                     1
+#define configTIMER_TASK_PRIORITY            3
+#define configTIMER_QUEUE_LENGTH             10
+#define configTIMER_TASK_STACK_DEPTH         configMINIMAL_STACK_SIZE
 
 /* Interrupt nesting behaviour configuration. */
 
 // configKERNEL_INTERRUPT_PRIORITY should be set to the lowest possible priority
 // See https://www.freertos.org/RTOS-Cortex-M3-M4.html
-#define configKERNEL_INTERRUPT_PRIORITY         255
+#define configKERNEL_INTERRUPT_PRIORITY      255
 
-// Allow all interrupts to be suspended in FreeRTOS critical sections so that
-// they can call FreeRTOS API "FromISR" functions safely
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    0
+// Allow all interrupts with priority lower than 0 to be suspended in FreeRTOS
+// critical sections so that they can call FreeRTOS API "FromISR" functions
+// safely
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY ((1 << 4) | 0xf)
 #define configMAX_API_CALL_INTERRUPT_PRIORITY                                  \
     configMAX_SYSCALL_INTERRUPT_PRIORITY
 
 /* Define to trap errors during development. */
-//#define configASSERT( ( x ) ) if( ( x ) == 0 ) vAssertCalled( __FILE__,
-//__LINE__ )
+#ifdef SBT_DEBUG
+#define configASSERT(x)                                                        \
+    if((x) == 0)                                                               \
+    vAssertCalled(__FILE__, __LINE__)
+#endif
+
+void vAssertCalled(const char* fileName, const int lineNumber);
 
 /* FreeRTOS MPU specific definitions. */
 #define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS 0

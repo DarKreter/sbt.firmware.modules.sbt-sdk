@@ -50,3 +50,23 @@ void SystickHandler()
         ;
 }
 } // namespace SBT::System
+
+void vAssertCalled(const char* fileName, const int lineNumber)
+{
+    softfault(fileName, lineNumber, "FreeRTOS assertion failed");
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    // Memory allocation failed. See call stack to find out where it happened.
+    while(true)
+        ;
+}
+
+void vApplicationStackOverflowHook([[maybe_unused]] TaskHandle_t xTask,
+                                   [[maybe_unused]] char* pcTaskName)
+{
+    // Task of name 'pcTaskName' caused stack overflow
+    while(true)
+        ;
+}

@@ -39,10 +39,13 @@ static std::unordered_map<
 template <I2C::CallbackType callbackType>
 void I2CUniversalCallback(I2C_HandleTypeDef* hi2c)
 {
-    auto callbackFunction = callbackFunctions[hi2c->Instance][callbackType];
-    // Check if the function is actually able to be called (not empty)
-    if(callbackFunction)
-        callbackFunction();
+    // Check if any entry with given key exists. Necessary to avoid allocating
+    // memory (which is not allowed in an ISR).
+    if(callbackFunctions.count(hi2c->Instance)) {
+        auto cfInstance = &callbackFunctions.at(hi2c->Instance);
+        if(cfInstance->count(callbackType))
+            cfInstance->at(callbackType)();
+    }
 }
 
 void I2C::Initialize(uint32_t ownAddress)
@@ -70,9 +73,9 @@ void I2C::Initialize(uint32_t ownAddress)
             // (UM1850 p. 259)
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
+                HAL_NVIC_SetPriority(I2C1_EV_IRQn, 9, 0);
                 HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-                HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
+                HAL_NVIC_SetPriority(I2C1_ER_IRQn, 9, 0);
                 HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
             }
 
@@ -92,9 +95,9 @@ void I2C::Initialize(uint32_t ownAddress)
             // (UM1850 p. 259)
             if(mode == OperatingMode::INTERRUPTS ||
                mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(I2C2_EV_IRQn, 0, 0);
+                HAL_NVIC_SetPriority(I2C2_EV_IRQn, 9, 0);
                 HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
-                HAL_NVIC_SetPriority(I2C2_ER_IRQn, 0, 0);
+                HAL_NVIC_SetPriority(I2C2_ER_IRQn, 9, 0);
                 HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
             }
 

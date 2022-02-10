@@ -57,12 +57,10 @@ void CAN::Initialize(BoxId ourBoxID,
         GPIO::Enable(GPIOA, GPIO_PIN_12, GPIO::Mode::AlternatePP,
                      GPIO::Pull::NoPull); // TX
     }
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 5, 5);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
-    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 5);
+    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
-    HAL_NVIC_SetPriority(CEC_IRQn, 5, 5);
-    HAL_NVIC_EnableIRQ(CEC_IRQn);
 
     CAN_HandleTypeDef& handle = state.handle;
 

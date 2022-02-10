@@ -123,7 +123,7 @@ DMA_HandleTypeDef* DMA::InitChannel(const Channel channel)
     DMA_HandleTypeDef* handle = GetChannelHandle(channel);
     DMA_HAL_ERROR_GUARD(HAL_DMA_Init(handle))
     IRQn_Type irq = GetChannelIRQ(channel);
-    HAL_NVIC_SetPriority(irq, 8, 0);
+    HAL_NVIC_SetPriority(irq, 5, 0);
     HAL_NVIC_EnableIRQ(irq);
     return handle;
 }
