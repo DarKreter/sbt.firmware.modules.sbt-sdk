@@ -2,12 +2,13 @@
 // Created by darkr on 22.05.2021.
 //
 
+#include "CAN.hpp"
+#include "Error.hpp"
 #include "GPIO.hpp"
-#include <CAN.hpp>
-#include <Hardware.hpp>
-#include <stdexcept>
-#include <tuple>
+#include "Hardware.hpp"
+#include <array>
 
+namespace SBT::Hardware {
 void CAN::GenericMessage::ConfigureMessage(BoxId id)
 {
     header.ExtId = static_cast<uint32_t>(id);
@@ -50,13 +51,10 @@ void CAN::Initialize(BoxId ourBoxID,
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_CAN1_CLK_ENABLE();
-    {
-        using namespace SBT::Hardware;
-        GPIO::Enable(GPIOA, GPIO_PIN_11, GPIO::Mode::Input,
-                     GPIO::Pull::NoPull); // RX
-        GPIO::Enable(GPIOA, GPIO_PIN_12, GPIO::Mode::AlternatePP,
-                     GPIO::Pull::NoPull); // TX
-    }
+    GPIO::Enable(GPIOA, GPIO_PIN_11, GPIO::Mode::Input,
+                 GPIO::Pull::NoPull); // RX
+    GPIO::Enable(GPIOA, GPIO_PIN_12, GPIO::Mode::AlternatePP,
+                 GPIO::Pull::NoPull); // TX
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
     HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 3, 0);
@@ -287,27 +285,29 @@ void CAN::saveMessageToQueue(uint32_t fifoId)
 {
     CAN::RxMessage message{};
     CAN_RxHeaderTypeDef header{};
-    HAL_CAN_GetRxMessage(&Hardware::can.GetState().handle, fifoId, &header,
+    HAL_CAN_GetRxMessage(&can.GetState().handle, fifoId, &header,
                          message.GetPayload());
     uint32_t boxid = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
     message.SetDeviceID(static_cast<BoxId>(boxid));
 
-    xQueueSendToBackFromISR(Hardware::can.GetState().queueHandle, &message,
-                            NULL);
+    xQueueSendToBackFromISR(can.GetState().queueHandle, &message, NULL);
 }
 
+CAN can;
+} // namespace SBT::Hardware
+
 // Handlers for CAN transmission
-void CAN1_RX0_IRQHandler()
-{
-    HAL_CAN_IRQHandler(&Hardware::can.GetState().handle);
-}
+
+using namespace SBT::Hardware;
+
+void CAN1_RX0_IRQHandler() { HAL_CAN_IRQHandler(&can.GetState().handle); }
 
 void HAL_CAN_RxFifo0MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef* hcan)
 {
-    Hardware::can.saveMessageToQueue(CAN_RX_FIFO0);
+    can.saveMessageToQueue(CAN_RX_FIFO0);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback([[maybe_unused]] CAN_HandleTypeDef* hcan)
 {
-    Hardware::can.saveMessageToQueue(CAN_RX_FIFO1);
+    can.saveMessageToQueue(CAN_RX_FIFO1);
 }

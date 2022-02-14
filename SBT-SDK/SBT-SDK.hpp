@@ -5,13 +5,11 @@
 #ifndef F1XX_PROJECT_TEMPLATE_SBT_SDK_HPP
 #define F1XX_PROJECT_TEMPLATE_SBT_SDK_HPP
 
-#include "Hardware.hpp"
 #include "TaskManager.hpp"
 
 #include <string>
 
-namespace SBT {
-namespace System {
+namespace SBT::System {
 enum class SystemState {
     Running,
     SoftFault
@@ -22,12 +20,6 @@ void Init();
 void Start(unsigned watchdogTimeout_ms = 1000);
 
 void SystickHandler();
-
-[[maybe_unused]] void softfault(const std::string& fileName,
-                                const int& lineNumber,
-                                const std::string& comment);
-
-} // namespace System
-} // namespace SBT
+} // namespace SBT::System
 
 #endif // F1XX_PROJECT_TEMPLATE_SBT_SDK_HPP

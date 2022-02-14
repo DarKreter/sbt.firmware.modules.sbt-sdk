@@ -5,10 +5,9 @@
 #ifndef F1XX_PROJECT_TEMPLATE_ADC_HPP
 #define F1XX_PROJECT_TEMPLATE_ADC_HPP
 
+#include "DMA.hpp"
 #include <forward_list>
 #include <stm32f1xx_hal.h>
-
-struct Hardware;
 
 // How to use this driver:
 // 1. Set ADC parameters using SetConverterXYZ() (optional)
@@ -19,9 +18,8 @@ struct Hardware;
 // 5. (Re)initialize channel(s) using InitChannels()
 // 6. Read the reading value from the channel using GetChannelValue()
 
+namespace SBT::Hardware {
 class ADC {
-    friend Hardware;
-
 public:
     // Channels 10-15 are available only on STM32F103Rx and STM32F103Vx
     enum class Channel {
@@ -86,8 +84,6 @@ private:
     uint16_t* values = nullptr;
     bool inited = false;
 
-    explicit ADC(ADC_TypeDef*);
-
     IRQn_Type GetConverterIRQ();
     ADCChannel* GetChannelObjectNoError(Channel);
     ADCChannel* GetChannelObject(Channel);
@@ -95,6 +91,8 @@ private:
 public:
     ADC() = delete;
     ADC(ADC&) = delete;
+
+    explicit ADC(ADC_TypeDef*);
 
     // Set converter parameters
     // Must be called before InitConverter()
@@ -129,5 +127,8 @@ public:
     /// \return ADC handle
     ADC_HandleTypeDef* GetConverterHandle();
 };
+
+extern ADC adc1;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_ADC_HPP

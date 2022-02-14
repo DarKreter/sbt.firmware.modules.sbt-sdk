@@ -5,13 +5,11 @@
 #ifndef F1XX_PROJECT_TEMPLATE_SPI_HPP
 #define F1XX_PROJECT_TEMPLATE_SPI_HPP
 
-#include <FreeRTOS.h>
-#include <event_groups.h>
+#include "DMA.hpp"
 #include <functional>
 #include <stm32f1xx_hal.h>
 
-struct Hardware;
-
+namespace SBT::Hardware {
 class SPI_t {
     bool initialized;
     bool misoEnabled;
@@ -19,8 +17,7 @@ class SPI_t {
 
     /*-------HANDLERS---------*/
     struct State {
-        [[deprecated(
-            "Use State field in handle instead")]] EventGroupHandle_t txRxState;
+        [[deprecated("Use State field in handle instead")]] void* txRxState;
         SPI_HandleTypeDef handle;
     };
     State state;
@@ -120,8 +117,6 @@ private:
     DMA* dmaController;
     DMA::Channel dmaChannelTx, dmaChannelRx;
 
-    explicit SPI_t(SPI_TypeDef* spii);
-
     /**
      * @brief Set mosiEnabled, misoEnabled and direction based on deviceType and
      * transmissionMode
@@ -139,6 +134,8 @@ private:
 public:
     SPI_t() = delete;
     SPI_t(SPI_t&) = delete;
+
+    explicit SPI_t(SPI_TypeDef* spii);
 
     /**
      * @brief Changes operating mode of SPI to blocking (Default: Interrupts)
@@ -281,8 +278,9 @@ public:
      * @brief Abort communication
      */
     void Abort();
-
-    friend Hardware;
 };
+
+extern SPI_t spi1, spi2;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_SPI_HPP

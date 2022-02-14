@@ -3,6 +3,8 @@
 //
 
 #include "SBT-SDK.hpp"
+#include "Error.hpp"
+#include "Hardware.hpp"
 
 #include "stm32f1xx_hal.h"
 
@@ -70,8 +72,8 @@ void Start([[maybe_unused]] unsigned watchdogTimeout_ms)
     }
 
     if(hiwdg.Init.Reload == 0)
-        ::softfault(__FILE__, __LINE__,
-                    "Requested watchdog timeout value could not be achieved");
+        softfault(__FILE__, __LINE__,
+                  "Requested watchdog timeout value could not be achieved");
 
     // Prescaler and Reload values are directly written to the IWDG registers
     hiwdg.Init.Prescaler -= 2;
@@ -96,32 +98,4 @@ void SystickHandler()
     }
 #endif /* INCLUDE_xTaskGetSchedulerState */
 }
-
-[[maybe_unused]] void softfault([[maybe_unused]] const std::string& fileName,
-                                [[maybe_unused]] const int& lineNumber,
-                                [[maybe_unused]] const std::string& comment)
-{
-    while(true)
-        ;
-}
 } // namespace SBT::System
-
-void vAssertCalled(const char* fileName, const int lineNumber)
-{
-    softfault(fileName, lineNumber, "FreeRTOS assertion failed");
-}
-
-void vApplicationMallocFailedHook(void)
-{
-    // Memory allocation failed. See call stack to find out where it happened.
-    while(true)
-        ;
-}
-
-void vApplicationStackOverflowHook([[maybe_unused]] TaskHandle_t xTask,
-                                   [[maybe_unused]] char* pcTaskName)
-{
-    // Task of name 'pcTaskName' caused stack overflow
-    while(true)
-        ;
-}

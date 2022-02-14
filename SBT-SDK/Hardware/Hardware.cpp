@@ -1,13 +1,11 @@
 #include "Hardware.hpp"
+#include "Error.hpp"
+#include <array>
+#include <optional>
+#include <stm32f1xx_hal.h>
 
-UART Hardware::uart1(USART1), Hardware::uart2(USART2), Hardware::uart3(USART3);
-I2C Hardware::i2c1(I2C1), Hardware::i2c2(I2C2);
-SPI_t Hardware::spi1(SPI1), Hardware::spi2(SPI2);
-CAN Hardware::can;
-DMA Hardware::dma1(DMA1);
-ADC Hardware::adc1(ADC1);
-
-void Hardware::configureClocks(uint32_t ahbFreq)
+namespace SBT::Hardware {
+void configureClocks(uint32_t ahbFreq)
 {
     //-----------HERE----------------------
     if(ahbFreq < 100'000 || 72'000'000 < ahbFreq)
@@ -133,43 +131,16 @@ void Hardware::configureClocks(uint32_t ahbFreq)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 }
 
-void Hardware::enableGpio(GPIO_TypeDef* gpio, uint32_t pin,
-                          Gpio::Mode direction, Gpio::Pull pull)
-{
-    GPIO_InitTypeDef initTypeDef;
-    initTypeDef.Pin = pin;
-    switch(direction) {
-    case Gpio::Mode::Input:
-        initTypeDef.Mode = GPIO_MODE_INPUT;
-        break;
-    case Gpio::Mode::Output:
-        initTypeDef.Mode = GPIO_MODE_OUTPUT_PP;
-        break;
-    case Gpio::Mode::AlternateInput:
-        initTypeDef.Mode = GPIO_MODE_AF_INPUT;
-        break;
-    case Gpio::Mode::AlternatePP:
-        initTypeDef.Mode = GPIO_MODE_AF_PP;
-        break;
-    case Gpio::Mode::AlternateOD:
-        initTypeDef.Mode = GPIO_MODE_AF_OD;
-        break;
-    }
-    initTypeDef.Pull = static_cast<uint32_t>(pull);
-    initTypeDef.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(gpio, &initTypeDef);
-}
+uint32_t GetAHB_Freq() { return HAL_RCC_GetHCLKFreq(); } // 100'000 - 72'000'000
 
-void Hardware::toggle(GPIO_TypeDef* gpio, uint32_t pin)
+uint32_t GetAPB1_Freq()
 {
-    HAL_GPIO_TogglePin(gpio, pin);
-}
+    return HAL_RCC_GetPCLK1Freq();
+} // 100'000 - 36'000'000
 
-// You did something wrong
-void softfault([[maybe_unused]] const std::string& fileName,
-               [[maybe_unused]] const int& lineNumber,
-               [[maybe_unused]] const std::string& comment)
+uint32_t GetAPB2_Freq()
 {
-    while(true)
-        ;
-}
+    return HAL_RCC_GetPCLK2Freq();
+} // 100'000 - 72'000'000
+
+} // namespace SBT::Hardware

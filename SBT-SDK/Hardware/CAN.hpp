@@ -5,24 +5,18 @@
 #ifndef F1XX_PROJECT_TEMPLATE_CAN_HPP
 #define F1XX_PROJECT_TEMPLATE_CAN_HPP
 
+#include "CAN_ID.hpp"
 #include <FreeRTOS.h>
-#include <array>
-#include <event_groups.h>
 #include <optional>
 #include <queue.h>
 #include <stm32f1xx_hal.h>
 
-#include <CAN_ID.hpp>
-
-struct Hardware;
-
+namespace SBT::Hardware {
 class CAN {
     struct State {
         CAN_HandleTypeDef handle;
         QueueHandle_t queueHandle;
     };
-
-    CAN();
 
 public:
     enum class Mode : uint32_t {
@@ -151,6 +145,8 @@ public:
         friend CAN;
     };
 
+    CAN();
+
     /**
      * @brief Set speed of CAN BUS (Default: 250KHz)
      * @param _baudRate values from range [1, 1MHz]
@@ -232,9 +228,11 @@ private:
      */
     static void saveMessageToQueue(uint32_t fifoId);
 
-    friend void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
-    friend void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* hcan);
-    friend Hardware;
+    friend void ::HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
+    friend void ::HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* hcan);
 };
+
+extern CAN can;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_CAN_HPP

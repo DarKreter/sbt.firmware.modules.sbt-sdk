@@ -2,11 +2,12 @@
 // Created by darkr on 15.05.2021.
 //
 
+#include "UART.hpp"
+#include "Error.hpp"
 #include "GPIO.hpp"
-#include "Hardware.hpp"
-#include <stdarg.h>
-#include <stdexcept>
-#include <string.h>
+#include "I2C.hpp"
+#include <cstdarg>
+#include <cstring>
 
 #define UART_ERROR(comment)                                                    \
     softfault(__FILE__, __LINE__, std::string("UART: ") + std::string(comment))
@@ -31,6 +32,7 @@
         static_cast<HAL_UART_CallbackIDTypeDef>(CallbackType::callbackType),   \
         UARTUniversalCallback<CallbackType::callbackType>))
 
+namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
 // each UART
 static std::unordered_map<
@@ -58,73 +60,66 @@ void UART::Initialize()
     if(initialized)
         UART_ERROR_ALREADY_INIT;
 
-    if(instance == Instance::UART_3 && Hardware::i2c2.IsInitialized())
+    if(instance == Instance::UART_3 && i2c2.IsInitialized())
         UART_ERROR("Cannot initialize UART3 along with I2C2!");
 
-    {
-        using namespace SBT::Hardware;
-
-        switch(instance) {
-        case Instance::UART_1:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_USART1_CLK_ENABLE();
-            // Set GPIO
-            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-                GPIO::Enable(GPIOA, GPIO_PIN_9, GPIO::Mode::AlternatePP,
-                             GPIO::Pull::NoPull); // TX1
-            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-                GPIO::Enable(GPIOA, GPIO_PIN_10, GPIO::Mode::AlternateInput,
-                             GPIO::Pull::PullUp); // RX1
-            // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART1_IRQn, 11, 0);
-                HAL_NVIC_EnableIRQ(USART1_IRQn);
-            }
-            state.handle.Instance = USART1;
-            break;
-        case Instance::UART_2:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_USART2_CLK_ENABLE();
-            // Set GPIO
-            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-                GPIO::Enable(GPIOA, GPIO_PIN_2, GPIO::Mode::AlternatePP,
-                             GPIO::Pull::NoPull); // TX2
-            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-                GPIO::Enable(GPIOA, GPIO_PIN_3, GPIO::Mode::AlternateInput,
-                             GPIO::Pull::PullUp); // RX2
-            // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART2_IRQn, 11, 0);
-                HAL_NVIC_EnableIRQ(USART2_IRQn);
-            }
-            state.handle.Instance = USART2;
-            break;
-        case Instance::UART_3:
-            // Enable clocks
-            __HAL_RCC_GPIOB_CLK_ENABLE();
-            __HAL_RCC_USART3_CLK_ENABLE();
-            // Set GPIO
-            if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-                GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternatePP,
-                             GPIO::Pull::NoPull); // TX3
-            if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-                GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateInput,
-                             GPIO::Pull::PullUp); // RX3
-            // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(USART3_IRQn, 11, 0);
-                HAL_NVIC_EnableIRQ(USART3_IRQn);
-            }
-            state.handle.Instance = USART3;
-            break;
-        case Instance::NONE:
-            UART_ERROR("Somehow instance not set to any UART...");
+    switch(instance) {
+    case Instance::UART_1:
+        // Enable clocks
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_USART1_CLK_ENABLE();
+        // Set GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Enable(GPIOA, GPIO_PIN_9, GPIO::Mode::AlternatePP,
+                         GPIO::Pull::NoPull); // TX1
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Enable(GPIOA, GPIO_PIN_10, GPIO::Mode::AlternateInput,
+                         GPIO::Pull::PullUp); // RX1
+        // Enable interrupts with low priority
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(USART1_IRQn, 11, 0);
+            HAL_NVIC_EnableIRQ(USART1_IRQn);
         }
+        state.handle.Instance = USART1;
+        break;
+    case Instance::UART_2:
+        // Enable clocks
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_USART2_CLK_ENABLE();
+        // Set GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Enable(GPIOA, GPIO_PIN_2, GPIO::Mode::AlternatePP,
+                         GPIO::Pull::NoPull); // TX2
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Enable(GPIOA, GPIO_PIN_3, GPIO::Mode::AlternateInput,
+                         GPIO::Pull::PullUp); // RX2
+        // Enable interrupts with low priority
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(USART2_IRQn, 11, 0);
+            HAL_NVIC_EnableIRQ(USART2_IRQn);
+        }
+        state.handle.Instance = USART2;
+        break;
+    case Instance::UART_3:
+        // Enable clocks
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        __HAL_RCC_USART3_CLK_ENABLE();
+        // Set GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternatePP,
+                         GPIO::Pull::NoPull); // TX3
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateInput,
+                         GPIO::Pull::PullUp); // RX3
+        // Enable interrupts with low priority
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(USART3_IRQn, 11, 0);
+            HAL_NVIC_EnableIRQ(USART3_IRQn);
+        }
+        state.handle.Instance = USART3;
+        break;
+    case Instance::NONE:
+        UART_ERROR("Somehow instance not set to any UART...");
     }
 
     state.handle.Init.BaudRate = baudRate;
@@ -292,26 +287,8 @@ void UART::AbortTx()
     UART_HAL_ERROR_GUARD(HAL_UART_AbortTransmit_IT(&state.handle))
 }
 
-void UART::AbortRx()
-{
-    UART_HAL_ERROR_GUARD(HAL_UART_AbortReceive_IT(&state.handle))
-}
-
-// Handlers for default HAL UART callbacks
-void USART1_IRQHandler()
-{
-    HAL_UART_IRQHandler(&Hardware::uart1.GetState().handle);
-}
-
-void USART2_IRQHandler()
-{
-    HAL_UART_IRQHandler(&Hardware::uart2.GetState().handle);
-}
-
-void USART3_IRQHandler()
-{
-    HAL_UART_IRQHandler(&Hardware::uart3.GetState().handle);
-}
+void UART::AbortRx(){
+    UART_HAL_ERROR_GUARD(HAL_UART_AbortReceive_IT(&state.handle))}
 
 UART::UART(USART_TypeDef* usart)
 {
@@ -321,19 +298,19 @@ UART::UART(USART_TypeDef* usart)
 
     if(usart == USART1) {
         instance = Instance::UART_1;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel4;
         dmaChannelRx = DMA::Channel::Channel5;
     }
     else if(usart == USART2) {
         instance = Instance::UART_2;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel7;
         dmaChannelRx = DMA::Channel::Channel6;
     }
     else if(usart == USART3) {
         instance = Instance::UART_3;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel2;
         dmaChannelRx = DMA::Channel::Channel3;
     }
@@ -445,3 +422,16 @@ void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 
     transmissionMode = _transmissionMode;
 }
+
+UART uart1(USART1), uart2(USART2), uart3(USART3);
+} // namespace SBT::Hardware
+
+// Handlers for default HAL UART callbacks
+
+using namespace SBT::Hardware;
+
+void USART1_IRQHandler() { HAL_UART_IRQHandler(&uart1.GetState().handle); }
+
+void USART2_IRQHandler() { HAL_UART_IRQHandler(&uart2.GetState().handle); }
+
+void USART3_IRQHandler() { HAL_UART_IRQHandler(&uart3.GetState().handle); }
