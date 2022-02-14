@@ -7,6 +7,7 @@ set(HEADER_LIST
 
 set(SRC_LIST
         SBT-SDK.cpp
+        Error.cpp
         Hardware/Hardware.cpp
         Hardware/GPIO.cpp
         Hardware/UART.cpp

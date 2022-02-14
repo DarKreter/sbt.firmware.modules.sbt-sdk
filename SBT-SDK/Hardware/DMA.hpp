@@ -8,8 +8,6 @@
 #include <forward_list>
 #include <stm32f1xx_hal.h>
 
-struct Hardware;
-
 // How to use this driver:
 // 1. Initialize a DMA controller using InitController()
 // 2. Create a DMA channel using CreateChannel()
@@ -18,14 +16,13 @@ struct Hardware;
 // channel handle returned by this function to initiate a DMA transfer directly
 // or link the channel to a DMA-capable peripheral as follows:
 //
-// uart1.hdmatx = Hardware::dma1.InitChannel(DMA::Channel::Channel4);
+// uart1.hdmatx = SBT::Hardware::dma1.InitChannel(DMA::Channel::Channel4);
 // uart1.hdmatx->Parent = &uart1;
 //
 // Where uart1 is an UART_HandleTypeDef type structure representing UART1.
 
+namespace SBT::Hardware {
 class DMA {
-    friend Hardware;
-
 public:
     enum class Channel {
         Channel1 = 1,
@@ -77,8 +74,6 @@ private:
     std::forward_list<DMA_HandleTypeDef*> channels;
     DMA_TypeDef* const dma;
 
-    explicit DMA(DMA_TypeDef*);
-
     DMA_Channel_TypeDef* GetChannelInstance(Channel);
     IRQn_Type GetChannelIRQ(Channel);
     DMA_HandleTypeDef* GetChannelHandleNoError(Channel);
@@ -86,6 +81,8 @@ private:
 public:
     DMA() = delete;
     DMA(DMA&) = delete;
+
+    explicit DMA(DMA_TypeDef*);
 
     /// Initialize a DMA controller
     void InitController();
@@ -114,5 +111,8 @@ public:
     /// \return DMA channel handle
     DMA_HandleTypeDef* GetChannelHandle(Channel);
 };
+
+extern DMA dma1;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_DMA_HPP

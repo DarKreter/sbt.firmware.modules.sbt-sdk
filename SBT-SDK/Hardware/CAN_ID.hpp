@@ -1,6 +1,8 @@
 #ifndef PARAMETER_DEFINITION_HPP
 #define PARAMETER_DEFINITION_HPP
 
+#include <cstdint>
+
 /* If You want to add new box, add new field to BoxId with unique ID.
  * If You want to add new parameters that will be sent over CAN, add new fields
  * to ParameterId with unique ID.

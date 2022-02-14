@@ -3,7 +3,7 @@
 //
 
 #include "DMA.hpp"
-#include "Hardware.hpp"
+#include "Error.hpp"
 
 #define DMA_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("DMA: ") + std::string(comment))
@@ -17,6 +17,7 @@
                       std::to_string(halStatus));                              \
     }
 
+namespace SBT::Hardware {
 DMA::DMA(DMA_TypeDef* const dma) : dma(dma) {}
 
 DMA_Channel_TypeDef* DMA::GetChannelInstance(const Channel channel)
@@ -136,33 +137,38 @@ DMA_HandleTypeDef* DMA::GetChannelHandle(const Channel channel)
     return handle;
 }
 
+DMA dma1(DMA1);
+} // namespace SBT::Hardware
+
 // DMA IRQ handlers
+
+using namespace SBT::Hardware;
 
 void DMA1_Channel1_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel1));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel1));
 }
 void DMA1_Channel2_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel2));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel2));
 }
 void DMA1_Channel3_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel3));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel3));
 }
 void DMA1_Channel4_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel4));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel4));
 }
 void DMA1_Channel5_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel5));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel5));
 }
 void DMA1_Channel6_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel6));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel6));
 }
 void DMA1_Channel7_IRQHandler()
 {
-    HAL_DMA_IRQHandler(Hardware::dma1.GetChannelHandle(DMA::Channel::Channel7));
+    HAL_DMA_IRQHandler(dma1.GetChannelHandle(DMA::Channel::Channel7));
 }

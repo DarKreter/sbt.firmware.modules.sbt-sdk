@@ -5,20 +5,17 @@
 #ifndef F1XX_PROJECT_TEMPLATE_I2C_HPP
 #define F1XX_PROJECT_TEMPLATE_I2C_HPP
 
-#include <FreeRTOS.h>
-#include <event_groups.h>
+#include "DMA.hpp"
 #include <functional>
 #include <stm32f1xx_hal.h>
 
-struct Hardware;
-
+namespace SBT::Hardware {
 class I2C {
     bool initialized;
 
     /*-------HANDLERS---------*/
     struct State {
-        [[deprecated(
-            "Use State field in handle instead")]] EventGroupHandle_t txRxState;
+        [[deprecated("Use State field in handle instead")]] void* txRxState;
         I2C_HandleTypeDef handle;
     };
     State state;
@@ -67,8 +64,6 @@ private:
     DMA* dmaController;
     DMA::Channel dmaChannelTx, dmaChannelRx;
 
-    explicit I2C(I2C_TypeDef* i2cc);
-
     void SendMasterRCC(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
     void SendMasterIT(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
     void SendMasterDMA(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
@@ -110,6 +105,8 @@ private:
 public:
     I2C() = delete;
     I2C(I2C&) = delete;
+
+    explicit I2C(I2C_TypeDef* i2cc);
 
     /**
      * @brief Set addressing mode (Default: _7BIT)
@@ -258,8 +255,9 @@ public:
      * @brief Checks if receiving is completed
      */
     [[nodiscard]] bool IsRxComplete() const;
-
-    friend Hardware;
 };
+
+extern I2C i2c1, i2c2;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_I2C_HPP

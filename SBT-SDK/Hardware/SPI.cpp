@@ -2,9 +2,10 @@
 // Created by darkr on 18.05.2021.
 //
 
+#include "SPI.hpp"
+#include "Error.hpp"
 #include "GPIO.hpp"
 #include "Hardware.hpp"
-#include <stdexcept>
 
 #define SPI_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("SPI: ") + std::string(comment))
@@ -29,6 +30,7 @@
         static_cast<HAL_SPI_CallbackIDTypeDef>(CallbackType::callbackType),    \
         SPIUniversalCallback<CallbackType::callbackType>))
 
+namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
 // each SPI
 static std::unordered_map<
@@ -58,53 +60,47 @@ void SPI_t::Initialize()
     CalculateMisoMosi();
     CalculateSpeed();
 
-    {
-        using namespace SBT::Hardware;
-
-        switch(instance) {
-        case Instance::SPI_1:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_SPI1_CLK_ENABLE();
-            // Set GPIO
-            GPIO::Enable(GPIOA, GPIO_PIN_5, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // SCK
-            if(misoEnabled)
-                GPIO::Enable(GPIOA, GPIO_PIN_6, GPIO::Mode::AlternateInput,
-                             GPIO::Pull::NoPull); // MISO
-            if(mosiEnabled)
-                GPIO::Enable(GPIOA, GPIO_PIN_7, GPIO::Mode::AlternatePP,
-                             GPIO::Pull::NoPull); // MOSI
-            // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(SPI1_IRQn, 7, 0);
-                HAL_NVIC_EnableIRQ(SPI1_IRQn);
-            }
-            break;
-        case Instance::SPI_2:
-            // Enable clocks
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-            __HAL_RCC_SPI2_CLK_ENABLE();
-            // Set GPIO
-            GPIO::Enable(GPIOB, GPIO_PIN_13, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // SCK
-            if(misoEnabled)
-                GPIO::Enable(GPIOB, GPIO_PIN_14, GPIO::Mode::AlternateInput,
-                             GPIO::Pull::NoPull); // MISO
-            if(mosiEnabled)
-                GPIO::Enable(GPIOB, GPIO_PIN_15, GPIO::Mode::AlternatePP,
-                             GPIO::Pull::NoPull); // MOSI
-            // Enable interrupts with low priority
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(SPI2_IRQn, 7, 0);
-                HAL_NVIC_EnableIRQ(SPI2_IRQn);
-            }
-            break;
-        case Instance::NONE:
-            SPI_ERROR("Somehow instance not set to any SPI...");
+    switch(instance) {
+    case Instance::SPI_1:
+        // Enable clocks
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_SPI1_CLK_ENABLE();
+        // Set GPIO
+        GPIO::Enable(GPIOA, GPIO_PIN_5, GPIO::Mode::AlternatePP,
+                     GPIO::Pull::NoPull); // SCK
+        if(misoEnabled)
+            GPIO::Enable(GPIOA, GPIO_PIN_6, GPIO::Mode::AlternateInput,
+                         GPIO::Pull::NoPull); // MISO
+        if(mosiEnabled)
+            GPIO::Enable(GPIOA, GPIO_PIN_7, GPIO::Mode::AlternatePP,
+                         GPIO::Pull::NoPull); // MOSI
+        // Enable interrupts with low priority
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(SPI1_IRQn, 7, 0);
+            HAL_NVIC_EnableIRQ(SPI1_IRQn);
         }
+        break;
+    case Instance::SPI_2:
+        // Enable clocks
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_SPI2_CLK_ENABLE();
+        // Set GPIO
+        GPIO::Enable(GPIOB, GPIO_PIN_13, GPIO::Mode::AlternatePP,
+                     GPIO::Pull::NoPull); // SCK
+        if(misoEnabled)
+            GPIO::Enable(GPIOB, GPIO_PIN_14, GPIO::Mode::AlternateInput,
+                         GPIO::Pull::NoPull); // MISO
+        if(mosiEnabled)
+            GPIO::Enable(GPIOB, GPIO_PIN_15, GPIO::Mode::AlternatePP,
+                         GPIO::Pull::NoPull); // MOSI
+        // Enable interrupts with low priority
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(SPI2_IRQn, 7, 0);
+            HAL_NVIC_EnableIRQ(SPI2_IRQn);
+        }
+        break;
+    case Instance::NONE:
+        SPI_ERROR("Somehow instance not set to any SPI...");
     }
 
     auto& handle = state.handle;
@@ -297,13 +293,13 @@ SPI_t::SPI_t(SPI_TypeDef* spii)
 
     if(spii == SPI1) {
         instance = Instance::SPI_1;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel3;
         dmaChannelRx = DMA::Channel::Channel2;
     }
     else if(spii == SPI2) {
         instance = Instance::SPI_2;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel5;
         dmaChannelRx = DMA::Channel::Channel4;
     }
@@ -487,13 +483,13 @@ void SPI_t::CalculateMisoMosi()
     }
 }
 
-// Handlers for SPI transmission
-void SPI1_IRQHandler()
-{
-    HAL_SPI_IRQHandler(&Hardware::spi1.GetState().handle);
-}
+SPI_t spi1(SPI1), spi2(SPI2);
+} // namespace SBT::Hardware
 
-void SPI2_IRQHandler()
-{
-    HAL_SPI_IRQHandler(&Hardware::spi2.GetState().handle);
-}
+// Handlers for SPI transmission
+
+using namespace SBT::Hardware;
+
+void SPI1_IRQHandler() { HAL_SPI_IRQHandler(&spi1.GetState().handle); }
+
+void SPI2_IRQHandler() { HAL_SPI_IRQHandler(&spi2.GetState().handle); }

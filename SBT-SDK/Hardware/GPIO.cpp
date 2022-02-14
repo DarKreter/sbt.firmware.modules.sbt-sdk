@@ -3,7 +3,7 @@
 //
 
 #include "GPIO.hpp"
-#include "Hardware.hpp"
+#include "Error.hpp"
 
 namespace SBT::Hardware {
 
@@ -54,7 +54,7 @@ std::pair<ADC*, ADC::Channel> GPIO::GetAnalogChannel(GPIO_TypeDef* gpioPort,
 {
     ADC* adc;
     if(gpioPort == GPIOA)
-        adc = &::Hardware::adc1;
+        adc = &adc1;
     else
         softfault(__FILE__, __LINE__, "GPIO: No ADC for requested port");
 

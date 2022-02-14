@@ -3,8 +3,7 @@
 //
 
 #include "ADC.hpp"
-#include "DMA.hpp"
-#include "Hardware.hpp"
+#include "Error.hpp"
 
 #define ADC_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("ADC: ") + std::string(comment))
@@ -18,6 +17,7 @@
                       std::to_string(halStatus));                              \
     }
 
+namespace SBT::Hardware {
 ADC::ADCChannel::ADCChannel(const Channel channel)
     : channel(channel), config(new ADC_ChannelConfTypeDef)
 {
@@ -76,7 +76,7 @@ void ADC::InitConverter()
     auto dma_channel = static_cast<DMA::Channel>(0);
     if(handle->Instance == ADC1) {
         __HAL_RCC_ADC1_CLK_ENABLE();
-        dmac = &Hardware::dma1;
+        dmac = &dma1;
         dma_channel = DMA::Channel::Channel1;
     }
     else
@@ -163,9 +163,11 @@ uint16_t ADC::GetChannelValue(const Channel channel)
 
 ADC_HandleTypeDef* ADC::GetConverterHandle() { return handle; }
 
+ADC adc1(ADC1);
+} // namespace SBT::Hardware
+
 // ADC IRQ handlers
 
-void ADC1_2_IRQHandler()
-{
-    HAL_ADC_IRQHandler(Hardware::adc1.GetConverterHandle());
-}
+using namespace SBT::Hardware;
+
+void ADC1_2_IRQHandler() { HAL_ADC_IRQHandler(adc1.GetConverterHandle()); }

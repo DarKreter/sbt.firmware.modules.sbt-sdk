@@ -1,9 +1,11 @@
 //
 // Created by darkr on 10.08.2021.
 //
+
+#include "I2C.hpp"
+#include "Error.hpp"
 #include "GPIO.hpp"
-#include "Hardware.hpp"
-#include <stdexcept>
+#include "UART.hpp"
 
 #define I2C_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("I2C: ") + std::string(comment))
@@ -28,6 +30,7 @@
         static_cast<HAL_I2C_CallbackIDTypeDef>(CallbackType::callbackType),    \
         I2CUniversalCallback<CallbackType::callbackType>))
 
+namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
 // each I2C
 static std::unordered_map<
@@ -53,60 +56,54 @@ void I2C::Initialize(uint32_t ownAddress)
     if(initialized)
         I2C_ERROR_ALREADY_INIT;
 
-    if(instance == Instance::I2C_2 && Hardware::uart3.IsInitialized())
+    if(instance == Instance::I2C_2 && uart3.IsInitialized())
         I2C_ERROR("Cannot initialize I2C2 along with UART3!");
 
-    {
-        using namespace SBT::Hardware;
-
-        switch(instance) {
-        case Instance::I2C_1:
-            // Enable clocks
-            __HAL_RCC_GPIOB_CLK_ENABLE();
-            __HAL_RCC_I2C1_CLK_ENABLE();
-            // Set GPIO
-            GPIO::Enable(GPIOB, GPIO_PIN_6, GPIO::Mode::AlternateOD,
-                         GPIO::Pull::PullUp); // SCL
-            GPIO::Enable(GPIOB, GPIO_PIN_7, GPIO::Mode::AlternateOD,
-                         GPIO::Pull::PullUp); // SDA
-            // Enable interrupts with high priority due to silicon limitation
-            // (UM1850 p. 259)
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(I2C1_EV_IRQn, 9, 0);
-                HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-                HAL_NVIC_SetPriority(I2C1_ER_IRQn, 9, 0);
-                HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
-            }
-
-            state.handle.Instance = I2C1;
-            break;
-
-        case Instance::I2C_2:
-            // Enable clocks
-            __HAL_RCC_GPIOB_CLK_ENABLE();
-            __HAL_RCC_I2C2_CLK_ENABLE();
-            // Set GPIO
-            GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternateOD,
-                         GPIO::Pull::PullUp); // SCL
-            GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateOD,
-                         GPIO::Pull::PullUp); // SDA
-            // Enable interrupts with high priority due to silicon limitation
-            // (UM1850 p. 259)
-            if(mode == OperatingMode::INTERRUPTS ||
-               mode == OperatingMode::DMA) {
-                HAL_NVIC_SetPriority(I2C2_EV_IRQn, 9, 0);
-                HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
-                HAL_NVIC_SetPriority(I2C2_ER_IRQn, 9, 0);
-                HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
-            }
-
-            state.handle.Instance = I2C2;
-            break;
-
-        case Instance::NONE:
-            I2C_ERROR("Somehow instance not set to any I2C...");
+    switch(instance) {
+    case Instance::I2C_1:
+        // Enable clocks
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        __HAL_RCC_I2C1_CLK_ENABLE();
+        // Set GPIO
+        GPIO::Enable(GPIOB, GPIO_PIN_6, GPIO::Mode::AlternateOD,
+                     GPIO::Pull::PullUp); // SCL
+        GPIO::Enable(GPIOB, GPIO_PIN_7, GPIO::Mode::AlternateOD,
+                     GPIO::Pull::PullUp); // SDA
+        // Enable interrupts with high priority due to silicon limitation
+        // (UM1850 p. 259)
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(I2C1_EV_IRQn, 9, 0);
+            HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+            HAL_NVIC_SetPriority(I2C1_ER_IRQn, 9, 0);
+            HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
         }
+
+        state.handle.Instance = I2C1;
+        break;
+
+    case Instance::I2C_2:
+        // Enable clocks
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        __HAL_RCC_I2C2_CLK_ENABLE();
+        // Set GPIO
+        GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternateOD,
+                     GPIO::Pull::PullUp); // SCL
+        GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateOD,
+                     GPIO::Pull::PullUp); // SDA
+        // Enable interrupts with high priority due to silicon limitation
+        // (UM1850 p. 259)
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_SetPriority(I2C2_EV_IRQn, 9, 0);
+            HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
+            HAL_NVIC_SetPriority(I2C2_ER_IRQn, 9, 0);
+            HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
+        }
+
+        state.handle.Instance = I2C2;
+        break;
+
+    case Instance::NONE:
+        I2C_ERROR("Somehow instance not set to any I2C...");
     }
 
     auto& handle = state.handle;
@@ -521,13 +518,13 @@ I2C::I2C(I2C_TypeDef* i2cc)
 
     if(i2cc == I2C1) {
         instance = Instance::I2C_1;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel6;
         dmaChannelRx = DMA::Channel::Channel7;
     }
     else if(i2cc == I2C2) {
         instance = Instance::I2C_2;
-        dmaController = &Hardware::dma1;
+        dmaController = &dma1;
         dmaChannelTx = DMA::Channel::Channel4;
         dmaChannelRx = DMA::Channel::Channel5;
     }
@@ -551,23 +548,17 @@ bool I2C::IsRxComplete() const
     return state.handle.State != HAL_I2C_STATE_BUSY_RX;
 }
 
+I2C i2c1(I2C1), i2c2(I2C2);
+} // namespace SBT::Hardware
+
 // Handlers for I2C transmission
-void I2C1_EV_IRQHandler()
-{
-    HAL_I2C_EV_IRQHandler(&Hardware::i2c1.GetState().handle);
-}
 
-void I2C2_EV_IRQHandler()
-{
-    HAL_I2C_EV_IRQHandler(&Hardware::i2c2.GetState().handle);
-}
+using namespace SBT::Hardware;
 
-void I2C1_ER_IRQHandler()
-{
-    HAL_I2C_ER_IRQHandler(&Hardware::i2c1.GetState().handle);
-}
+void I2C1_EV_IRQHandler() { HAL_I2C_EV_IRQHandler(&i2c1.GetState().handle); }
 
-void I2C2_ER_IRQHandler()
-{
-    HAL_I2C_ER_IRQHandler(&Hardware::i2c2.GetState().handle);
-}
+void I2C2_EV_IRQHandler() { HAL_I2C_EV_IRQHandler(&i2c2.GetState().handle); }
+
+void I2C1_ER_IRQHandler() { HAL_I2C_ER_IRQHandler(&i2c1.GetState().handle); }
+
+void I2C2_ER_IRQHandler() { HAL_I2C_ER_IRQHandler(&i2c2.GetState().handle); }

@@ -5,14 +5,11 @@
 #ifndef F1XX_PROJECT_TEMPLATE_UART_HPP
 #define F1XX_PROJECT_TEMPLATE_UART_HPP
 
-#include <FreeRTOS.h>
-#include <array>
-#include <event_groups.h>
+#include "DMA.hpp"
 #include <functional>
 #include <stm32f1xx_hal.h>
 
-struct Hardware;
-
+namespace SBT::Hardware {
 class UART {
     /**
      * @brief Set to true after calling Initialize() function
@@ -32,7 +29,7 @@ class UART {
     /*-------HANDLERS---------*/
     struct State {
         [[deprecated("Use gState (for TX) and RxState (for RX) fields in "
-                     "handle instead")]] EventGroupHandle_t txRxState;
+                     "handle instead")]] void* txRxState;
         UART_HandleTypeDef handle;
     };
     State state;
@@ -100,9 +97,6 @@ private:
     DMA* dmaController;
     DMA::Channel dmaChannelTx, dmaChannelRx;
 
-    // setting default settings
-    explicit UART(USART_TypeDef* usart);
-
     // Send functions
     void SendRCC(uint8_t* data, size_t numOfBytes);
     void SendIT(uint8_t* data, size_t numOfBytes);
@@ -117,6 +111,9 @@ public:
     // To avoid creating objects with different constructor than one above
     UART() = delete;
     UART(UART&) = delete;
+
+    // setting default settings
+    explicit UART(USART_TypeDef* usart);
 
     /**
      * @brief Set buffer(for using printf function) to sent size
@@ -265,8 +262,9 @@ public:
      * @brief Abort receiving
      */
     void AbortRx();
-
-    friend Hardware;
 };
+
+extern UART uart1, uart2, uart3;
+} // namespace SBT::Hardware
 
 #endif // F1XX_PROJECT_TEMPLATE_UART_HPP
