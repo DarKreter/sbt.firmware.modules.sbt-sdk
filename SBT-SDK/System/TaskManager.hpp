@@ -17,6 +17,7 @@
 namespace SBT::System {
 class TaskManager {
 public:
+    // Register a task with priority constrained to be less than 8
     static void registerTask(const std::shared_ptr<Task>& task);
 
     // Register all tasks in FreeRTOS - allocate local stack etc.
@@ -27,6 +28,10 @@ public:
 
 private:
     static std::vector<std::shared_ptr<Task>> _tasks;
+
+    // Register a task without priority constraints. Add a friend class or
+    // function to use this method.
+    static void registerSystemTask(const std::shared_ptr<Task>& task);
 };
 } // namespace SBT::System
 
