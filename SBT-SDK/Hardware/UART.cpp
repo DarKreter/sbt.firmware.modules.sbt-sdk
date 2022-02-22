@@ -15,6 +15,8 @@
 #define UART_ERROR_NOT_INIT     UART_ERROR("Not initialized")
 #define UART_ERROR_ALREADY_INIT UART_ERROR("Already initialized")
 #define UART_ERROR_UNKNOWN_MODE UART_ERROR("How that even happen")
+#define UART_ERROR_UNKNOWN_INSTANCE                                            \
+    UART_ERROR("Somehow instance not set to any UART...")
 #define UART_HAL_ERROR_GUARD(function)                                         \
     {                                                                          \
         HAL_StatusTypeDef halStatus = function;                                \
@@ -119,7 +121,7 @@ void UART::Initialize()
         state.handle.Instance = USART3;
         break;
     case Instance::NONE:
-        UART_ERROR("Somehow instance not set to any UART...");
+        UART_ERROR_UNKNOWN_INSTANCE;
     }
 
     state.handle.Init.BaudRate = baudRate;
@@ -171,6 +173,55 @@ void UART::Initialize()
     UART_REGISTER_CALLBACK(&state.handle, AbortRxComplete)
 
     initialized = true;
+}
+
+void UART::DeInitialize()
+{
+    if(!initialized)
+        UART_ERROR_NOT_INIT;
+
+    initialized = false;
+
+    // Deinitialize UART using HAL
+    UART_HAL_ERROR_GUARD(HAL_UART_DeInit(&state.handle))
+
+    // Deinitialize DMA if selected
+    if(mode == OperatingMode::DMA) {
+        // TX channel
+        dmaController->DeleteChannel(dmaChannelTx);
+
+        // RX channel
+        dmaController->DeleteChannel(dmaChannelRx);
+
+        // Do not deinitialize the controller as it may be in use by another
+        // device
+    }
+
+    switch(instance) {
+    case Instance::UART_1:
+        // Disable the UART1 clock only as GPIOA may be in use by another device
+        __HAL_RCC_USART1_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
+            HAL_NVIC_DisableIRQ(USART1_IRQn);
+        break;
+    case Instance::UART_2:
+        // Disable the UART2 clock only as GPIOA may be in use by another device
+        __HAL_RCC_USART2_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
+            HAL_NVIC_DisableIRQ(USART2_IRQn);
+        break;
+    case Instance::UART_3:
+        // Disable the UART3 clock only as GPIOB may be in use by another device
+        __HAL_RCC_USART3_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
+            HAL_NVIC_DisableIRQ(USART3_IRQn);
+        break;
+    case Instance::NONE:
+        UART_ERROR_UNKNOWN_INSTANCE;
+    }
 }
 
 void UART::RegisterCallback(CallbackType callbackType,

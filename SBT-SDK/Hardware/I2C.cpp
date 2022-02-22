@@ -13,6 +13,8 @@
 #define I2C_ERROR_NOT_INIT     I2C_ERROR("Not initialized")
 #define I2C_ERROR_ALREADY_INIT I2C_ERROR("Already initialized")
 #define I2C_ERROR_UNKNOWN_MODE I2C_ERROR("How that even happen")
+#define I2C_ERROR_UNKNOWN_INSTANCE                                             \
+    I2C_ERROR("Somehow instance not set to any I2C...")
 #define I2C_HAL_ERROR_GUARD(function)                                          \
     {                                                                          \
         HAL_StatusTypeDef halStatus = function;                                \
@@ -103,7 +105,7 @@ void I2C::Initialize(uint32_t ownAddress)
         break;
 
     case Instance::NONE:
-        I2C_ERROR("Somehow instance not set to any I2C...");
+        I2C_ERROR_UNKNOWN_INSTANCE;
     }
 
     auto& handle = state.handle;
@@ -158,6 +160,49 @@ void I2C::Initialize(uint32_t ownAddress)
     I2C_REGISTER_CALLBACK(&handle, Abort)
 
     initialized = true;
+}
+
+void I2C::DeInitialize()
+{
+    if(!initialized)
+        I2C_ERROR_NOT_INIT;
+
+    initialized = false;
+
+    // Deinitialize DMA if selected
+    if(mode == OperatingMode::DMA) {
+        // TX channel
+        dmaController->DeleteChannel(dmaChannelTx);
+
+        // RX channel
+        dmaController->DeleteChannel(dmaChannelRx);
+
+        // Do not deinitialize the controller as it may be in use by another
+        // device
+    }
+
+    switch(instance) {
+    case Instance::I2C_1:
+        // Disable the I2C1 clock only as GPIOB may be in use by another device
+        __HAL_RCC_I2C1_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_DisableIRQ(I2C1_EV_IRQn);
+            HAL_NVIC_DisableIRQ(I2C1_ER_IRQn);
+        }
+        break;
+    case Instance::I2C_2:
+        // Disable the I2C2 clock only as GPIOB may be in use by another device
+        __HAL_RCC_I2C2_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
+            HAL_NVIC_DisableIRQ(I2C2_EV_IRQn);
+            HAL_NVIC_DisableIRQ(I2C2_ER_IRQn);
+        }
+        break;
+    case Instance::NONE:
+        I2C_ERROR_UNKNOWN_INSTANCE;
+    }
 }
 
 void I2C::RegisterCallback(CallbackType callbackType,

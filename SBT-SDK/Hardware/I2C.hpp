@@ -209,6 +209,11 @@ public:
     void Initialize(uint32_t ownAddress);
 
     /**
+     * @brief Deinitialize I2C
+     */
+    void DeInitialize();
+
+    /**
      * @brief Register a custom callback
      * @param callbackType Event which triggers the callback
      * @param callbackFunction Void function taking no arguments. A regular
