@@ -87,9 +87,18 @@ public:
     /// Initialize a DMA controller
     void InitController();
 
+    /// Deinitialize a DMA controller
+    void DeInitController();
+
     /// Create a DMA channel
     /// Must be called before setting any parameters
     void CreateChannel(Channel);
+
+    /// Check whether a DMA channel exists
+    bool DoesChannelExist(Channel);
+
+    /// Delete a DMA channel
+    void DeleteChannel(Channel);
 
     // Set channel parameters
     // Must be called between CreateChannel() and InitChannel()
@@ -106,6 +115,9 @@ public:
     /// Must be called after setting all parameters
     /// \return DMA channel handle
     DMA_HandleTypeDef* InitChannel(Channel);
+
+    /// Deinitialize a DMA channel
+    void DeInitChannel(Channel);
 
     /// Get a DMA channel handle
     /// \return DMA channel handle

@@ -73,6 +73,7 @@ private:
         const uint16_t* value = nullptr;
 
         explicit ADCChannel(Channel);
+        ~ADCChannel();
 
     public:
         ADCChannel() = delete;
@@ -83,6 +84,9 @@ private:
     ADC_HandleTypeDef* const handle;
     uint16_t* values = nullptr;
     bool inited = false;
+
+    DMA* dmaController;
+    DMA::Channel dmaChannel;
 
     IRQn_Type GetConverterIRQ();
     ADCChannel* GetChannelObjectNoError(Channel);
@@ -106,9 +110,18 @@ public:
     /// Check whether a converter is initialized
     [[nodiscard]] bool IsConverterInited() const;
 
+    /// Deinitialize an ADC
+    void DeInitConverter();
+
     /// Create an ADC channel
     /// Must be called before setting any parameters
     void CreateChannel(Channel);
+
+    /// Check whether an ADC channel exists
+    bool DoesChannelExist(Channel);
+
+    /// Delete an ADC channel
+    void DeleteChannel(Channel);
 
     // Set channel parameters
     // Must be called between CreateChannel() and InitChannel()

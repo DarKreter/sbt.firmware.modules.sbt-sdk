@@ -13,6 +13,8 @@
 #define SPI_ERROR_NOT_INIT     SPI_ERROR("Not initialized")
 #define SPI_ERROR_ALREADY_INIT SPI_ERROR("Already initialized")
 #define SPI_ERROR_UNKNOWN_MODE SPI_ERROR("How that even happen")
+#define SPI_ERROR_UNKNOWN_INSTANCE                                             \
+    SPI_ERROR("Somehow instance not set to any SPI...")
 #define SPI_HAL_ERROR_GUARD(function)                                          \
     {                                                                          \
         HAL_StatusTypeDef halStatus = function;                                \
@@ -82,7 +84,7 @@ void SPI_t::Initialize()
         break;
     case Instance::SPI_2:
         // Enable clocks
-        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_GPIOB_CLK_ENABLE();
         __HAL_RCC_SPI2_CLK_ENABLE();
         // Set GPIO
         GPIO::Enable(GPIOB, GPIO_PIN_13, GPIO::Mode::AlternatePP,
@@ -100,7 +102,7 @@ void SPI_t::Initialize()
         }
         break;
     case Instance::NONE:
-        SPI_ERROR("Somehow instance not set to any SPI...");
+        SPI_ERROR_UNKNOWN_INSTANCE;
     }
 
     auto& handle = state.handle;
@@ -173,6 +175,48 @@ void SPI_t::Initialize()
     SPI_REGISTER_CALLBACK(&handle, Abort)
 
     initialized = true;
+}
+
+void SPI_t::DeInitialize()
+{
+    if(!initialized)
+        SPI_ERROR_NOT_INIT;
+
+    initialized = false;
+
+    // Deinitialize SPI using HAL
+    SPI_HAL_ERROR_GUARD(HAL_SPI_DeInit(&state.handle));
+
+    // Deinitialize DMA if selected
+    if(mode == OperatingMode::DMA) {
+        // TX channel
+        dmaController->DeleteChannel(dmaChannelTx);
+
+        // RX channel
+        dmaController->DeleteChannel(dmaChannelRx);
+
+        // Do not deinitialize the controller as it may be in use by another
+        // device
+    }
+
+    switch(instance) {
+    case Instance::SPI_1:
+        // Disable the SPI1 clock only as GPIOA may be in use by another device
+        __HAL_RCC_SPI1_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
+            HAL_NVIC_DisableIRQ(SPI1_IRQn);
+        break;
+    case Instance::SPI_2:
+        // Disable the SPI2 clock only as GPIOB may be in use by another device
+        __HAL_RCC_SPI2_CLK_DISABLE();
+        // Disable interrupts
+        if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
+            HAL_NVIC_DisableIRQ(SPI2_IRQn);
+        break;
+    case Instance::NONE:
+        SPI_ERROR_UNKNOWN_INSTANCE;
+    }
 }
 
 void SPI_t::RegisterCallback(CallbackType callbackType,

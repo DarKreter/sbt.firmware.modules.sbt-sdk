@@ -8,7 +8,8 @@
 #define ADC_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("ADC: ") + std::string(comment))
 
-#define ADC_ERROR_CONV_NI ADC_ERROR("Converter not implemented")
+#define ADC_ERROR_CONV_NI       ADC_ERROR("Converter is not implemented")
+#define ADC_ERROR_CONV_NOT_INIT ADC_ERROR("Converter is not initialized")
 #define ADC_HAL_ERROR_GUARD(function)                                          \
     {                                                                          \
         HAL_StatusTypeDef halStatus = function;                                \
@@ -23,9 +24,19 @@ ADC::ADCChannel::ADCChannel(const Channel channel)
 {
 }
 
+ADC::ADCChannel::~ADCChannel() { delete config; }
+
 ADC::ADC(ADC_TypeDef* const adc) : handle(new ADC_HandleTypeDef)
 {
     handle->Instance = adc;
+
+    // Select DMA controller and channel
+    if(handle->Instance == ADC1) {
+        dmaController = &dma1;
+        dmaChannel = DMA::Channel::Channel1;
+    }
+    else
+        ADC_ERROR_CONV_NI;
 
     // Set defaults
     handle->Init.DataAlign = static_cast<uint32_t>(DataAlignment::Right);
@@ -72,34 +83,48 @@ void ADC::InitConverter()
     if(inited)
         ADC_ERROR("Converter is already initialized");
 
-    DMA* dmac = nullptr;
-    auto dma_channel = static_cast<DMA::Channel>(0);
-    if(handle->Instance == ADC1) {
+    if(handle->Instance == ADC1)
         __HAL_RCC_ADC1_CLK_ENABLE();
-        dmac = &dma1;
-        dma_channel = DMA::Channel::Channel1;
-    }
     else
         ADC_ERROR_CONV_NI;
+
     if(HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_ADC) > 14e6)
         ADC_ERROR("Clock frequency is too high (maximum is 14MHz)");
 
     // Set up DMA
-    dmac->InitController();
-    dmac->CreateChannel(dma_channel);
-    dmac->SetChannelMemInc(dma_channel, DMA::MemInc::Enable);
-    dmac->SetChannelPeriphDataAlignment(dma_channel,
-                                        DMA::PeriphDataAlignment::HalfWord);
-    dmac->SetChannelMemDataAlignment(dma_channel,
-                                     DMA::MemDataAlignment::HalfWord);
-    dmac->SetChannelMode(dma_channel, DMA::Mode::Circular);
-    handle->DMA_Handle = dmac->InitChannel(dma_channel);
+    dmaController->InitController();
+    dmaController->CreateChannel(dmaChannel);
+    dmaController->SetChannelMemInc(dmaChannel, DMA::MemInc::Enable);
+    dmaController->SetChannelPeriphDataAlignment(
+        dmaChannel, DMA::PeriphDataAlignment::HalfWord);
+    dmaController->SetChannelMemDataAlignment(dmaChannel,
+                                              DMA::MemDataAlignment::HalfWord);
+    dmaController->SetChannelMode(dmaChannel, DMA::Mode::Circular);
+    handle->DMA_Handle = dmaController->InitChannel(dmaChannel);
     handle->DMA_Handle->Parent = handle;
 
     inited = true;
 }
 
 bool ADC::IsConverterInited() const { return inited; }
+
+void ADC::DeInitConverter()
+{
+    if(!inited)
+        ADC_ERROR_CONV_NOT_INIT;
+
+    inited = false;
+
+    // Deinitialize DMA
+    dmaController->DeleteChannel(dmaChannel);
+
+    // Do not deinitialize the controller as it may be in use by another device
+
+    if(handle->Instance == ADC1)
+        __HAL_RCC_ADC1_CLK_DISABLE();
+    else
+        ADC_ERROR_CONV_NI;
+}
 
 void ADC::CreateChannel(const Channel channel)
 {
@@ -119,6 +144,19 @@ void ADC::CreateChannel(const Channel channel)
         ADC_ERROR("A maximum of 16 channels is supported");
 }
 
+bool ADC::DoesChannelExist(Channel channel)
+{
+    return GetChannelObjectNoError(channel) != nullptr;
+}
+
+void ADC::DeleteChannel(Channel channel)
+{
+    ADCChannel* chn = GetChannelObject(channel);
+    --handle->Init.NbrOfConversion;
+    channels.remove(chn);
+    delete chn;
+}
+
 void ADC::SetChannelSamplingTime(const Channel channel,
                                  const SamplingTime samplingTime)
 {
@@ -129,7 +167,7 @@ void ADC::SetChannelSamplingTime(const Channel channel,
 void ADC::InitChannels()
 {
     if(!inited)
-        ADC_ERROR("Converter is not initialized");
+        ADC_ERROR_CONV_NOT_INIT;
     if(handle->Init.NbrOfConversion == 0)
         ADC_ERROR("No channels exist");
     ADC_HAL_ERROR_GUARD(HAL_ADC_Stop_DMA(handle))

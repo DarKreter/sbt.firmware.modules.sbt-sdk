@@ -185,6 +185,11 @@ public:
     void Initialize();
 
     /**
+     * @brief Deinitialize function
+     */
+    void DeInitialize();
+
+    /**
      * @brief Register a custom callback
      * @param callbackType Event which triggers the callback
      * @param callbackFunction Void function taking no arguments. A regular

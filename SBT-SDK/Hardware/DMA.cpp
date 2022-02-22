@@ -8,7 +8,7 @@
 #define DMA_ERROR(comment)                                                     \
     softfault(__FILE__, __LINE__, std::string("DMA: ") + std::string(comment))
 
-#define DMA_ERROR_CTRL_NI DMA_ERROR("Controller not implemented")
+#define DMA_ERROR_CTRL_NI DMA_ERROR("Controller is not implemented")
 #define DMA_HAL_ERROR_GUARD(function)                                          \
     {                                                                          \
         HAL_StatusTypeDef halStatus = function;                                \
@@ -55,6 +55,15 @@ void DMA::InitController()
         DMA_ERROR_CTRL_NI;
 }
 
+void DMA::DeInitController()
+{
+    // Disable the DMA clock
+    if(dma == DMA1)
+        __HAL_RCC_DMA1_CLK_DISABLE();
+    else
+        DMA_ERROR_CTRL_NI;
+}
+
 void DMA::CreateChannel(const Channel channel)
 {
     DMA_HandleTypeDef* handle = GetChannelHandleNoError(channel);
@@ -76,6 +85,22 @@ void DMA::CreateChannel(const Channel channel)
     handle->Init.Priority = static_cast<uint32_t>(Priority::Low);
 
     channels.push_front(handle);
+}
+
+bool DMA::DoesChannelExist(Channel channel)
+{
+    return GetChannelHandleNoError(channel) != nullptr;
+}
+
+void DMA::DeleteChannel(const Channel channel)
+{
+    // A channel must be deinitialized before it can be deleted
+    DeInitChannel(channel);
+
+    DMA_HandleTypeDef* handle = GetChannelHandle(channel);
+
+    channels.remove(handle);
+    delete handle;
 }
 
 void DMA::SetChannelDirection(const Channel channel, const Direction direction)
@@ -127,6 +152,14 @@ DMA_HandleTypeDef* DMA::InitChannel(const Channel channel)
     HAL_NVIC_SetPriority(irq, 5, 0);
     HAL_NVIC_EnableIRQ(irq);
     return handle;
+}
+
+void DMA::DeInitChannel(const Channel channel)
+{
+    DMA_HandleTypeDef* handle = GetChannelHandle(channel);
+    IRQn_Type irq = GetChannelIRQ(channel);
+    HAL_NVIC_DisableIRQ(irq);
+    DMA_HAL_ERROR_GUARD(HAL_DMA_DeInit(handle))
 }
 
 DMA_HandleTypeDef* DMA::GetChannelHandle(const Channel channel)
