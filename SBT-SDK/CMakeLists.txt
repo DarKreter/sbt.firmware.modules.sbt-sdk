@@ -23,8 +23,8 @@ add_library(SBT-SDK ${SRC_LIST} ${HEADER_LIST})
 
 target_include_directories(SBT-SDK PUBLIC . Hardware System)
 
-target_link_libraries(SBT-SDK PRIVATE STM32Cube-F1)
-target_link_libraries(SBT-SDK PRIVATE FreeRTOS-Kernel)
+target_link_libraries(SBT-SDK PUBLIC STM32Cube-F1)
+target_link_libraries(SBT-SDK PUBLIC FreeRTOS-Kernel)
 
 add_dependencies(SBT-SDK STM32Cube-F1)
 add_dependencies(SBT-SDK FreeRTOS-Kernel)
