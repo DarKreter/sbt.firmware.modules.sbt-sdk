@@ -36,5 +36,11 @@ void TaskManager::startTasks()
     }
 }
 
+void TaskManager::TasksInit()
+{
+    for(const auto& task : _tasks)
+        task->initialize();
+}
+
 // void TaskManager::startRtos() { vTaskStartScheduler(); }
 } // namespace SBT::System
