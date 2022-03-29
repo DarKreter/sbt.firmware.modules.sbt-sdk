@@ -22,6 +22,9 @@ public:
 
     // Register all tasks in FreeRTOS - allocate local stack etc.
     static void startTasks();
+
+    // Calls "initialize()" function for all registered tasks
+    static void TasksInit();
     //
     //  // Start scheduler - this function theoretically should not return
     //  static void startRtos();
@@ -32,6 +35,8 @@ private:
     // Register a task without priority constraints. Add a friend class or
     // function to use this method.
     static void registerSystemTask(const std::shared_ptr<Task>& task);
+
+    friend void Start(unsigned);
 };
 } // namespace SBT::System
 

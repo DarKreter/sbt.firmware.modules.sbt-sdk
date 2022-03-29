@@ -19,7 +19,6 @@ public:
     [[nodiscard]] size_t getPriority() const;
     [[nodiscard]] size_t getStackDepth() const;
 
-protected:
     // Setup method that is run single time at the start of the task
     virtual void initialize() = 0;
 

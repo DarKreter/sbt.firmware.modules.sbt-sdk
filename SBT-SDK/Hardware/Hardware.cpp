@@ -143,4 +143,48 @@ uint32_t GetAPB2_Freq()
     return HAL_RCC_GetPCLK2Freq();
 } // 100'000 - 72'000'000
 
+#ifndef SBT_DEBUG
+void StartWatchdog(IWDG_HandleTypeDef& hiwdg, unsigned watchdogTimeout_ms)
+{
+    hiwdg.Instance = IWDG;
+
+    hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+    hiwdg.Init.Reload = 0;
+
+    // Compute the best prescaler and reload values
+    for(unsigned i = 0; i < 7; i++) {
+        unsigned prescalerExponent = i + 2;
+        unsigned reload =
+            (watchdogTimeout_ms * LSI_VALUE / (1000 << prescalerExponent));
+
+        // Check whether the new reload value is acceptable
+        if(reload > 4096)
+            continue;
+
+        // If the new prescaler and reload values give smaller error, use them
+        // instead of the old ones
+        if(std::abs(static_cast<int>(watchdogTimeout_ms) -
+                    static_cast<int>(reload * (1000 << prescalerExponent) /
+                                     LSI_VALUE)) <
+           std::abs(static_cast<int>(watchdogTimeout_ms) -
+                    static_cast<int>(hiwdg.Init.Reload *
+                                     (1000 << hiwdg.Init.Prescaler) /
+                                     LSI_VALUE))) {
+            hiwdg.Init.Prescaler = prescalerExponent;
+            hiwdg.Init.Reload = reload;
+        }
+    }
+
+    if(hiwdg.Init.Reload == 0)
+        softfault(__FILE__, __LINE__,
+                  "Requested watchdog timeout value could not be achieved");
+
+    // Prescaler and Reload values are directly written to the IWDG registers
+    hiwdg.Init.Prescaler -= 2;
+    hiwdg.Init.Reload -= 1;
+
+    HAL_IWDG_Init(&hiwdg);
+}
+#endif
+
 } // namespace SBT::Hardware
