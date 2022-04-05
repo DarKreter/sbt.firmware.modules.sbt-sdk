@@ -1,7 +1,6 @@
 //
 // Created by darkr on 22.05.2021.
 //
-#include <array>
 #include <optional>
 
 #include "CAN.hpp"
@@ -9,31 +8,35 @@
 #include "GPIO.hpp"
 #include "Hardware.hpp"
 
-#define CAN_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__, std::string("hCAN: ") + std::string(comment))
+static void canError(const std::string& comment)
+{
+    softfault("CAN: " + comment);
+}
 
-#define CAN_ERROR_NOT_INIT        CAN_ERROR("Not initialized")
-#define CAN_ERROR_NOT_STARTED     CAN_ERROR("Not started")
-#define CAN_ERROR_ALREADY_INIT    CAN_ERROR("Already initialized")
-#define CAN_ERROR_ALREADY_STARTED CAN_ERROR("Already started")
-#define CAN_HAL_ERROR_GUARD(function)                                          \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            CAN_ERROR(std::string("HAL function failed with code ") +          \
-                      std::to_string(halStatus));                              \
-    }
+static void canErrorNotInit() { canError("Not initialized"); }
+
+static void canErrorNotStarted() { canError("Not started"); }
+
+static void canErrorAlreadyInit() { canError("Already initialized"); }
+
+static void canErrorAlreadyStarted() { canError("Already started"); }
+
+static void canHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        canError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 #define CAN_ACTIVE_NOTIFICATION(hcan, callbackType)                            \
     if(callbackFunctions.count(callbackType))                                  \
-        CAN_HAL_ERROR_GUARD(HAL_CAN_ActivateNotification(                      \
+        canHALErrorGuard(HAL_CAN_ActivateNotification(                         \
             hcan, static_cast<HAL_CAN_CallbackIDTypeDef>(callbackType)));
 
 // Register a function created from the template as a callback. callbackType
 // must be a constant (literal) expression and not a variable as it is passed as
 // the template parameter and must be known at compile time.
 #define CAN_REGISTER_CALLBACK(hcan, callbackType)                              \
-    CAN_HAL_ERROR_GUARD(HAL_CAN_RegisterCallback(                              \
+    canHALErrorGuard(HAL_CAN_RegisterCallback(                                 \
         hcan,                                                                  \
         static_cast<HAL_CAN_CallbackIDTypeDef>(CallbackType::callbackType),    \
         CANUniversalCallback<CallbackType::callbackType>))
@@ -66,7 +69,7 @@ hCAN::hCAN() noexcept
 void hCAN::Initialize()
 {
     if(state != State::NOT_INITIALIZED)
-        CAN_ERROR_ALREADY_INIT;
+        canErrorAlreadyInit();
 
     // Calculate swj, bs1, bs2 and prescaler based on baudRate
     CalculateTQ();
@@ -102,7 +105,7 @@ void hCAN::Initialize()
     CAN_REGISTER_CALLBACK(&handle, MspInit);
     CAN_REGISTER_CALLBACK(&handle, MspDeInit);
 
-    CAN_HAL_ERROR_GUARD(HAL_CAN_Init(&handle));
+    canHALErrorGuard(HAL_CAN_Init(&handle));
 
     // Set up the remaining callbacks
     CAN_REGISTER_CALLBACK(&handle, TxMailbox0Complete);
@@ -125,27 +128,27 @@ void hCAN::Initialize()
 void hCAN::Start()
 {
     if(state == State::NOT_INITIALIZED)
-        CAN_ERROR_NOT_INIT;
+        canErrorNotInit();
     else if(state == State::STARTED)
-        CAN_ERROR_ALREADY_STARTED;
+        canErrorAlreadyStarted();
 
-    CAN_HAL_ERROR_GUARD(HAL_CAN_Start(&handle));
+    canHALErrorGuard(HAL_CAN_Start(&handle));
 
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspInit);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspDeInit);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox0Complete);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox1Complete);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox2Complete);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox0Abort);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox1Abort);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox2Abort);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo0MsgPending);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo1MsgPending);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo0Full);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo1Full);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::Sleep);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::WakeUpFromRxMsg);
-    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::Error);
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspInit)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspDeInit)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox0Complete)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox1Complete)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox2Complete)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox0Abort)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox1Abort)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox2Abort)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo0MsgPending)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo1MsgPending)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo0Full)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::RxFifo1Full)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::Sleep)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::WakeUpFromRxMsg)
+    CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::Error)
 
     state = State::STARTED;
 }
@@ -154,9 +157,9 @@ void hCAN::AddFilter_LIST(uint8_t filterBankIndex, uint32_t id1, uint32_t id2)
 {
     // Need to be called after Initialized and before Start
     if(state == State::NOT_INITIALIZED)
-        CAN_ERROR_NOT_INIT;
+        canErrorNotInit();
     else if(state == State::STARTED)
-        CAN_ERROR_ALREADY_STARTED;
+        canErrorAlreadyStarted();
 
     // Configure filters
     CAN_FilterTypeDef HALfilter;
@@ -179,9 +182,9 @@ void hCAN::AddFilter_MASK(uint8_t filterBankIndex, uint32_t id, uint32_t mask)
 {
     // Need to be called after Initialized and before Start
     if(state == State::NOT_INITIALIZED)
-        CAN_ERROR_NOT_INIT;
+        canErrorNotInit();
     else if(state == State::STARTED)
-        CAN_ERROR_ALREADY_STARTED;
+        canErrorAlreadyStarted();
 
     // Configure filters
     CAN_FilterTypeDef HALfilter;
@@ -215,7 +218,7 @@ void hCAN::GetRxMessage(uint32_t fifoId, uint32_t* extID, uint8_t* payload,
 bool hCAN::IsAnyTxMailboxFree()
 {
     if(state != State::STARTED)
-        CAN_ERROR_NOT_STARTED;
+        canErrorNotStarted();
 
     return HAL_CAN_GetTxMailboxesFreeLevel(&handle) > 0;
 }
@@ -223,7 +226,7 @@ bool hCAN::IsAnyTxMailboxFree()
 void hCAN::Send(const uint32_t& id, uint8_t(data)[8])
 {
     if(state != State::STARTED)
-        CAN_ERROR_NOT_STARTED;
+        canErrorNotStarted();
 
     [[maybe_unused]] uint32_t usedMailbox;
 
@@ -233,7 +236,7 @@ void hCAN::Send(const uint32_t& id, uint8_t(data)[8])
     header.RTR = CAN_RTR_DATA;
     header.DLC = 8;
 
-    CAN_HAL_ERROR_GUARD(
+    canHALErrorGuard(
         HAL_CAN_AddTxMessage(&handle, &header, data, &usedMailbox));
 }
 
@@ -255,7 +258,6 @@ void hCAN::CalculateTQ()
         constexpr TQ(uint8_t a, hCAN::SWJ b, hCAN::BS1 c, hCAN::BS2 d)
             : divider{a}, _swj{b}, _bs1{c}, _bs2{d}
         {
-            ;
         }
     };
 
@@ -334,11 +336,11 @@ void hCAN::CalculateTQ()
 void hCAN::SetBaudRate([[maybe_unused]] uint32_t _baudRate)
 {
     if(state != State::NOT_INITIALIZED)
-        CAN_ERROR_ALREADY_INIT; // Too late
+        canErrorAlreadyInit(); // Too late
     else if(_baudRate > 1'000'000)
-        CAN_ERROR("CAN BUS speed must be below 1MHz!");
+        canError("CAN BUS speed must be below 1MHz!");
     else if(_baudRate > Hardware::GetAPB1_Freq() / 8)
-        CAN_ERROR("Too high baud rate for this clock speed!");
+        canError("Too high baud rate for this clock speed!");
 
     baudRate = _baudRate;
 }
@@ -346,7 +348,7 @@ void hCAN::SetBaudRate([[maybe_unused]] uint32_t _baudRate)
 void hCAN::SetMode(hCAN::Mode _mode)
 {
     if(state != State::NOT_INITIALIZED)
-        CAN_ERROR_ALREADY_INIT; // Too late
+        canErrorAlreadyInit(); // Too late
 
     mode = _mode;
 }

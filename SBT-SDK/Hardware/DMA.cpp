@@ -5,17 +5,18 @@
 #include "DMA.hpp"
 #include "Error.hpp"
 
-#define DMA_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__, std::string("DMA: ") + std::string(comment))
+static void dmaError(const std::string& comment)
+{
+    softfault("DMA: " + comment);
+}
 
-#define DMA_ERROR_CTRL_NI DMA_ERROR("Controller is not implemented")
-#define DMA_HAL_ERROR_GUARD(function)                                          \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            DMA_ERROR(std::string("HAL function failed with code ") +          \
-                      std::to_string(halStatus));                              \
-    }
+static void dmaErrorCtrlNotImpl() { dmaError("Controller is not implemented"); }
+
+static void dmaHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        dmaError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 namespace SBT::Hardware {
 DMA::DMA(DMA_TypeDef* const dma) : dma(dma) {}
@@ -33,7 +34,7 @@ IRQn_Type DMA::GetChannelIRQ(const Channel channel)
     if(dma == DMA1)
         irq = static_cast<int>(DMA1_Channel1_IRQn);
     else
-        DMA_ERROR_CTRL_NI;
+        dmaErrorCtrlNotImpl();
     return static_cast<IRQn_Type>(irq + (unsigned)(channel)-1);
 }
 
@@ -52,7 +53,7 @@ void DMA::InitController()
     if(dma == DMA1)
         __HAL_RCC_DMA1_CLK_ENABLE();
     else
-        DMA_ERROR_CTRL_NI;
+        dmaErrorCtrlNotImpl();
 }
 
 void DMA::DeInitController()
@@ -61,14 +62,14 @@ void DMA::DeInitController()
     if(dma == DMA1)
         __HAL_RCC_DMA1_CLK_DISABLE();
     else
-        DMA_ERROR_CTRL_NI;
+        dmaErrorCtrlNotImpl();
 }
 
 void DMA::CreateChannel(const Channel channel)
 {
     DMA_HandleTypeDef* handle = GetChannelHandleNoError(channel);
     if(handle != nullptr)
-        DMA_ERROR("Channel already exists");
+        dmaError("Channel already exists");
 
     handle = new DMA_HandleTypeDef;
     handle->Instance = GetChannelInstance(channel);
@@ -147,7 +148,7 @@ void DMA::SetChannelPriority(const Channel channel, const Priority priority)
 DMA_HandleTypeDef* DMA::InitChannel(const Channel channel)
 {
     DMA_HandleTypeDef* handle = GetChannelHandle(channel);
-    DMA_HAL_ERROR_GUARD(HAL_DMA_Init(handle))
+    dmaHALErrorGuard(HAL_DMA_Init(handle));
     IRQn_Type irq = GetChannelIRQ(channel);
     HAL_NVIC_SetPriority(irq, 5, 0);
     HAL_NVIC_EnableIRQ(irq);
@@ -159,14 +160,14 @@ void DMA::DeInitChannel(const Channel channel)
     DMA_HandleTypeDef* handle = GetChannelHandle(channel);
     IRQn_Type irq = GetChannelIRQ(channel);
     HAL_NVIC_DisableIRQ(irq);
-    DMA_HAL_ERROR_GUARD(HAL_DMA_DeInit(handle))
+    dmaHALErrorGuard(HAL_DMA_DeInit(handle));
 }
 
 DMA_HandleTypeDef* DMA::GetChannelHandle(const Channel channel)
 {
     DMA_HandleTypeDef* handle = GetChannelHandleNoError(channel);
     if(handle == nullptr)
-        DMA_ERROR("Channel does not exist");
+        dmaError("Channel does not exist");
     return handle;
 }
 

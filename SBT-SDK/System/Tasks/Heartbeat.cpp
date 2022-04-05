@@ -11,7 +11,7 @@ using namespace SBT::Hardware;
 using namespace SBT::System;
 using namespace SBT::System::Comm;
 
-Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 128), payload{} {}
+Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 68), payload{} {}
 
 void Heartbeat::initialize()
 {

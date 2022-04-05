@@ -9,30 +9,36 @@
 #include <cstdarg>
 #include <cstring>
 
-#define UART_ERROR(comment)                                                    \
-    softfault(__FILE__, __LINE__, std::string("UART: ") + std::string(comment))
+static void uartError(const std::string& comment)
+{
+    softfault("UART: " + comment);
+}
 
-#define UART_ERROR_NOT_INIT     UART_ERROR("Not initialized")
-#define UART_ERROR_ALREADY_INIT UART_ERROR("Already initialized")
-#define UART_ERROR_UNKNOWN_MODE UART_ERROR("How that even happen")
-#define UART_ERROR_UNKNOWN_INSTANCE                                            \
-    UART_ERROR("Somehow instance not set to any UART...")
-#define UART_HAL_ERROR_GUARD(function)                                         \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            UART_ERROR(std::string("HAL function failed with code ") +         \
-                       std::to_string(halStatus));                             \
-    }
+static void uartErrorNotInit() { uartError("Not initialized"); }
+
+static void uartErrorAlreadyInit() { uartError("Already initialized"); }
+
+static void uartErrorUnknownMode() { uartError("How that even happen"); }
+
+static void uartErrorUnknownInstance()
+{
+    uartError("Somehow instance not set to any UART...");
+}
+
+static void uartHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        uartError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 // Register a function created from the template as a callback. callbackType
 // must be a constant (literal) expression and not a variable as it is passed as
 // the template parameter and must be known at compile time.
 #define UART_REGISTER_CALLBACK(huart, callbackType)                            \
-    UART_HAL_ERROR_GUARD(HAL_UART_RegisterCallback(                            \
+    uartHALErrorGuard(HAL_UART_RegisterCallback(                               \
         huart,                                                                 \
         static_cast<HAL_UART_CallbackIDTypeDef>(CallbackType::callbackType),   \
-        UARTUniversalCallback<CallbackType::callbackType>))
+        UARTUniversalCallback<CallbackType::callbackType>));
 
 namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
@@ -60,10 +66,10 @@ void UART::Initialize()
 {
 
     if(initialized)
-        UART_ERROR_ALREADY_INIT;
+        uartErrorAlreadyInit();
 
     if(instance == Instance::UART_3 && i2c2.IsInitialized())
-        UART_ERROR("Cannot initialize UART3 along with I2C2!");
+        uartError("Cannot initialize UART3 along with I2C2!");
 
     switch(instance) {
     case Instance::UART_1:
@@ -121,7 +127,7 @@ void UART::Initialize()
         state.handle.Instance = USART3;
         break;
     case Instance::NONE:
-        UART_ERROR_UNKNOWN_INSTANCE;
+        uartErrorUnknownInstance();
     }
 
     state.handle.Init.BaudRate = baudRate;
@@ -160,7 +166,7 @@ void UART::Initialize()
     UART_REGISTER_CALLBACK(&state.handle, MspDeInit)
 
     // Set registers with prepared data
-    UART_HAL_ERROR_GUARD(HAL_UART_Init(&state.handle))
+    uartHALErrorGuard(HAL_UART_Init(&state.handle));
 
     // Set up the remaining callbacks
     UART_REGISTER_CALLBACK(&state.handle, TxHalfComplete)
@@ -178,12 +184,12 @@ void UART::Initialize()
 void UART::DeInitialize()
 {
     if(!initialized)
-        UART_ERROR_NOT_INIT;
+        uartErrorNotInit();
 
     initialized = false;
 
     // Deinitialize UART using HAL
-    UART_HAL_ERROR_GUARD(HAL_UART_DeInit(&state.handle))
+    uartHALErrorGuard(HAL_UART_DeInit(&state.handle));
 
     // Deinitialize DMA if selected
     if(mode == OperatingMode::DMA) {
@@ -220,7 +226,7 @@ void UART::DeInitialize()
             HAL_NVIC_DisableIRQ(USART3_IRQn);
         break;
     case Instance::NONE:
-        UART_ERROR_UNKNOWN_INSTANCE;
+        uartErrorUnknownInstance();
     }
 }
 
@@ -234,7 +240,7 @@ void UART::RegisterCallback(CallbackType callbackType,
 void UART::Send(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        UART_ERROR_NOT_INIT;
+        uartErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -247,14 +253,14 @@ void UART::Send(uint8_t* data, size_t numOfBytes)
         SendDMA(data, numOfBytes);
         break;
     default:
-        UART_ERROR_UNKNOWN_MODE;
+        uartErrorUnknownMode();
     }
 }
 
 void UART::SendRCC(uint8_t* data, size_t numOfBytes)
 {
-    UART_HAL_ERROR_GUARD(
-        HAL_UART_Transmit(&state.handle, data, numOfBytes, timeout))
+    uartHALErrorGuard(
+        HAL_UART_Transmit(&state.handle, data, numOfBytes, timeout));
 }
 
 void UART::SendIT(uint8_t* data, size_t numOfBytes)
@@ -262,8 +268,8 @@ void UART::SendIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.gState == HAL_UART_STATE_READY) {
         // If UART is not busy, transmit
-        UART_HAL_ERROR_GUARD(
-            HAL_UART_Transmit_IT(&state.handle, data, numOfBytes))
+        uartHALErrorGuard(
+            HAL_UART_Transmit_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -272,15 +278,15 @@ void UART::SendDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.gState == HAL_UART_STATE_READY) {
         // If UART is not busy, transmit
-        UART_HAL_ERROR_GUARD(
-            HAL_UART_Transmit_DMA(&state.handle, data, numOfBytes))
+        uartHALErrorGuard(
+            HAL_UART_Transmit_DMA(&state.handle, data, numOfBytes));
     }
 }
 
 void UART::Receive(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        UART_ERROR_NOT_INIT;
+        uartErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -293,14 +299,14 @@ void UART::Receive(uint8_t* data, size_t numOfBytes)
         ReceiveDMA(data, numOfBytes);
         break;
     default:
-        UART_ERROR_UNKNOWN_MODE;
+        uartErrorUnknownMode();
     }
 }
 
 void UART::ReceiveRCC(uint8_t* data, size_t numOfBytes)
 {
-    UART_HAL_ERROR_GUARD(
-        HAL_UART_Receive(&state.handle, data, numOfBytes, timeout))
+    uartHALErrorGuard(
+        HAL_UART_Receive(&state.handle, data, numOfBytes, timeout));
 }
 
 void UART::ReceiveIT(uint8_t* data, size_t numOfBytes)
@@ -308,8 +314,7 @@ void UART::ReceiveIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.RxState == HAL_UART_STATE_READY) {
         // If UART is not busy, receive
-        UART_HAL_ERROR_GUARD(
-            HAL_UART_Receive_IT(&state.handle, data, numOfBytes))
+        uartHALErrorGuard(HAL_UART_Receive_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -318,8 +323,8 @@ void UART::ReceiveDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.RxState == HAL_UART_STATE_READY) {
         // If UART is not busy, receive
-        UART_HAL_ERROR_GUARD(
-            HAL_UART_Receive_DMA(&state.handle, data, numOfBytes))
+        uartHALErrorGuard(
+            HAL_UART_Receive_DMA(&state.handle, data, numOfBytes));
     }
 }
 
@@ -335,11 +340,13 @@ bool UART::IsRxComplete() const
 
 void UART::AbortTx()
 {
-    UART_HAL_ERROR_GUARD(HAL_UART_AbortTransmit_IT(&state.handle))
+    uartHALErrorGuard(HAL_UART_AbortTransmit_IT(&state.handle));
 }
 
-void UART::AbortRx(){
-    UART_HAL_ERROR_GUARD(HAL_UART_AbortReceive_IT(&state.handle))}
+void UART::AbortRx()
+{
+    uartHALErrorGuard(HAL_UART_AbortReceive_IT(&state.handle));
+}
 
 UART::UART(USART_TypeDef* usart)
 {
@@ -366,7 +373,7 @@ UART::UART(USART_TypeDef* usart)
         dmaChannelRx = DMA::Channel::Channel3;
     }
     else
-        UART_ERROR("Please choose UART_1, UART_2 or UART_3");
+        uartError("Please choose UART_1, UART_2 or UART_3");
 
     mode = OperatingMode::INTERRUPTS;
     wordLength = WordLength::_8BITS;
@@ -380,7 +387,7 @@ UART::UART(USART_TypeDef* usart)
 void UART::SetWordLength(UART::WordLength _wordLength)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     wordLength = _wordLength;
 }
@@ -388,7 +395,7 @@ void UART::SetWordLength(UART::WordLength _wordLength)
 void UART::SetParity(UART::Parity _parity)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     parity = _parity;
 }
@@ -396,7 +403,7 @@ void UART::SetParity(UART::Parity _parity)
 void UART::SetStopBits(UART::StopBits _stopBits)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     stopBits = _stopBits;
 }
@@ -404,7 +411,7 @@ void UART::SetStopBits(UART::StopBits _stopBits)
 void UART::SetBaudRate(uint32_t _baudRate)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     baudRate = _baudRate;
 }
@@ -412,7 +419,7 @@ void UART::SetBaudRate(uint32_t _baudRate)
 void UART::ChangeModeToBlocking(uint32_t Timeout)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::BLOCKING;
     timeout = Timeout;
@@ -421,7 +428,7 @@ void UART::ChangeModeToBlocking(uint32_t Timeout)
 void UART::ChangeModeToInterrupts()
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::INTERRUPTS;
 }
@@ -429,7 +436,7 @@ void UART::ChangeModeToInterrupts()
 void UART::ChangeModeToDMA()
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::DMA;
 }
@@ -469,7 +476,7 @@ void UART::DisablePrintf()
 void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 {
     if(initialized)
-        UART_ERROR_ALREADY_INIT; // Too late
+        uartErrorAlreadyInit(); // Too late
 
     transmissionMode = _transmissionMode;
 }

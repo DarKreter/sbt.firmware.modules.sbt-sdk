@@ -5,18 +5,20 @@
 #include "ADC.hpp"
 #include "Error.hpp"
 
-#define ADC_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__, std::string("ADC: ") + std::string(comment))
+static void adcError(const std::string& comment)
+{
+    softfault("ADC: " + comment);
+}
 
-#define ADC_ERROR_CONV_NI       ADC_ERROR("Converter is not implemented")
-#define ADC_ERROR_CONV_NOT_INIT ADC_ERROR("Converter is not initialized")
-#define ADC_HAL_ERROR_GUARD(function)                                          \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            ADC_ERROR(std::string("HAL function failed with code ") +          \
-                      std::to_string(halStatus));                              \
-    }
+static void adcErrorConvNotImpl() { adcError("Converter is not implemented"); }
+
+static void adcErrorConvNotInit() { adcError("Converter is not initialized"); }
+
+static void adcHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        adcError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 namespace SBT::Hardware {
 ADC::ADCChannel::ADCChannel(const Channel channel)
@@ -36,7 +38,7 @@ ADC::ADC(ADC_TypeDef* const adc) : handle(new ADC_HandleTypeDef)
         dmaChannel = DMA::Channel::Channel1;
     }
     else
-        ADC_ERROR_CONV_NI;
+        adcErrorConvNotImpl();
 
     // Set defaults
     handle->Init.DataAlign = static_cast<uint32_t>(DataAlignment::Right);
@@ -52,7 +54,7 @@ IRQn_Type ADC::GetConverterIRQ()
     if(handle->Instance == ADC1)
         return ADC1_2_IRQn;
     else
-        ADC_ERROR_CONV_NI;
+        adcErrorConvNotImpl();
     // To silence error
     return static_cast<IRQn_Type>(0);
 }
@@ -69,7 +71,7 @@ ADC::ADCChannel* ADC::GetChannelObject(const Channel channel)
 {
     ADCChannel* chn = GetChannelObjectNoError(channel);
     if(chn == nullptr)
-        ADC_ERROR("Channel does not exist");
+        adcError("Channel does not exist");
     return chn;
 }
 
@@ -81,15 +83,15 @@ void ADC::SetConverterDataAlignment(const DataAlignment dataAlignment)
 void ADC::InitConverter()
 {
     if(inited)
-        ADC_ERROR("Converter is already initialized");
+        adcError("Converter is already initialized");
 
     if(handle->Instance == ADC1)
         __HAL_RCC_ADC1_CLK_ENABLE();
     else
-        ADC_ERROR_CONV_NI;
+        adcErrorConvNotImpl();
 
     if(HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_ADC) > 14e6)
-        ADC_ERROR("Clock frequency is too high (maximum is 14MHz)");
+        adcError("Clock frequency is too high (maximum is 14MHz)");
 
     // Set up DMA
     dmaController->InitController();
@@ -111,7 +113,7 @@ bool ADC::IsConverterInited() const { return inited; }
 void ADC::DeInitConverter()
 {
     if(!inited)
-        ADC_ERROR_CONV_NOT_INIT;
+        adcErrorConvNotInit();
 
     inited = false;
 
@@ -123,14 +125,14 @@ void ADC::DeInitConverter()
     if(handle->Instance == ADC1)
         __HAL_RCC_ADC1_CLK_DISABLE();
     else
-        ADC_ERROR_CONV_NI;
+        adcErrorConvNotImpl();
 }
 
 void ADC::CreateChannel(const Channel channel)
 {
     ADCChannel* chn = GetChannelObjectNoError(channel);
     if(chn != nullptr)
-        ADC_ERROR("Channel already exists");
+        adcError("Channel already exists");
 
     chn = new ADCChannel(channel);
     chn->config->Channel = static_cast<uint32_t>(channel);
@@ -141,7 +143,7 @@ void ADC::CreateChannel(const Channel channel)
     channels.push_front(chn);
 
     if(++handle->Init.NbrOfConversion > 16)
-        ADC_ERROR("A maximum of 16 channels is supported");
+        adcError("A maximum of 16 channels is supported");
 }
 
 bool ADC::DoesChannelExist(Channel channel)
@@ -167,10 +169,10 @@ void ADC::SetChannelSamplingTime(const Channel channel,
 void ADC::InitChannels()
 {
     if(!inited)
-        ADC_ERROR_CONV_NOT_INIT;
+        adcErrorConvNotInit();
     if(handle->Init.NbrOfConversion == 0)
-        ADC_ERROR("No channels exist");
-    ADC_HAL_ERROR_GUARD(HAL_ADC_Stop_DMA(handle))
+        adcError("No channels exist");
+    adcHALErrorGuard(HAL_ADC_Stop_DMA(handle));
 
     // (Re)allocate value storage
     delete values;
@@ -182,16 +184,16 @@ void ADC::InitChannels()
         for(auto i : channels) {
             i->config->Rank = c + 1;
             i->value = &values[c];
-            ADC_HAL_ERROR_GUARD(HAL_ADC_ConfigChannel(handle, i->config))
+            adcHALErrorGuard(HAL_ADC_ConfigChannel(handle, i->config));
             c++;
         }
     }
 
-    ADC_HAL_ERROR_GUARD(HAL_ADC_Init(handle))
-    ADC_HAL_ERROR_GUARD(HAL_ADCEx_Calibration_Start(handle))
-    ADC_HAL_ERROR_GUARD(HAL_ADC_Start_DMA(handle,
-                                          reinterpret_cast<uint32_t*>(values),
-                                          handle->Init.NbrOfConversion))
+    adcHALErrorGuard(HAL_ADC_Init(handle));
+    adcHALErrorGuard(HAL_ADCEx_Calibration_Start(handle));
+    adcHALErrorGuard(HAL_ADC_Start_DMA(handle,
+                                       reinterpret_cast<uint32_t*>(values),
+                                       handle->Init.NbrOfConversion));
 }
 
 uint16_t ADC::GetChannelValue(const Channel channel)
