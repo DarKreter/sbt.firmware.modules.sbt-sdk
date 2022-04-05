@@ -7,30 +7,36 @@
 #include "GPIO.hpp"
 #include "Hardware.hpp"
 
-#define SPI_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__, std::string("SPI: ") + std::string(comment))
+static void spiError(const std::string& comment)
+{
+    softfault("SPI: " + comment);
+}
 
-#define SPI_ERROR_NOT_INIT     SPI_ERROR("Not initialized")
-#define SPI_ERROR_ALREADY_INIT SPI_ERROR("Already initialized")
-#define SPI_ERROR_UNKNOWN_MODE SPI_ERROR("How that even happen")
-#define SPI_ERROR_UNKNOWN_INSTANCE                                             \
-    SPI_ERROR("Somehow instance not set to any SPI...")
-#define SPI_HAL_ERROR_GUARD(function)                                          \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            SPI_ERROR(std::string("HAL function failed with code ") +          \
-                      std::to_string(halStatus));                              \
-    }
+static void spiErrorNotInit() { spiError("Not initialized"); }
+
+static void spiErrorAlreadyInit() { spiError("Already initialized"); }
+
+static void spiErrorUnknownMode() { spiError("How that even happen"); }
+
+static void spiErrorUnknownInstance()
+{
+    spiError("Somehow instance not set to any SPI...");
+}
+
+static void spiHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        spiError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 // Register a function created from the template as a callback. callbackType
 // must be a constant (literal) expression and not a variable as it is passed as
 // the template parameter and must be known at compile time.
 #define SPI_REGISTER_CALLBACK(hspi, callbackType)                              \
-    SPI_HAL_ERROR_GUARD(HAL_SPI_RegisterCallback(                              \
+    spiHALErrorGuard(HAL_SPI_RegisterCallback(                                 \
         hspi,                                                                  \
         static_cast<HAL_SPI_CallbackIDTypeDef>(CallbackType::callbackType),    \
-        SPIUniversalCallback<CallbackType::callbackType>))
+        SPIUniversalCallback<CallbackType::callbackType>));
 
 namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
@@ -57,7 +63,7 @@ void SPIUniversalCallback(SPI_HandleTypeDef* hspi)
 void SPI_t::Initialize()
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT;
+        spiErrorAlreadyInit();
 
     CalculateMisoMosi();
     CalculateSpeed();
@@ -102,7 +108,7 @@ void SPI_t::Initialize()
         }
         break;
     case Instance::NONE:
-        SPI_ERROR_UNKNOWN_INSTANCE;
+        spiErrorUnknownInstance();
     }
 
     auto& handle = state.handle;
@@ -162,7 +168,7 @@ void SPI_t::Initialize()
     SPI_REGISTER_CALLBACK(&handle, MspInit)
     SPI_REGISTER_CALLBACK(&handle, MspDeInit)
 
-    SPI_HAL_ERROR_GUARD(HAL_SPI_Init(&handle))
+    spiHALErrorGuard(HAL_SPI_Init(&handle));
 
     // Set up the remaining callbacks
     SPI_REGISTER_CALLBACK(&handle, TxComplete)
@@ -180,12 +186,12 @@ void SPI_t::Initialize()
 void SPI_t::DeInitialize()
 {
     if(!initialized)
-        SPI_ERROR_NOT_INIT;
+        spiErrorNotInit();
 
     initialized = false;
 
     // Deinitialize SPI using HAL
-    SPI_HAL_ERROR_GUARD(HAL_SPI_DeInit(&state.handle));
+    spiHALErrorGuard(HAL_SPI_DeInit(&state.handle));
 
     // Deinitialize DMA if selected
     if(mode == OperatingMode::DMA) {
@@ -215,7 +221,7 @@ void SPI_t::DeInitialize()
             HAL_NVIC_DisableIRQ(SPI2_IRQn);
         break;
     case Instance::NONE:
-        SPI_ERROR_UNKNOWN_INSTANCE;
+        spiErrorUnknownInstance();
     }
 }
 
@@ -229,7 +235,7 @@ void SPI_t::RegisterCallback(CallbackType callbackType,
 void SPI_t::Send(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        SPI_ERROR_NOT_INIT;
+        spiErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -242,7 +248,7 @@ void SPI_t::Send(uint8_t* data, size_t numOfBytes)
         SendDMA(data, numOfBytes);
         break;
     default:
-        SPI_ERROR_UNKNOWN_MODE;
+        spiErrorUnknownMode();
     }
 }
 
@@ -251,8 +257,7 @@ void SPI_t::SendIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, transmit
-        SPI_HAL_ERROR_GUARD(
-            HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes))
+        spiHALErrorGuard(HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -261,21 +266,20 @@ void SPI_t::SendDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, transmit
-        SPI_HAL_ERROR_GUARD(
-            HAL_SPI_Transmit_DMA(&state.handle, data, numOfBytes))
+        spiHALErrorGuard(HAL_SPI_Transmit_DMA(&state.handle, data, numOfBytes));
     }
 }
 
 void SPI_t::SendRCC(uint8_t* data, size_t numOfBytes)
 {
-    SPI_HAL_ERROR_GUARD(
-        HAL_SPI_Transmit(&state.handle, data, numOfBytes, timeout))
+    spiHALErrorGuard(
+        HAL_SPI_Transmit(&state.handle, data, numOfBytes, timeout));
 }
 
 void SPI_t::Receive(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        SPI_ERROR_NOT_INIT;
+        spiErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -288,7 +292,7 @@ void SPI_t::Receive(uint8_t* data, size_t numOfBytes)
         ReceiveDMA(data, numOfBytes);
         break;
     default:
-        SPI_ERROR_UNKNOWN_MODE;
+        spiErrorUnknownMode();
     }
 }
 
@@ -297,7 +301,7 @@ void SPI_t::ReceiveIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, receive
-        SPI_HAL_ERROR_GUARD(HAL_SPI_Receive_IT(&state.handle, data, numOfBytes))
+        spiHALErrorGuard(HAL_SPI_Receive_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -306,15 +310,13 @@ void SPI_t::ReceiveDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, receive
-        SPI_HAL_ERROR_GUARD(
-            HAL_SPI_Receive_DMA(&state.handle, data, numOfBytes))
+        spiHALErrorGuard(HAL_SPI_Receive_DMA(&state.handle, data, numOfBytes));
     }
 }
 
 void SPI_t::ReceiveRCC(uint8_t* data, size_t numOfBytes)
 {
-    SPI_HAL_ERROR_GUARD(
-        HAL_SPI_Receive(&state.handle, data, numOfBytes, timeout))
+    spiHALErrorGuard(HAL_SPI_Receive(&state.handle, data, numOfBytes, timeout));
 }
 
 bool SPI_t::IsTxComplete() const
@@ -329,7 +331,7 @@ bool SPI_t::IsRxComplete() const
              state.handle.State == HAL_SPI_STATE_BUSY_TX_RX);
 }
 
-void SPI_t::Abort(){SPI_HAL_ERROR_GUARD(HAL_SPI_Abort(&state.handle))}
+void SPI_t::Abort() { spiHALErrorGuard(HAL_SPI_Abort(&state.handle)); }
 
 SPI_t::SPI_t(SPI_TypeDef* spii)
 {
@@ -348,7 +350,7 @@ SPI_t::SPI_t(SPI_TypeDef* spii)
         dmaChannelRx = DMA::Channel::Channel4;
     }
     else
-        SPI_ERROR("Please choose SPI_1 or SPI_2");
+        spiError("Please choose SPI_1 or SPI_2");
 
     mode = OperatingMode::INTERRUPTS;
     dataSize = DataSize::_8BIT;
@@ -367,7 +369,7 @@ SPI_t::SPI_t(SPI_TypeDef* spii)
 void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT;
+        spiErrorAlreadyInit();
 
     prescaler = _prescaler;
 }
@@ -375,10 +377,10 @@ void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 void SPI_t::SetBaudRate(int32_t _baudRate)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT;
+        spiErrorAlreadyInit();
 
     if(_baudRate < 1 || 18'000'000 < _baudRate)
-        SPI_ERROR("Baud rate for SPI must be between 1 and 18'000'000");
+        spiError("Baud rate for SPI must be between 1 and 18'000'000");
 
     baudRate = _baudRate;
 }
@@ -386,7 +388,7 @@ void SPI_t::SetBaudRate(int32_t _baudRate)
 void SPI_t::SetDataSize(DataSize _dataSize)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     dataSize = _dataSize;
 }
@@ -394,7 +396,7 @@ void SPI_t::SetDataSize(DataSize _dataSize)
 void SPI_t::SetFirstBit(FirstBit _firstBit)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     firstBit = _firstBit;
 }
@@ -402,7 +404,7 @@ void SPI_t::SetFirstBit(FirstBit _firstBit)
 void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     clockPolarity = _clockPolarity;
 }
@@ -410,7 +412,7 @@ void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     clockPhase = _clockPhase;
 }
@@ -418,7 +420,7 @@ void SPI_t::SetClockPhase(ClockPhase _clockPhase)
 void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::BLOCKING;
     timeout = _timeout;
@@ -427,7 +429,7 @@ void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 void SPI_t::ChangeModeToInterrupts()
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::INTERRUPTS;
 }
@@ -435,7 +437,7 @@ void SPI_t::ChangeModeToInterrupts()
 void SPI_t::ChangeModeToDMA()
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::DMA;
 }
@@ -443,7 +445,7 @@ void SPI_t::ChangeModeToDMA()
 void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     transmissionMode = _transmissionMode;
 }
@@ -451,7 +453,7 @@ void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
 {
     if(initialized)
-        SPI_ERROR_ALREADY_INIT; // Too late
+        spiErrorAlreadyInit(); // Too late
 
     deviceType = _deviceType;
 }

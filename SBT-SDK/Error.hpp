@@ -10,4 +10,6 @@
 void softfault(const std::string& fileName, const int& lineNumber,
                const std::string& comment);
 
+void softfault(const std::string& comment);
+
 #endif // F1XX_PROJECT_TEMPLATE_ERROR_HPP

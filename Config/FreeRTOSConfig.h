@@ -15,11 +15,11 @@ extern uint32_t SystemCoreClock;
 //#define configSYSTICK_CLOCK_HZ 1000000
 #define configTICK_RATE_HZ                      1000
 #define configMAX_PRIORITIES                    16
-#define configMINIMAL_STACK_SIZE                128
+#define configMINIMAL_STACK_SIZE                20
 #define configMAX_TASK_NAME_LEN                 16
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
-#define configUSE_TASK_NOTIFICATIONS            1
+#define configUSE_TASK_NOTIFICATIONS            0
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES   3
 #define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             1
@@ -30,7 +30,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TIME_SLICING                  0
 #define configUSE_NEWLIB_REENTRANT              0
 #define configENABLE_BACKWARD_COMPATIBILITY     0
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 5
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 0
 #define configSTACK_DEPTH_TYPE                  uint16_t
 #define configMESSAGE_BUFFER_LENGTH_TYPE        size_t
 
@@ -66,7 +66,7 @@ void vApplicationMallocFailedHook(void);
 #define configMAX_CO_ROUTINE_PRIORITIES      1
 
 /* Software timer related definitions. */
-#define configUSE_TIMERS                     1
+#define configUSE_TIMERS                     0
 #define configTIMER_TASK_PRIORITY            3
 #define configTIMER_QUEUE_LENGTH             10
 #define configTIMER_TASK_STACK_DEPTH         configMINIMAL_STACK_SIZE
@@ -114,7 +114,7 @@ void vAssertCalled(const char* fileName, const int lineNumber);
 #define INCLUDE_xTaskGetIdleTaskHandle                         0
 #define INCLUDE_eTaskGetState                                  0
 #define INCLUDE_xEventGroupSetBitFromISR                       1
-#define INCLUDE_xTimerPendFunctionCall                         1
+#define INCLUDE_xTimerPendFunctionCall                         0
 #define INCLUDE_xTaskAbortDelay                                0
 #define INCLUDE_xTaskGetHandle                                 0
 #define INCLUDE_xTaskResumeFromISR                             1

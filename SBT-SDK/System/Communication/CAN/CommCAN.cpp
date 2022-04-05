@@ -8,11 +8,12 @@
 #include "CanSender.hpp"
 #include "Error.hpp"
 
-#define CAN_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__,                                              \
-              std::string("CommCAN: ") + std::string(comment))
+static void commCANError(const std::string& comment)
+{
+    softfault("CommCAN: " + comment);
+}
 
-#define CAN_ERROR_NOT_INIT CAN_ERROR("Not initialized")
+static void commCANErrorNotInit() { commCANError("Not initialized"); }
 
 namespace SBT::System::Comm {
 
@@ -77,10 +78,10 @@ void CAN::AddFilter(const Filter& filter,
                     const std::function<void(RxMessage)>& callback)
 {
     if(!initialized)
-        CAN_ERROR_NOT_INIT;
+        commCANErrorNotInit();
 
     if(Filter::filterBankID >= 14)
-        CAN_ERROR("Too many filters. (You have only 14 filter banks)");
+        commCANError("Too many filters. (You have only 14 filter banks)");
 
     if(filter.GetFilterType() == Filter::FilterType::MASK_FILTER)
         Hardware::can.AddFilter_MASK(Filter::filterBankID, filter.GetFilterID(),
@@ -97,7 +98,7 @@ void CAN::AddFilter(const Filter& filter,
 void CAN::Send(CAN::TxMessage& message)
 {
     if(!initialized)
-        CAN_ERROR_NOT_INIT;
+        commCANErrorNotInit();
 
     // Send is adding message to queue and from there it will be transmitted to
     // the CAN bus

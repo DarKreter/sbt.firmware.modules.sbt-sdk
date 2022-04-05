@@ -7,30 +7,36 @@
 #include "GPIO.hpp"
 #include "UART.hpp"
 
-#define I2C_ERROR(comment)                                                     \
-    softfault(__FILE__, __LINE__, std::string("I2C: ") + std::string(comment))
+static void i2cError(const std::string& comment)
+{
+    softfault("I2C: " + comment);
+}
 
-#define I2C_ERROR_NOT_INIT     I2C_ERROR("Not initialized")
-#define I2C_ERROR_ALREADY_INIT I2C_ERROR("Already initialized")
-#define I2C_ERROR_UNKNOWN_MODE I2C_ERROR("How that even happen")
-#define I2C_ERROR_UNKNOWN_INSTANCE                                             \
-    I2C_ERROR("Somehow instance not set to any I2C...")
-#define I2C_HAL_ERROR_GUARD(function)                                          \
-    {                                                                          \
-        HAL_StatusTypeDef halStatus = function;                                \
-        if(halStatus != HAL_OK)                                                \
-            I2C_ERROR(std::string("HAL function failed with code ") +          \
-                      std::to_string(halStatus));                              \
-    }
+static void i2cErrorNotInit() { i2cError("Not initialized"); }
+
+static void i2cErrorAlreadyInit() { i2cError("Already initialized"); }
+
+static void i2cErrorUnknownMode() { i2cError("How that even happen"); }
+
+static void i2cErrorUnknownInstance()
+{
+    i2cError("Somehow instance not set to any I2C...");
+}
+
+static void i2cHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        i2cError("HAL function failed with code " + std::to_string(halStatus));
+}
 
 // Register a function created from the template as a callback. callbackType
 // must be a constant (literal) expression and not a variable as it is passed as
 // the template parameter and must be known at compile time.
 #define I2C_REGISTER_CALLBACK(hi2c, callbackType)                              \
-    I2C_HAL_ERROR_GUARD(HAL_I2C_RegisterCallback(                              \
+    i2cHALErrorGuard(HAL_I2C_RegisterCallback(                                 \
         hi2c,                                                                  \
         static_cast<HAL_I2C_CallbackIDTypeDef>(CallbackType::callbackType),    \
-        I2CUniversalCallback<CallbackType::callbackType>))
+        I2CUniversalCallback<CallbackType::callbackType>));
 
 namespace SBT::Hardware {
 // Nested unordered map containing callback functions for each callback type for
@@ -56,10 +62,10 @@ void I2CUniversalCallback(I2C_HandleTypeDef* hi2c)
 void I2C::Initialize(uint32_t ownAddress)
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT;
+        i2cErrorAlreadyInit();
 
     if(instance == Instance::I2C_2 && uart3.IsInitialized())
-        I2C_ERROR("Cannot initialize I2C2 along with UART3!");
+        i2cError("Cannot initialize I2C2 along with UART3!");
 
     switch(instance) {
     case Instance::I2C_1:
@@ -105,7 +111,7 @@ void I2C::Initialize(uint32_t ownAddress)
         break;
 
     case Instance::NONE:
-        I2C_ERROR_UNKNOWN_INSTANCE;
+        i2cErrorUnknownInstance();
     }
 
     auto& handle = state.handle;
@@ -146,7 +152,7 @@ void I2C::Initialize(uint32_t ownAddress)
     I2C_REGISTER_CALLBACK(&handle, MspDeInit)
 
     // Set registers with prepared data
-    I2C_HAL_ERROR_GUARD(HAL_I2C_Init(&handle))
+    i2cHALErrorGuard(HAL_I2C_Init(&handle));
 
     // Set up the remaining callbacks
     I2C_REGISTER_CALLBACK(&handle, MasterTxComplete)
@@ -165,7 +171,7 @@ void I2C::Initialize(uint32_t ownAddress)
 void I2C::DeInitialize()
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     initialized = false;
 
@@ -201,7 +207,7 @@ void I2C::DeInitialize()
         }
         break;
     case Instance::NONE:
-        I2C_ERROR_UNKNOWN_INSTANCE;
+        i2cErrorUnknownInstance();
     }
 }
 
@@ -215,7 +221,7 @@ void I2C::RegisterCallback(CallbackType callbackType,
 void I2C::SendMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -228,7 +234,7 @@ void I2C::SendMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
         SendMasterDMA(slaveAddress, data, numOfBytes);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -237,8 +243,8 @@ void I2C::SendMasterIT(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, transmit
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Transmit_IT(
-            &state.handle, slaveAddress, data, numOfBytes))
+        i2cHALErrorGuard(HAL_I2C_Master_Transmit_IT(&state.handle, slaveAddress,
+                                                    data, numOfBytes));
     }
 }
 
@@ -247,21 +253,21 @@ void I2C::SendMasterDMA(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, transmit
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Transmit_DMA(
-            &state.handle, slaveAddress, data, numOfBytes))
+        i2cHALErrorGuard(HAL_I2C_Master_Transmit_DMA(
+            &state.handle, slaveAddress, data, numOfBytes));
     }
 }
 
 void I2C::SendMasterRCC(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
 {
-    I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Transmit(&state.handle, slaveAddress,
-                                                data, numOfBytes, timeout))
+    i2cHALErrorGuard(HAL_I2C_Master_Transmit(&state.handle, slaveAddress, data,
+                                             numOfBytes, timeout));
 }
 
 void I2C::SendSlave(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -274,7 +280,7 @@ void I2C::SendSlave(uint8_t* data, size_t numOfBytes)
         SendSlaveDMA(data, numOfBytes);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -283,8 +289,8 @@ void I2C::SendSlaveIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, transmit
-        I2C_HAL_ERROR_GUARD(
-            HAL_I2C_Slave_Transmit_IT(&state.handle, data, numOfBytes))
+        i2cHALErrorGuard(
+            HAL_I2C_Slave_Transmit_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -293,21 +299,21 @@ void I2C::SendSlaveDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, transmit
-        I2C_HAL_ERROR_GUARD(
-            HAL_I2C_Slave_Transmit_DMA(&state.handle, data, numOfBytes))
+        i2cHALErrorGuard(
+            HAL_I2C_Slave_Transmit_DMA(&state.handle, data, numOfBytes));
     }
 }
 
 void I2C::SendSlaveRCC(uint8_t* data, size_t numOfBytes)
 {
-    I2C_HAL_ERROR_GUARD(
-        HAL_I2C_Slave_Transmit(&state.handle, data, numOfBytes, timeout))
+    i2cHALErrorGuard(
+        HAL_I2C_Slave_Transmit(&state.handle, data, numOfBytes, timeout));
 }
 
 void I2C::ReceiveMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -320,7 +326,7 @@ void I2C::ReceiveMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes)
         ReceiveMasterDMA(slaveAddress, data, numOfBytes);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -330,8 +336,8 @@ void I2C::ReceiveMasterIT(uint16_t slaveAddress, uint8_t* data,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, receive
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Receive_IT(
-            &state.handle, slaveAddress, data, numOfBytes))
+        i2cHALErrorGuard(HAL_I2C_Master_Receive_IT(&state.handle, slaveAddress,
+                                                   data, numOfBytes));
     }
 }
 
@@ -341,22 +347,22 @@ void I2C::ReceiveMasterDMA(uint16_t slaveAddress, uint8_t* data,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, receive
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Receive_DMA(
-            &state.handle, slaveAddress, data, numOfBytes))
+        i2cHALErrorGuard(HAL_I2C_Master_Receive_DMA(&state.handle, slaveAddress,
+                                                    data, numOfBytes));
     }
 }
 
 void I2C::ReceiveMasterRCC(uint16_t slaveAddress, uint8_t* data,
                            size_t numOfBytes)
 {
-    I2C_HAL_ERROR_GUARD(HAL_I2C_Master_Receive(&state.handle, slaveAddress,
-                                               data, numOfBytes, timeout))
+    i2cHALErrorGuard(HAL_I2C_Master_Receive(&state.handle, slaveAddress, data,
+                                            numOfBytes, timeout));
 }
 
 void I2C::ReceiveSlave(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -369,7 +375,7 @@ void I2C::ReceiveSlave(uint8_t* data, size_t numOfBytes)
         ReceiveSlaveDMA(data, numOfBytes);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -378,8 +384,8 @@ void I2C::ReceiveSlaveIT(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, receive
-        I2C_HAL_ERROR_GUARD(
-            HAL_I2C_Slave_Receive_IT(&state.handle, data, numOfBytes))
+        i2cHALErrorGuard(
+            HAL_I2C_Slave_Receive_IT(&state.handle, data, numOfBytes));
     }
 }
 
@@ -388,22 +394,22 @@ void I2C::ReceiveSlaveDMA(uint8_t* data, size_t numOfBytes)
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, receive
-        I2C_HAL_ERROR_GUARD(
-            HAL_I2C_Slave_Receive_DMA(&state.handle, data, numOfBytes))
+        i2cHALErrorGuard(
+            HAL_I2C_Slave_Receive_DMA(&state.handle, data, numOfBytes));
     }
 }
 
 void I2C::ReceiveSlaveRCC(uint8_t* data, size_t numOfBytes)
 {
-    I2C_HAL_ERROR_GUARD(
-        HAL_I2C_Slave_Receive(&state.handle, data, numOfBytes, timeout))
+    i2cHALErrorGuard(
+        HAL_I2C_Slave_Receive(&state.handle, data, numOfBytes, timeout));
 }
 
 void I2C::ReadRegister(uint16_t slaveAddress, uint16_t registerAddress,
                        uint8_t registerSize, uint8_t* data, uint16_t dataSize)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -419,7 +425,7 @@ void I2C::ReadRegister(uint16_t slaveAddress, uint16_t registerAddress,
                         dataSize);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -429,9 +435,9 @@ void I2C::ReadRegisterIT(uint16_t slaveAddress, uint16_t registerAddress,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, read
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Read_IT(&state.handle, slaveAddress,
-                                                registerAddress, registerSize,
-                                                data, dataSize))
+        i2cHALErrorGuard(HAL_I2C_Mem_Read_IT(&state.handle, slaveAddress,
+                                             registerAddress, registerSize,
+                                             data, dataSize));
     }
 }
 
@@ -442,9 +448,9 @@ void I2C::ReadRegisterDMA(uint16_t slaveAddress, uint16_t registerAddress,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, read
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Read_DMA(&state.handle, slaveAddress,
-                                                 registerAddress, registerSize,
-                                                 data, dataSize))
+        i2cHALErrorGuard(HAL_I2C_Mem_Read_DMA(&state.handle, slaveAddress,
+                                              registerAddress, registerSize,
+                                              data, dataSize));
     }
 }
 
@@ -452,16 +458,16 @@ void I2C::ReadRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress,
                           uint8_t registerSize, uint8_t* data,
                           uint16_t dataSize)
 {
-    I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Read(&state.handle, slaveAddress,
-                                         registerAddress, registerSize, data,
-                                         dataSize, timeout))
+    i2cHALErrorGuard(HAL_I2C_Mem_Read(&state.handle, slaveAddress,
+                                      registerAddress, registerSize, data,
+                                      dataSize, timeout));
 }
 
 void I2C::WriteRegister(uint16_t slaveAddress, uint16_t registerAddress,
                         uint8_t registerSize, uint8_t* data, uint16_t dataSize)
 {
     if(!initialized)
-        I2C_ERROR_NOT_INIT;
+        i2cErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
@@ -477,7 +483,7 @@ void I2C::WriteRegister(uint16_t slaveAddress, uint16_t registerAddress,
                          dataSize);
         break;
     default:
-        I2C_ERROR_UNKNOWN_MODE;
+        i2cErrorUnknownMode();
     }
 }
 
@@ -488,9 +494,9 @@ void I2C::WriteRegisterIT(uint16_t slaveAddress, uint16_t registerAddress,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, write
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Write_IT(&state.handle, slaveAddress,
-                                                 registerAddress, registerSize,
-                                                 data, dataSize))
+        i2cHALErrorGuard(HAL_I2C_Mem_Write_IT(&state.handle, slaveAddress,
+                                              registerAddress, registerSize,
+                                              data, dataSize));
     }
 }
 
@@ -501,9 +507,9 @@ void I2C::WriteRegisterDMA(uint16_t slaveAddress, uint16_t registerAddress,
     // Check if there is no transmission
     if(state.handle.State == HAL_I2C_STATE_READY) {
         // If I2C is not busy, write
-        I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Write_DMA(&state.handle, slaveAddress,
-                                                  registerAddress, registerSize,
-                                                  data, dataSize))
+        i2cHALErrorGuard(HAL_I2C_Mem_Write_DMA(&state.handle, slaveAddress,
+                                               registerAddress, registerSize,
+                                               data, dataSize));
     }
 }
 
@@ -511,15 +517,15 @@ void I2C::WriteRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress,
                            uint8_t registerSize, uint8_t* data,
                            uint16_t dataSize)
 {
-    I2C_HAL_ERROR_GUARD(HAL_I2C_Mem_Write(&state.handle, slaveAddress,
-                                          registerAddress, registerSize, data,
-                                          dataSize, timeout))
+    i2cHALErrorGuard(HAL_I2C_Mem_Write(&state.handle, slaveAddress,
+                                       registerAddress, registerSize, data,
+                                       dataSize, timeout));
 }
 
 void I2C::ChangeModeToBlocking(uint32_t _timeout)
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT; // Too late
+        i2cErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::BLOCKING;
     timeout = _timeout;
@@ -528,7 +534,7 @@ void I2C::ChangeModeToBlocking(uint32_t _timeout)
 void I2C::ChangeModeToInterrupts()
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT; // Too late
+        i2cErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::INTERRUPTS;
 }
@@ -536,7 +542,7 @@ void I2C::ChangeModeToInterrupts()
 void I2C::ChangeModeToDMA()
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT; // Too late
+        i2cErrorAlreadyInit(); // Too late
 
     mode = OperatingMode::DMA;
 }
@@ -544,7 +550,7 @@ void I2C::ChangeModeToDMA()
 void I2C::SetAddressingMode(AddressingMode _addressingMode)
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT; // Too late
+        i2cErrorAlreadyInit(); // Too late
 
     addressingMode = _addressingMode;
 }
@@ -552,7 +558,7 @@ void I2C::SetAddressingMode(AddressingMode _addressingMode)
 void I2C::SetSpeed(uint32_t _speed)
 {
     if(initialized)
-        I2C_ERROR_ALREADY_INIT; // Too late
+        i2cErrorAlreadyInit(); // Too late
 
     speed = _speed;
 }
@@ -574,7 +580,7 @@ I2C::I2C(I2C_TypeDef* i2cc)
         dmaChannelRx = DMA::Channel::Channel5;
     }
     else
-        I2C_ERROR("Please choose I2C_1 or I2C_2");
+        i2cError("Please choose I2C_1 or I2C_2");
 
     mode = OperatingMode::INTERRUPTS;
     addressingMode = AddressingMode::_7BIT;
