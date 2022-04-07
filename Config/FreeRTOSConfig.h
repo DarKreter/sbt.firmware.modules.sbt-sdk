@@ -15,7 +15,7 @@ extern uint32_t SystemCoreClock;
 //#define configSYSTICK_CLOCK_HZ 1000000
 #define configTICK_RATE_HZ                      1000
 #define configMAX_PRIORITIES                    16
-#define configMINIMAL_STACK_SIZE                20
+#define configMINIMAL_STACK_SIZE                32
 #define configMAX_TASK_NAME_LEN                 16
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
