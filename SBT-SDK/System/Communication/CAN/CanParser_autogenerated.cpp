@@ -17,6 +17,181 @@ namespace SBT::System::Comm {
 
 #endif // CANPARSER_USE_DIAG_MONITORS
 
+typedef int64_t bitext_t;
+typedef uint64_t ubitext_t;
+// To compile this function you need to typedef 'bitext_t' and 'ubitext_t'
+// globally in @dbccodeconf.h or locally in 'dbcdrvname'-config.h
+// Type selection may affect common performance. Most useful types are:
+// bitext_t : int64_t and ubitext_t : uint64_t
+[[maybe_unused]] static bitext_t __ext_sig__(ubitext_t val, uint8_t bits)
+{
+    ubitext_t const m = 1u << (bits - 1);
+    return (val ^ m) - m;
+}
+
+HEARTBEAT_t Unpack_HEARTBEAT(const uint8_t* _d)
+{
+    HEARTBEAT_t _m;
+    _m.upTime = ((_d[3] & (0xFFU)) << 24) | ((_d[2] & (0xFFU)) << 16) |
+                ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.upTime_phys = (sigfloat_t)(CANPARSER_upTime_fromS(_m->upTime));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.canTxMessFailCount = (_d[4] & (0xFFU));
+    _m.canRxMessFailCount = (_d[5] & (0xFFU));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < HEARTBEAT_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_HEARTBEAT_canparser(&_m.mon1, HEARTBEAT_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_HEARTBEAT(HEARTBEAT_t* _m, __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < HEARTBEAT_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->upTime = CANPARSER_upTime_toS(_m->upTime_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->upTime & (0xFFU));
+    cframe->Data[1] |= ((_m->upTime >> 8) & (0xFFU));
+    cframe->Data[2] |= ((_m->upTime >> 16) & (0xFFU));
+    cframe->Data[3] |= ((_m->upTime >> 24) & (0xFFU));
+    cframe->Data[4] |= (_m->canTxMessFailCount & (0xFFU));
+    cframe->Data[5] |= (_m->canRxMessFailCount & (0xFFU));
+
+    cframe->MsgId = HEARTBEAT_CANID;
+    cframe->DLC = HEARTBEAT_DLC;
+    cframe->IDE = HEARTBEAT_IDE;
+    return HEARTBEAT_CANID;
+}
+
+#else
+
+void Pack_HEARTBEAT(HEARTBEAT_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < HEARTBEAT_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->upTime = CANPARSER_upTime_toS(_m->upTime_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->upTime & (0xFFU));
+    _d[1] |= ((_m->upTime >> 8) & (0xFFU));
+    _d[2] |= ((_m->upTime >> 16) & (0xFFU));
+    _d[3] |= ((_m->upTime >> 24) & (0xFFU));
+    _d[4] |= (_m->canTxMessFailCount & (0xFFU));
+    _d[5] |= (_m->canRxMessFailCount & (0xFFU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+LIFEPO4_GENERAL_t Unpack_LIFEPO4_GENERAL(const uint8_t* _d)
+{
+    LIFEPO4_GENERAL_t _m;
+    _m.chargeCurrent = ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.chargeCurrent_phys =
+        (sigfloat_t)(CANPARSER_chargeCurrent_fromS(_m->chargeCurrent));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.dischargingCurrent = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.dischargingCurrent_phys =
+        (sigfloat_t)(CANPARSER_dischargingCurrent_fromS(
+            _m->dischargingCurrent));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.voltage = ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.voltage_phys = (sigfloat_t)(CANPARSER_voltage_fromS(_m->voltage));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.percentage = (_d[6] & (0xFFU));
+    _m.state = (_d[7] & (0x03U));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < LIFEPO4_GENERAL_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_LIFEPO4_GENERAL_canparser(&_m.mon1, LIFEPO4_GENERAL_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m,
+                              __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < LIFEPO4_GENERAL_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->chargeCurrent = CANPARSER_chargeCurrent_toS(_m->chargeCurrent_phys);
+    _m->dischargingCurrent =
+        CANPARSER_dischargingCurrent_toS(_m->dischargingCurrent_phys);
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->chargeCurrent & (0xFFU));
+    cframe->Data[1] |= ((_m->chargeCurrent >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->dischargingCurrent & (0xFFU));
+    cframe->Data[3] |= ((_m->dischargingCurrent >> 8) & (0xFFU));
+    cframe->Data[4] |= (_m->voltage & (0xFFU));
+    cframe->Data[5] |= ((_m->voltage >> 8) & (0xFFU));
+    cframe->Data[6] |= (_m->percentage & (0xFFU));
+    cframe->Data[7] |= (_m->state & (0x03U));
+
+    cframe->MsgId = LIFEPO4_GENERAL_CANID;
+    cframe->DLC = LIFEPO4_GENERAL_DLC;
+    cframe->IDE = LIFEPO4_GENERAL_IDE;
+    return LIFEPO4_GENERAL_CANID;
+}
+
+#else
+
+void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < LIFEPO4_GENERAL_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->chargeCurrent = CANPARSER_chargeCurrent_toS(_m->chargeCurrent_phys);
+    _m->dischargingCurrent =
+        CANPARSER_dischargingCurrent_toS(_m->dischargingCurrent_phys);
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->chargeCurrent & (0xFFU));
+    _d[1] |= ((_m->chargeCurrent >> 8) & (0xFFU));
+    _d[2] |= (_m->dischargingCurrent & (0xFFU));
+    _d[3] |= ((_m->dischargingCurrent >> 8) & (0xFFU));
+    _d[4] |= (_m->voltage & (0xFFU));
+    _d[5] |= ((_m->voltage >> 8) & (0xFFU));
+    _d[6] |= (_m->percentage & (0xFFU));
+    _d[7] |= (_m->state & (0x03U));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
 LIFEPO4_CELLS_1_t Unpack_LIFEPO4_CELLS_1(const uint8_t* _d)
 {
     LIFEPO4_CELLS_1_t _m;
@@ -329,35 +504,28 @@ void Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m, uint8_t* _d)
 
 #endif // CANPARSER_USE_CANSTRUCT
 
-LIFEPO4_GENERAL_t Unpack_LIFEPO4_GENERAL(const uint8_t* _d)
+PUMPS_GENERAL_t Unpack_PUMPS_GENERAL(const uint8_t* _d)
 {
-    LIFEPO4_GENERAL_t _m;
-    _m.voltage = ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
-#ifdef CANPARSER_USE_SIGFLOAT
-    _m.voltage_phys = (sigfloat_t)(CANPARSER_voltage_fromS(_m->voltage));
-#endif // CANPARSER_USE_SIGFLOAT
-
-    _m.currentCharge = ((_d[3] & (0x0FU)) << 8) | (_d[2] & (0xFFU));
-#ifdef CANPARSER_USE_SIGFLOAT
-    _m.currentCharge_phys =
-        (sigfloat_t)(CANPARSER_currentCharge_fromS(_m->currentCharge));
-#endif // CANPARSER_USE_SIGFLOAT
-
-    _m.currentDischarge = ((_d[4] & (0xFFU)) << 4) | ((_d[3] >> 4) & (0x0FU));
-#ifdef CANPARSER_USE_SIGFLOAT
-    _m.currentDischarge_phys =
-        (sigfloat_t)(CANPARSER_currentDischarge_fromS(_m->currentDischarge));
-#endif // CANPARSER_USE_SIGFLOAT
-
-    _m.temperature = (_d[5] & (0xFFU));
-    _m.capacity = (_d[6] & (0xFFU));
+    PUMPS_GENERAL_t _m;
+    _m.waterLevel1 = ((_d[1] & (0x0FU)) << 8) | (_d[0] & (0xFFU));
+    _m.waterLevel2 = ((_d[2] & (0xFFU)) << 4) | ((_d[1] >> 4) & (0x0FU));
+    _m.waterLevel3 = ((_d[4] & (0x0FU)) << 8) | (_d[3] & (0xFFU));
+    _m.waterLevel4 = ((_d[5] & (0xFFU)) << 4) | ((_d[4] >> 4) & (0x0FU));
+    _m.statusPump1 = (_d[6] & (0x01U));
+    _m.statusPump2 = ((_d[6] >> 1) & (0x01U));
+    _m.statusPump3 = ((_d[6] >> 2) & (0x01U));
+    _m.statusPump4 = ((_d[6] >> 3) & (0x01U));
+    _m.operatingModePump1 = ((_d[6] >> 4) & (0x01U));
+    _m.operatingModePump2 = ((_d[6] >> 5) & (0x01U));
+    _m.operatingModePump3 = ((_d[6] >> 6) & (0x01U));
+    _m.operatingModePump4 = ((_d[6] >> 7) & (0x01U));
 
 #ifdef CANPARSER_USE_DIAG_MONITORS
-    _m.mon1.dlc_error = (dlc_ < LIFEPO4_GENERAL_DLC);
+    _m.mon1.dlc_error = (dlc_ < PUMPS_GENERAL_DLC);
     _m.mon1.last_cycle = GetSystemTick();
     _m.mon1.frame_cnt++;
 
-    FMon_LIFEPO4_GENERAL_canparser(&_m.mon1, LIFEPO4_GENERAL_CANID);
+    FMon_PUMPS_GENERAL_canparser(&_m.mon1, PUMPS_GENERAL_CANID);
 #endif // CANPARSER_USE_DIAG_MONITORS
 
     return _m;
@@ -365,98 +533,268 @@ LIFEPO4_GENERAL_t Unpack_LIFEPO4_GENERAL(const uint8_t* _d)
 
 #ifdef CANPARSER_USE_CANSTRUCT
 
-uint32_t Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m,
-                              __CoderDbcCanFrame_t__* cframe)
+uint32_t Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe)
 {
     uint8_t i;
-    for(i = 0; (i < LIFEPO4_GENERAL_DLC) && (i < 8); cframe->Data[i++] = 0)
+    for(i = 0; (i < PUMPS_GENERAL_DLC) && (i < 8); cframe->Data[i++] = 0)
         ;
 
-#ifdef CANPARSER_USE_SIGFLOAT
-    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
-    _m->currentCharge = CANPARSER_currentCharge_toS(_m->currentCharge_phys);
-    _m->currentDischarge =
-        CANPARSER_currentDischarge_toS(_m->currentDischarge_phys);
-#endif // CANPARSER_USE_SIGFLOAT
+    cframe->Data[0] |= (_m->waterLevel1 & (0xFFU));
+    cframe->Data[1] |=
+        ((_m->waterLevel1 >> 8) & (0x0FU)) | ((_m->waterLevel2 & (0x0FU)) << 4);
+    cframe->Data[2] |= ((_m->waterLevel2 >> 4) & (0xFFU));
+    cframe->Data[3] |= (_m->waterLevel3 & (0xFFU));
+    cframe->Data[4] |=
+        ((_m->waterLevel3 >> 8) & (0x0FU)) | ((_m->waterLevel4 & (0x0FU)) << 4);
+    cframe->Data[5] |= ((_m->waterLevel4 >> 4) & (0xFFU));
+    cframe->Data[6] |= (_m->statusPump1 & (0x01U)) |
+                       ((_m->statusPump2 & (0x01U)) << 1) |
+                       ((_m->statusPump3 & (0x01U)) << 2) |
+                       ((_m->statusPump4 & (0x01U)) << 3) |
+                       ((_m->operatingModePump1 & (0x01U)) << 4) |
+                       ((_m->operatingModePump2 & (0x01U)) << 5) |
+                       ((_m->operatingModePump3 & (0x01U)) << 6) |
+                       ((_m->operatingModePump4 & (0x01U)) << 7);
 
-    cframe->Data[0] |= (_m->voltage & (0xFFU));
-    cframe->Data[1] |= ((_m->voltage >> 8) & (0xFFU));
-    cframe->Data[2] |= (_m->currentCharge & (0xFFU));
-    cframe->Data[3] |= ((_m->currentCharge >> 8) & (0x0FU)) |
-                       ((_m->currentDischarge & (0x0FU)) << 4);
-    cframe->Data[4] |= ((_m->currentDischarge >> 4) & (0xFFU));
-    cframe->Data[5] |= (_m->temperature & (0xFFU));
-    cframe->Data[6] |= (_m->capacity & (0xFFU));
-
-    cframe->MsgId = LIFEPO4_GENERAL_CANID;
-    cframe->DLC = LIFEPO4_GENERAL_DLC;
-    cframe->IDE = LIFEPO4_GENERAL_IDE;
-    return LIFEPO4_GENERAL_CANID;
+    cframe->MsgId = PUMPS_GENERAL_CANID;
+    cframe->DLC = PUMPS_GENERAL_DLC;
+    cframe->IDE = PUMPS_GENERAL_IDE;
+    return PUMPS_GENERAL_CANID;
 }
 
 #else
 
-void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m, uint8_t* _d)
+void Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, uint8_t* _d)
 {
     uint8_t i;
-    for(i = 0; (i < LIFEPO4_GENERAL_DLC) && (i < 8); _d[i++] = 0)
+    for(i = 0; (i < PUMPS_GENERAL_DLC) && (i < 8); _d[i++] = 0)
         ;
 
-#ifdef CANPARSER_USE_SIGFLOAT
-    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
-    _m->currentCharge = CANPARSER_currentCharge_toS(_m->currentCharge_phys);
-    _m->currentDischarge =
-        CANPARSER_currentDischarge_toS(_m->currentDischarge_phys);
-#endif // CANPARSER_USE_SIGFLOAT
-
-    _d[0] |= (_m->voltage & (0xFFU));
-    _d[1] |= ((_m->voltage >> 8) & (0xFFU));
-    _d[2] |= (_m->currentCharge & (0xFFU));
-    _d[3] |= ((_m->currentCharge >> 8) & (0x0FU)) |
-             ((_m->currentDischarge & (0x0FU)) << 4);
-    _d[4] |= ((_m->currentDischarge >> 4) & (0xFFU));
-    _d[5] |= (_m->temperature & (0xFFU));
-    _d[6] |= (_m->capacity & (0xFFU));
+    _d[0] |= (_m->waterLevel1 & (0xFFU));
+    _d[1] |=
+        ((_m->waterLevel1 >> 8) & (0x0FU)) | ((_m->waterLevel2 & (0x0FU)) << 4);
+    _d[2] |= ((_m->waterLevel2 >> 4) & (0xFFU));
+    _d[3] |= (_m->waterLevel3 & (0xFFU));
+    _d[4] |=
+        ((_m->waterLevel3 >> 8) & (0x0FU)) | ((_m->waterLevel4 & (0x0FU)) << 4);
+    _d[5] |= ((_m->waterLevel4 >> 4) & (0xFFU));
+    _d[6] |= (_m->statusPump1 & (0x01U)) | ((_m->statusPump2 & (0x01U)) << 1) |
+             ((_m->statusPump3 & (0x01U)) << 2) |
+             ((_m->statusPump4 & (0x01U)) << 3) |
+             ((_m->operatingModePump1 & (0x01U)) << 4) |
+             ((_m->operatingModePump2 & (0x01U)) << 5) |
+             ((_m->operatingModePump3 & (0x01U)) << 6) |
+             ((_m->operatingModePump4 & (0x01U)) << 7);
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
 
-MPPT_GENERAL_t Unpack_MPPT_GENERAL(const uint8_t* _d)
+EMBEDDED_BUS_DATA_t Unpack_EMBEDDED_BUS_DATA(const uint8_t* _d)
 {
-    MPPT_GENERAL_t _m;
-    _m.panelVoltage = ((_d[2] & (0x03U)) << 16) | ((_d[1] & (0xFFU)) << 8) |
-                      (_d[0] & (0xFFU));
+    EMBEDDED_BUS_DATA_t _m;
+    _m.voltage = ((_d[2] & (0x0FU)) << 16) | ((_d[1] & (0xFFU)) << 8) |
+                 (_d[0] & (0xFFU));
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m.panelVoltage_phys =
-        (sigfloat_t)(CANPARSER_panelVoltage_fromS(_m->panelVoltage));
+    _m.voltage_phys = (sigfloat_t)(CANPARSER_voltage_fromS(_m->voltage));
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _m.panelCurrent = ((_d[3] & (0x3FU)) << 6) | ((_d[2] >> 2) & (0x3FU));
+    _m.current = ((_d[4] & (0xFFU)) << 12) | ((_d[3] & (0xFFU)) << 4) |
+                 ((_d[2] >> 4) & (0x0FU));
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m.panelCurrent_phys =
-        (sigfloat_t)(CANPARSER_panelCurrent_fromS(_m->panelCurrent));
+    _m.current_phys = (sigfloat_t)(CANPARSER_current_fromS(_m->current));
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _m.chargerCurrent = ((_d[5] & (0x03U)) << 10) | ((_d[4] & (0xFFU)) << 2) |
-                        ((_d[3] >> 6) & (0x03U));
+    _m.power = ((_d[7] & (0x0FU)) << 16) | ((_d[6] & (0xFFU)) << 8) |
+               (_d[5] & (0xFFU));
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m.chargerCurrent_phys =
-        (sigfloat_t)(CANPARSER_chargerCurrent_fromS(_m->chargerCurrent));
+    _m.power_phys = (sigfloat_t)(CANPARSER_power_fromS(_m->power));
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _m.panelPower = ((_d[7] & (0x03U)) << 14) | ((_d[6] & (0xFFU)) << 6) |
-                    ((_d[5] >> 2) & (0x3FU));
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < EMBEDDED_BUS_DATA_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_EMBEDDED_BUS_DATA_canparser(&_m.mon1, EMBEDDED_BUS_DATA_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_EMBEDDED_BUS_DATA(EMBEDDED_BUS_DATA_t* _m,
+                                __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < EMBEDDED_BUS_DATA_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+    _m->current = CANPARSER_current_toS(_m->current_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->voltage & (0xFFU));
+    cframe->Data[1] |= ((_m->voltage >> 8) & (0xFFU));
+    cframe->Data[2] |=
+        ((_m->voltage >> 16) & (0x0FU)) | ((_m->current & (0x0FU)) << 4);
+    cframe->Data[3] |= ((_m->current >> 4) & (0xFFU));
+    cframe->Data[4] |= ((_m->current >> 12) & (0xFFU));
+    cframe->Data[5] |= (_m->power & (0xFFU));
+    cframe->Data[6] |= ((_m->power >> 8) & (0xFFU));
+    cframe->Data[7] |= ((_m->power >> 16) & (0x0FU));
+
+    cframe->MsgId = EMBEDDED_BUS_DATA_CANID;
+    cframe->DLC = EMBEDDED_BUS_DATA_DLC;
+    cframe->IDE = EMBEDDED_BUS_DATA_IDE;
+    return EMBEDDED_BUS_DATA_CANID;
+}
+
+#else
+
+void Pack_EMBEDDED_BUS_DATA(EMBEDDED_BUS_DATA_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < EMBEDDED_BUS_DATA_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+    _m->current = CANPARSER_current_toS(_m->current_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->voltage & (0xFFU));
+    _d[1] |= ((_m->voltage >> 8) & (0xFFU));
+    _d[2] |= ((_m->voltage >> 16) & (0x0FU)) | ((_m->current & (0x0FU)) << 4);
+    _d[3] |= ((_m->current >> 4) & (0xFFU));
+    _d[4] |= ((_m->current >> 12) & (0xFFU));
+    _d[5] |= (_m->power & (0xFFU));
+    _d[6] |= ((_m->power >> 8) & (0xFFU));
+    _d[7] |= ((_m->power >> 16) & (0x0FU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+POWER_BUS_DATA_t Unpack_POWER_BUS_DATA(const uint8_t* _d)
+{
+    POWER_BUS_DATA_t _m;
+    _m.voltage = ((_d[2] & (0x0FU)) << 16) | ((_d[1] & (0xFFU)) << 8) |
+                 (_d[0] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.voltage_phys = (sigfloat_t)(CANPARSER_voltage_fromS(_m->voltage));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.current = ((_d[4] & (0xFFU)) << 12) | ((_d[3] & (0xFFU)) << 4) |
+                 ((_d[2] >> 4) & (0x0FU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.current_phys = (sigfloat_t)(CANPARSER_current_fromS(_m->current));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.power = ((_d[7] & (0x0FU)) << 16) | ((_d[6] & (0xFFU)) << 8) |
+               (_d[5] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.power_phys = (sigfloat_t)(CANPARSER_power_fromS(_m->power));
+#endif // CANPARSER_USE_SIGFLOAT
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < POWER_BUS_DATA_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_POWER_BUS_DATA_canparser(&_m.mon1, POWER_BUS_DATA_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_POWER_BUS_DATA(POWER_BUS_DATA_t* _m,
+                             __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < POWER_BUS_DATA_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+    _m->current = CANPARSER_current_toS(_m->current_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->voltage & (0xFFU));
+    cframe->Data[1] |= ((_m->voltage >> 8) & (0xFFU));
+    cframe->Data[2] |=
+        ((_m->voltage >> 16) & (0x0FU)) | ((_m->current & (0x0FU)) << 4);
+    cframe->Data[3] |= ((_m->current >> 4) & (0xFFU));
+    cframe->Data[4] |= ((_m->current >> 12) & (0xFFU));
+    cframe->Data[5] |= (_m->power & (0xFFU));
+    cframe->Data[6] |= ((_m->power >> 8) & (0xFFU));
+    cframe->Data[7] |= ((_m->power >> 16) & (0x0FU));
+
+    cframe->MsgId = POWER_BUS_DATA_CANID;
+    cframe->DLC = POWER_BUS_DATA_DLC;
+    cframe->IDE = POWER_BUS_DATA_IDE;
+    return POWER_BUS_DATA_CANID;
+}
+
+#else
+
+void Pack_POWER_BUS_DATA(POWER_BUS_DATA_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < POWER_BUS_DATA_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->voltage = CANPARSER_voltage_toS(_m->voltage_phys);
+    _m->current = CANPARSER_current_toS(_m->current_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->voltage & (0xFFU));
+    _d[1] |= ((_m->voltage >> 8) & (0xFFU));
+    _d[2] |= ((_m->voltage >> 16) & (0x0FU)) | ((_m->current & (0x0FU)) << 4);
+    _d[3] |= ((_m->current >> 4) & (0xFFU));
+    _d[4] |= ((_m->current >> 12) & (0xFFU));
+    _d[5] |= (_m->power & (0xFFU));
+    _d[6] |= ((_m->power >> 8) & (0xFFU));
+    _d[7] |= ((_m->power >> 16) & (0x0FU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+PV_DATA_t Unpack_PV_DATA(const uint8_t* _d)
+{
+    PV_DATA_t _m;
+    _m.panelPower = ((_d[3] & (0xFFU)) << 24) | ((_d[2] & (0xFFU)) << 16) |
+                    ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
 #ifdef CANPARSER_USE_SIGFLOAT
     _m.panelPower_phys =
         (sigfloat_t)(CANPARSER_panelPower_fromS(_m->panelPower));
 #endif // CANPARSER_USE_SIGFLOAT
 
+    _m.panelCurrent = ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.panelCurrent_phys =
+        (sigfloat_t)(CANPARSER_panelCurrent_fromS(_m->panelCurrent));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.panelVoltage = ((_d[7] & (0xFFU)) << 8) | (_d[6] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.panelVoltage_phys =
+        (sigfloat_t)(CANPARSER_panelVoltage_fromS(_m->panelVoltage));
+#endif // CANPARSER_USE_SIGFLOAT
+
 #ifdef CANPARSER_USE_DIAG_MONITORS
-    _m.mon1.dlc_error = (dlc_ < MPPT_GENERAL_DLC);
+    _m.mon1.dlc_error = (dlc_ < PV_DATA_DLC);
     _m.mon1.last_cycle = GetSystemTick();
     _m.mon1.frame_cnt++;
 
-    FMon_MPPT_GENERAL_canparser(&_m.mon1, MPPT_GENERAL_CANID);
+    FMon_PV_DATA_canparser(&_m.mon1, PV_DATA_CANID);
 #endif // CANPARSER_USE_DIAG_MONITORS
 
     return _m;
@@ -464,85 +802,88 @@ MPPT_GENERAL_t Unpack_MPPT_GENERAL(const uint8_t* _d)
 
 #ifdef CANPARSER_USE_CANSTRUCT
 
-uint32_t Pack_MPPT_GENERAL(MPPT_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe)
+uint32_t Pack_PV_DATA(PV_DATA_t* _m, __CoderDbcCanFrame_t__* cframe)
 {
     uint8_t i;
-    for(i = 0; (i < MPPT_GENERAL_DLC) && (i < 8); cframe->Data[i++] = 0)
+    for(i = 0; (i < PV_DATA_DLC) && (i < 8); cframe->Data[i++] = 0)
         ;
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m->panelVoltage = CANPARSER_panelVoltage_toS(_m->panelVoltage_phys);
-    _m->panelCurrent = CANPARSER_panelCurrent_toS(_m->panelCurrent_phys);
-    _m->chargerCurrent = CANPARSER_chargerCurrent_toS(_m->chargerCurrent_phys);
     _m->panelPower = CANPARSER_panelPower_toS(_m->panelPower_phys);
+    _m->panelCurrent = CANPARSER_panelCurrent_toS(_m->panelCurrent_phys);
+    _m->panelVoltage = CANPARSER_panelVoltage_toS(_m->panelVoltage_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
-    cframe->Data[0] |= (_m->panelVoltage & (0xFFU));
-    cframe->Data[1] |= ((_m->panelVoltage >> 8) & (0xFFU));
-    cframe->Data[2] |= ((_m->panelVoltage >> 16) & (0x03U)) |
-                       ((_m->panelCurrent & (0x3FU)) << 2);
-    cframe->Data[3] |= ((_m->panelCurrent >> 6) & (0x3FU)) |
-                       ((_m->chargerCurrent & (0x03U)) << 6);
-    cframe->Data[4] |= ((_m->chargerCurrent >> 2) & (0xFFU));
-    cframe->Data[5] |= ((_m->chargerCurrent >> 10) & (0x03U)) |
-                       ((_m->panelPower & (0x3FU)) << 2);
-    cframe->Data[6] |= ((_m->panelPower >> 6) & (0xFFU));
-    cframe->Data[7] |= ((_m->panelPower >> 14) & (0x03U));
+    cframe->Data[0] |= (_m->panelPower & (0xFFU));
+    cframe->Data[1] |= ((_m->panelPower >> 8) & (0xFFU));
+    cframe->Data[2] |= ((_m->panelPower >> 16) & (0xFFU));
+    cframe->Data[3] |= ((_m->panelPower >> 24) & (0xFFU));
+    cframe->Data[4] |= (_m->panelCurrent & (0xFFU));
+    cframe->Data[5] |= ((_m->panelCurrent >> 8) & (0xFFU));
+    cframe->Data[6] |= (_m->panelVoltage & (0xFFU));
+    cframe->Data[7] |= ((_m->panelVoltage >> 8) & (0xFFU));
 
-    cframe->MsgId = MPPT_GENERAL_CANID;
-    cframe->DLC = MPPT_GENERAL_DLC;
-    cframe->IDE = MPPT_GENERAL_IDE;
-    return MPPT_GENERAL_CANID;
+    cframe->MsgId = PV_DATA_CANID;
+    cframe->DLC = PV_DATA_DLC;
+    cframe->IDE = PV_DATA_IDE;
+    return PV_DATA_CANID;
 }
 
 #else
 
-void Pack_MPPT_GENERAL(MPPT_GENERAL_t* _m, uint8_t* _d)
+void Pack_PV_DATA(PV_DATA_t* _m, uint8_t* _d)
 {
     uint8_t i;
-    for(i = 0; (i < MPPT_GENERAL_DLC) && (i < 8); _d[i++] = 0)
+    for(i = 0; (i < PV_DATA_DLC) && (i < 8); _d[i++] = 0)
         ;
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m->panelVoltage = CANPARSER_panelVoltage_toS(_m->panelVoltage_phys);
-    _m->panelCurrent = CANPARSER_panelCurrent_toS(_m->panelCurrent_phys);
-    _m->chargerCurrent = CANPARSER_chargerCurrent_toS(_m->chargerCurrent_phys);
     _m->panelPower = CANPARSER_panelPower_toS(_m->panelPower_phys);
+    _m->panelCurrent = CANPARSER_panelCurrent_toS(_m->panelCurrent_phys);
+    _m->panelVoltage = CANPARSER_panelVoltage_toS(_m->panelVoltage_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _d[0] |= (_m->panelVoltage & (0xFFU));
-    _d[1] |= ((_m->panelVoltage >> 8) & (0xFFU));
-    _d[2] |= ((_m->panelVoltage >> 16) & (0x03U)) |
-             ((_m->panelCurrent & (0x3FU)) << 2);
-    _d[3] |= ((_m->panelCurrent >> 6) & (0x3FU)) |
-             ((_m->chargerCurrent & (0x03U)) << 6);
-    _d[4] |= ((_m->chargerCurrent >> 2) & (0xFFU));
-    _d[5] |= ((_m->chargerCurrent >> 10) & (0x03U)) |
-             ((_m->panelPower & (0x3FU)) << 2);
-    _d[6] |= ((_m->panelPower >> 6) & (0xFFU));
-    _d[7] |= ((_m->panelPower >> 14) & (0x03U));
+    _d[0] |= (_m->panelPower & (0xFFU));
+    _d[1] |= ((_m->panelPower >> 8) & (0xFFU));
+    _d[2] |= ((_m->panelPower >> 16) & (0xFFU));
+    _d[3] |= ((_m->panelPower >> 24) & (0xFFU));
+    _d[4] |= (_m->panelCurrent & (0xFFU));
+    _d[5] |= ((_m->panelCurrent >> 8) & (0xFFU));
+    _d[6] |= (_m->panelVoltage & (0xFFU));
+    _d[7] |= ((_m->panelVoltage >> 8) & (0xFFU));
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
 
-HEARTBEAT_t Unpack_HEARTBEAT(const uint8_t* _d)
+MPPT_CHARGER_DATA_t Unpack_MPPT_CHARGER_DATA(const uint8_t* _d)
 {
-    HEARTBEAT_t _m;
-    _m.upTime = ((_d[3] & (0xFFU)) << 24) | ((_d[2] & (0xFFU)) << 16) |
-                ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
+    MPPT_CHARGER_DATA_t _m;
+    _m.internalTemperature =
+        __ext_sig__((((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))), 16);
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m.upTime_phys = (sigfloat_t)(CANPARSER_upTime_fromS(_m->upTime));
+    _m.internalTemperature_phys =
+        (sigfloat_t)(CANPARSER_internalTemperature_fromS(
+            _m->internalTemperature));
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _m.canTxMessFailCount = (_d[4] & (0xFFU));
-    _m.canRxMessFailCount = (_d[5] & (0xFFU));
+    _m.batteryCurrent = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.batteryCurrent_phys =
+        (sigfloat_t)(CANPARSER_batteryCurrent_fromS(_m->batteryCurrent));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.batteryVoltage = ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.batteryVoltage_phys =
+        (sigfloat_t)(CANPARSER_batteryVoltage_fromS(_m->batteryVoltage));
+#endif // CANPARSER_USE_SIGFLOAT
 
 #ifdef CANPARSER_USE_DIAG_MONITORS
-    _m.mon1.dlc_error = (dlc_ < HEARTBEAT_DLC);
+    _m.mon1.dlc_error = (dlc_ < MPPT_CHARGER_DATA_DLC);
     _m.mon1.last_cycle = GetSystemTick();
     _m.mon1.frame_cnt++;
 
-    FMon_HEARTBEAT_canparser(&_m.mon1, HEARTBEAT_CANID);
+    FMon_MPPT_CHARGER_DATA_canparser(&_m.mon1, MPPT_CHARGER_DATA_CANID);
 #endif // CANPARSER_USE_DIAG_MONITORS
 
     return _m;
@@ -550,47 +891,411 @@ HEARTBEAT_t Unpack_HEARTBEAT(const uint8_t* _d)
 
 #ifdef CANPARSER_USE_CANSTRUCT
 
-uint32_t Pack_HEARTBEAT(HEARTBEAT_t* _m, __CoderDbcCanFrame_t__* cframe)
+uint32_t Pack_MPPT_CHARGER_DATA(MPPT_CHARGER_DATA_t* _m,
+                                __CoderDbcCanFrame_t__* cframe)
 {
     uint8_t i;
-    for(i = 0; (i < HEARTBEAT_DLC) && (i < 8); cframe->Data[i++] = 0)
+    for(i = 0; (i < MPPT_CHARGER_DATA_DLC) && (i < 8); cframe->Data[i++] = 0)
         ;
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m->upTime = CANPARSER_upTime_toS(_m->upTime_phys);
+    _m->internalTemperature =
+        CANPARSER_internalTemperature_toS(_m->internalTemperature_phys);
+    _m->batteryCurrent = CANPARSER_batteryCurrent_toS(_m->batteryCurrent_phys);
+    _m->batteryVoltage = CANPARSER_batteryVoltage_toS(_m->batteryVoltage_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
-    cframe->Data[0] |= (_m->upTime & (0xFFU));
-    cframe->Data[1] |= ((_m->upTime >> 8) & (0xFFU));
-    cframe->Data[2] |= ((_m->upTime >> 16) & (0xFFU));
-    cframe->Data[3] |= ((_m->upTime >> 24) & (0xFFU));
-    cframe->Data[4] |= (_m->canTxMessFailCount & (0xFFU));
-    cframe->Data[5] |= (_m->canRxMessFailCount & (0xFFU));
+    cframe->Data[0] |= (_m->internalTemperature & (0xFFU));
+    cframe->Data[1] |= ((_m->internalTemperature >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->batteryCurrent & (0xFFU));
+    cframe->Data[3] |= ((_m->batteryCurrent >> 8) & (0xFFU));
+    cframe->Data[4] |= (_m->batteryVoltage & (0xFFU));
+    cframe->Data[5] |= ((_m->batteryVoltage >> 8) & (0xFFU));
 
-    cframe->MsgId = HEARTBEAT_CANID;
-    cframe->DLC = HEARTBEAT_DLC;
-    cframe->IDE = HEARTBEAT_IDE;
-    return HEARTBEAT_CANID;
+    cframe->MsgId = MPPT_CHARGER_DATA_CANID;
+    cframe->DLC = MPPT_CHARGER_DATA_DLC;
+    cframe->IDE = MPPT_CHARGER_DATA_IDE;
+    return MPPT_CHARGER_DATA_CANID;
 }
 
 #else
 
-void Pack_HEARTBEAT(HEARTBEAT_t* _m, uint8_t* _d)
+void Pack_MPPT_CHARGER_DATA(MPPT_CHARGER_DATA_t* _m, uint8_t* _d)
 {
     uint8_t i;
-    for(i = 0; (i < HEARTBEAT_DLC) && (i < 8); _d[i++] = 0)
+    for(i = 0; (i < MPPT_CHARGER_DATA_DLC) && (i < 8); _d[i++] = 0)
         ;
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    _m->upTime = CANPARSER_upTime_toS(_m->upTime_phys);
+    _m->internalTemperature =
+        CANPARSER_internalTemperature_toS(_m->internalTemperature_phys);
+    _m->batteryCurrent = CANPARSER_batteryCurrent_toS(_m->batteryCurrent_phys);
+    _m->batteryVoltage = CANPARSER_batteryVoltage_toS(_m->batteryVoltage_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
-    _d[0] |= (_m->upTime & (0xFFU));
-    _d[1] |= ((_m->upTime >> 8) & (0xFFU));
-    _d[2] |= ((_m->upTime >> 16) & (0xFFU));
-    _d[3] |= ((_m->upTime >> 24) & (0xFFU));
-    _d[4] |= (_m->canTxMessFailCount & (0xFFU));
-    _d[5] |= (_m->canRxMessFailCount & (0xFFU));
+    _d[0] |= (_m->internalTemperature & (0xFFU));
+    _d[1] |= ((_m->internalTemperature >> 8) & (0xFFU));
+    _d[2] |= (_m->batteryCurrent & (0xFFU));
+    _d[3] |= ((_m->batteryCurrent >> 8) & (0xFFU));
+    _d[4] |= (_m->batteryVoltage & (0xFFU));
+    _d[5] |= ((_m->batteryVoltage >> 8) & (0xFFU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+YIELD_DATA_t Unpack_YIELD_DATA(const uint8_t* _d)
+{
+    YIELD_DATA_t _m;
+    _m.yieldToday = ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.yieldToday_phys =
+        (sigfloat_t)(CANPARSER_yieldToday_fromS(_m->yieldToday));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.maximumPowerToday = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < YIELD_DATA_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_YIELD_DATA_canparser(&_m.mon1, YIELD_DATA_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_YIELD_DATA(YIELD_DATA_t* _m, __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < YIELD_DATA_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->yieldToday = CANPARSER_yieldToday_toS(_m->yieldToday_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->yieldToday & (0xFFU));
+    cframe->Data[1] |= ((_m->yieldToday >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->maximumPowerToday & (0xFFU));
+    cframe->Data[3] |= ((_m->maximumPowerToday >> 8) & (0xFFU));
+
+    cframe->MsgId = YIELD_DATA_CANID;
+    cframe->DLC = YIELD_DATA_DLC;
+    cframe->IDE = YIELD_DATA_IDE;
+    return YIELD_DATA_CANID;
+}
+
+#else
+
+void Pack_YIELD_DATA(YIELD_DATA_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < YIELD_DATA_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->yieldToday = CANPARSER_yieldToday_toS(_m->yieldToday_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->yieldToday & (0xFFU));
+    _d[1] |= ((_m->yieldToday >> 8) & (0xFFU));
+    _d[2] |= (_m->maximumPowerToday & (0xFFU));
+    _d[3] |= ((_m->maximumPowerToday >> 8) & (0xFFU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+GEODETIC_POSITION_1_t Unpack_GEODETIC_POSITION_1(const uint8_t* _d)
+{
+    GEODETIC_POSITION_1_t _m;
+    _m.latitude =
+        __ext_sig__((((_d[3] & (0xFFU)) << 24) | ((_d[2] & (0xFFU)) << 16) |
+                     ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))),
+                    32);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.latitude_phys = (sigfloat_t)(CANPARSER_latitude_fromS(_m->latitude));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.longitude =
+        __ext_sig__((((_d[7] & (0xFFU)) << 24) | ((_d[6] & (0xFFU)) << 16) |
+                     ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU))),
+                    32);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.longitude_phys = (sigfloat_t)(CANPARSER_longitude_fromS(_m->longitude));
+#endif // CANPARSER_USE_SIGFLOAT
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < GEODETIC_POSITION_1_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_GEODETIC_POSITION_1_canparser(&_m.mon1, GEODETIC_POSITION_1_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_GEODETIC_POSITION_1(GEODETIC_POSITION_1_t* _m,
+                                  __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < GEODETIC_POSITION_1_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->latitude = CANPARSER_latitude_toS(_m->latitude_phys);
+    _m->longitude = CANPARSER_longitude_toS(_m->longitude_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->latitude & (0xFFU));
+    cframe->Data[1] |= ((_m->latitude >> 8) & (0xFFU));
+    cframe->Data[2] |= ((_m->latitude >> 16) & (0xFFU));
+    cframe->Data[3] |= ((_m->latitude >> 24) & (0xFFU));
+    cframe->Data[4] |= (_m->longitude & (0xFFU));
+    cframe->Data[5] |= ((_m->longitude >> 8) & (0xFFU));
+    cframe->Data[6] |= ((_m->longitude >> 16) & (0xFFU));
+    cframe->Data[7] |= ((_m->longitude >> 24) & (0xFFU));
+
+    cframe->MsgId = GEODETIC_POSITION_1_CANID;
+    cframe->DLC = GEODETIC_POSITION_1_DLC;
+    cframe->IDE = GEODETIC_POSITION_1_IDE;
+    return GEODETIC_POSITION_1_CANID;
+}
+
+#else
+
+void Pack_GEODETIC_POSITION_1(GEODETIC_POSITION_1_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < GEODETIC_POSITION_1_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->latitude = CANPARSER_latitude_toS(_m->latitude_phys);
+    _m->longitude = CANPARSER_longitude_toS(_m->longitude_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->latitude & (0xFFU));
+    _d[1] |= ((_m->latitude >> 8) & (0xFFU));
+    _d[2] |= ((_m->latitude >> 16) & (0xFFU));
+    _d[3] |= ((_m->latitude >> 24) & (0xFFU));
+    _d[4] |= (_m->longitude & (0xFFU));
+    _d[5] |= ((_m->longitude >> 8) & (0xFFU));
+    _d[6] |= ((_m->longitude >> 16) & (0xFFU));
+    _d[7] |= ((_m->longitude >> 24) & (0xFFU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+GEODETIC_POSITION_2_t Unpack_GEODETIC_POSITION_2(const uint8_t* _d)
+{
+    GEODETIC_POSITION_2_t _m;
+    _m.hamsl = __ext_sig__((((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))), 16);
+    _m.horizontalAccEst = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
+    _m.verticalAccEst = ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
+    _m.gpsFixType = (_d[6] & (0x07U));
+    _m.gpsFixOK = ((_d[6] >> 3) & (0x01U));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < GEODETIC_POSITION_2_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_GEODETIC_POSITION_2_canparser(&_m.mon1, GEODETIC_POSITION_2_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m,
+                                  __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < GEODETIC_POSITION_2_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+    cframe->Data[0] |= (_m->hamsl & (0xFFU));
+    cframe->Data[1] |= ((_m->hamsl >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->horizontalAccEst & (0xFFU));
+    cframe->Data[3] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
+    cframe->Data[4] |= (_m->verticalAccEst & (0xFFU));
+    cframe->Data[5] |= ((_m->verticalAccEst >> 8) & (0xFFU));
+    cframe->Data[6] |=
+        (_m->gpsFixType & (0x07U)) | ((_m->gpsFixOK & (0x01U)) << 3);
+
+    cframe->MsgId = GEODETIC_POSITION_2_CANID;
+    cframe->DLC = GEODETIC_POSITION_2_DLC;
+    cframe->IDE = GEODETIC_POSITION_2_IDE;
+    return GEODETIC_POSITION_2_CANID;
+}
+
+#else
+
+void Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < GEODETIC_POSITION_2_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+    _d[0] |= (_m->hamsl & (0xFFU));
+    _d[1] |= ((_m->hamsl >> 8) & (0xFFU));
+    _d[2] |= (_m->horizontalAccEst & (0xFFU));
+    _d[3] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
+    _d[4] |= (_m->verticalAccEst & (0xFFU));
+    _d[5] |= ((_m->verticalAccEst >> 8) & (0xFFU));
+    _d[6] |= (_m->gpsFixType & (0x07U)) | ((_m->gpsFixOK & (0x01U)) << 3);
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+NED_VELOCITY_t Unpack_NED_VELOCITY(const uint8_t* _d)
+{
+    NED_VELOCITY_t _m;
+    _m.speed = ((_d[1] & (0x0FU)) << 8) | (_d[0] & (0xFFU));
+    _m.groundSpeed = ((_d[2] & (0xFFU)) << 4) | ((_d[1] >> 4) & (0x0FU));
+    _m.speedAccEst = ((_d[4] & (0x0FU)) << 8) | (_d[3] & (0xFFU));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < NED_VELOCITY_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_NED_VELOCITY_canparser(&_m.mon1, NED_VELOCITY_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_NED_VELOCITY(NED_VELOCITY_t* _m, __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < NED_VELOCITY_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+    cframe->Data[0] |= (_m->speed & (0xFFU));
+    cframe->Data[1] |=
+        ((_m->speed >> 8) & (0x0FU)) | ((_m->groundSpeed & (0x0FU)) << 4);
+    cframe->Data[2] |= ((_m->groundSpeed >> 4) & (0xFFU));
+    cframe->Data[3] |= (_m->speedAccEst & (0xFFU));
+    cframe->Data[4] |= ((_m->speedAccEst >> 8) & (0x0FU));
+
+    cframe->MsgId = NED_VELOCITY_CANID;
+    cframe->DLC = NED_VELOCITY_DLC;
+    cframe->IDE = NED_VELOCITY_IDE;
+    return NED_VELOCITY_CANID;
+}
+
+#else
+
+void Pack_NED_VELOCITY(NED_VELOCITY_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < NED_VELOCITY_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+    _d[0] |= (_m->speed & (0xFFU));
+    _d[1] |= ((_m->speed >> 8) & (0x0FU)) | ((_m->groundSpeed & (0x0FU)) << 4);
+    _d[2] |= ((_m->groundSpeed >> 4) & (0xFFU));
+    _d[3] |= (_m->speedAccEst & (0xFFU));
+    _d[4] |= ((_m->speedAccEst >> 8) & (0x0FU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+NED_HEADING_t Unpack_NED_HEADING(const uint8_t* _d)
+{
+    NED_HEADING_t _m;
+    _m.headingOfMotion =
+        __ext_sig__((((_d[3] & (0xFFU)) << 24) | ((_d[2] & (0xFFU)) << 16) |
+                     ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))),
+                    32);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.headingOfMotion_phys =
+        (sigfloat_t)(CANPARSER_headingOfMotion_fromS(_m->headingOfMotion));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.headingOfMotionAccEst = ((_d[7] & (0xFFU)) << 24) |
+                               ((_d[6] & (0xFFU)) << 16) |
+                               ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.headingOfMotionAccEst_phys =
+        (sigfloat_t)(CANPARSER_headingOfMotionAccEst_fromS(
+            _m->headingOfMotionAccEst));
+#endif // CANPARSER_USE_SIGFLOAT
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < NED_HEADING_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_NED_HEADING_canparser(&_m.mon1, NED_HEADING_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_NED_HEADING(NED_HEADING_t* _m, __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < NED_HEADING_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->headingOfMotion =
+        CANPARSER_headingOfMotion_toS(_m->headingOfMotion_phys);
+    _m->headingOfMotionAccEst =
+        CANPARSER_headingOfMotionAccEst_toS(_m->headingOfMotionAccEst_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->headingOfMotion & (0xFFU));
+    cframe->Data[1] |= ((_m->headingOfMotion >> 8) & (0xFFU));
+    cframe->Data[2] |= ((_m->headingOfMotion >> 16) & (0xFFU));
+    cframe->Data[3] |= ((_m->headingOfMotion >> 24) & (0xFFU));
+    cframe->Data[4] |= (_m->headingOfMotionAccEst & (0xFFU));
+    cframe->Data[5] |= ((_m->headingOfMotionAccEst >> 8) & (0xFFU));
+    cframe->Data[6] |= ((_m->headingOfMotionAccEst >> 16) & (0xFFU));
+    cframe->Data[7] |= ((_m->headingOfMotionAccEst >> 24) & (0xFFU));
+
+    cframe->MsgId = NED_HEADING_CANID;
+    cframe->DLC = NED_HEADING_DLC;
+    cframe->IDE = NED_HEADING_IDE;
+    return NED_HEADING_CANID;
+}
+
+#else
+
+void Pack_NED_HEADING(NED_HEADING_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < NED_HEADING_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->headingOfMotion =
+        CANPARSER_headingOfMotion_toS(_m->headingOfMotion_phys);
+    _m->headingOfMotionAccEst =
+        CANPARSER_headingOfMotionAccEst_toS(_m->headingOfMotionAccEst_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->headingOfMotion & (0xFFU));
+    _d[1] |= ((_m->headingOfMotion >> 8) & (0xFFU));
+    _d[2] |= ((_m->headingOfMotion >> 16) & (0xFFU));
+    _d[3] |= ((_m->headingOfMotion >> 24) & (0xFFU));
+    _d[4] |= (_m->headingOfMotionAccEst & (0xFFU));
+    _d[5] |= ((_m->headingOfMotionAccEst >> 8) & (0xFFU));
+    _d[6] |= ((_m->headingOfMotionAccEst >> 16) & (0xFFU));
+    _d[7] |= ((_m->headingOfMotionAccEst >> 24) & (0xFFU));
 }
 
 #endif // CANPARSER_USE_CANSTRUCT

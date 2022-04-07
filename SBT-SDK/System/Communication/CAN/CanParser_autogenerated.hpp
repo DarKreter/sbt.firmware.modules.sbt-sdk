@@ -26,35 +26,167 @@ namespace SBT::System::Comm {
 
 #endif // CANPARSER_USE_DIAG_MONITORS
 
-// def @LIFEPO4_CELLS_1 CAN Message (1    0x1)
-#define LIFEPO4_CELLS_1_IDE              (0U)
-#define LIFEPO4_CELLS_1_DLC              (8U)
-#define LIFEPO4_CELLS_1_CANID            (0x1)
+// def @HEARTBEAT CAN Message (1    0x1)
+#define HEARTBEAT_IDE                        (0U)
+#define HEARTBEAT_DLC                        (8U)
+#define HEARTBEAT_CANID                      (0x1)
+// signal: @upTime
+#define CANPARSER_HEARTBEAT_upTime_CovFactor (0.001000)
+#define CANPARSER_HEARTBEAT_upTime_toS(x)                                      \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_HEARTBEAT_upTime_fromS(x) ((((x) * (0.001000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint32_t upTime; //      Bits=32 Factor= 0.001000        Unit:'s'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t upTime_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint8_t canTxMessFailCount; //      Bits= 8
+
+    uint8_t canRxMessFailCount; //      Bits= 8
+
+#else
+
+    uint32_t upTime; //      Bits=32 Factor= 0.001000        Unit:'s'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t upTime_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint8_t canTxMessFailCount; //      Bits= 8
+
+    uint8_t canRxMessFailCount; //      Bits= 8
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} HEARTBEAT_t;
+
+// def @LIFEPO4_GENERAL CAN Message (2    0x2)
+#define LIFEPO4_GENERAL_IDE                               (0U)
+#define LIFEPO4_GENERAL_DLC                               (8U)
+#define LIFEPO4_GENERAL_CANID                             (0x2)
+// signal: @chargeCurrent
+#define CANPARSER_LIFEPO4_GENERAL_chargeCurrent_CovFactor (0.100000)
+#define CANPARSER_LIFEPO4_GENERAL_chargeCurrent_toS(x)                         \
+    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
+#define CANPARSER_LIFEPO4_GENERAL_chargeCurrent_fromS(x)                       \
+    ((((x) * (0.100000)) + (0.000000)))
+// signal: @dischargingCurrent
+#define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_CovFactor (0.010000)
+#define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_toS(x)                    \
+    ((uint16_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_fromS(x)                  \
+    ((((x) * (0.010000)) + (0.000000)))
+// signal: @voltage
+#define CANPARSER_LIFEPO4_GENERAL_voltage_CovFactor (0.100000)
+#define CANPARSER_LIFEPO4_GENERAL_voltage_toS(x)                               \
+    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
+#define CANPARSER_LIFEPO4_GENERAL_voltage_fromS(x)                             \
+    ((((x) * (0.100000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint16_t chargeCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t chargeCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.010000 Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t dischargingCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t voltage; //      Bits=16 Factor= 0.100000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint8_t percentage; //      Bits= 8 Unit:'%'
+
+    uint8_t state : 2; //      Bits= 2 Unit:'N/A'
+
+#else
+
+    uint16_t chargeCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t chargeCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.010000 Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t dischargingCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t voltage; //      Bits=16 Factor= 0.100000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint8_t percentage; //      Bits= 8 Unit:'%'
+
+    uint8_t state; //      Bits= 2 Unit:'N/A'
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} LIFEPO4_GENERAL_t;
+
+// def @LIFEPO4_CELLS_1 CAN Message (3    0x3)
+#define LIFEPO4_CELLS_1_IDE                              (0U)
+#define LIFEPO4_CELLS_1_DLC                              (8U)
+#define LIFEPO4_CELLS_1_CANID                            (0x3)
 // signal: @cellVoltage1
-#define CANPARSER_cellVoltage1_CovFactor (0.001000)
-#define CANPARSER_cellVoltage1_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage1_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage1_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage1_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage1_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage2
-#define CANPARSER_cellVoltage2_CovFactor (0.001000)
-#define CANPARSER_cellVoltage2_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage2_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage2_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage2_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage2_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage3
-#define CANPARSER_cellVoltage3_CovFactor (0.001000)
-#define CANPARSER_cellVoltage3_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage3_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage3_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage3_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage3_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage4
-#define CANPARSER_cellVoltage4_CovFactor (0.001000)
-#define CANPARSER_cellVoltage4_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage4_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage4_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage4_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage4_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage5
-#define CANPARSER_cellVoltage5_CovFactor (0.001000)
-#define CANPARSER_cellVoltage5_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage5_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage5_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage5_fromS(x) ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_1_cellVoltage5_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
@@ -131,35 +263,40 @@ typedef struct {
 
 } LIFEPO4_CELLS_1_t;
 
-// def @LIFEPO4_CELLS_2 CAN Message (2    0x2)
-#define LIFEPO4_CELLS_2_IDE              (0U)
-#define LIFEPO4_CELLS_2_DLC              (8U)
-#define LIFEPO4_CELLS_2_CANID            (0x2)
+// def @LIFEPO4_CELLS_2 CAN Message (4    0x4)
+#define LIFEPO4_CELLS_2_IDE                              (0U)
+#define LIFEPO4_CELLS_2_DLC                              (8U)
+#define LIFEPO4_CELLS_2_CANID                            (0x4)
 // signal: @cellVoltage6
-#define CANPARSER_cellVoltage6_CovFactor (0.001000)
-#define CANPARSER_cellVoltage6_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage6_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage6_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage6_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage6_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage7
-#define CANPARSER_cellVoltage7_CovFactor (0.001000)
-#define CANPARSER_cellVoltage7_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage7_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage7_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage7_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage7_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage8
-#define CANPARSER_cellVoltage8_CovFactor (0.001000)
-#define CANPARSER_cellVoltage8_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage8_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage8_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage8_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage8_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltage9
-#define CANPARSER_cellVoltage9_CovFactor (0.001000)
-#define CANPARSER_cellVoltage9_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage9_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage9_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltage9_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltage9_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltageA
-#define CANPARSER_cellVoltageA_CovFactor (0.001000)
-#define CANPARSER_cellVoltageA_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltageA_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltageA_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltageA_fromS(x) ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_2_cellVoltageA_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
@@ -236,30 +373,34 @@ typedef struct {
 
 } LIFEPO4_CELLS_2_t;
 
-// def @LIFEPO4_CELLS_3 CAN Message (3    0x3)
-#define LIFEPO4_CELLS_3_IDE              (0U)
-#define LIFEPO4_CELLS_3_DLC              (8U)
-#define LIFEPO4_CELLS_3_CANID            (0x3)
+// def @LIFEPO4_CELLS_3 CAN Message (5    0x5)
+#define LIFEPO4_CELLS_3_IDE                              (0U)
+#define LIFEPO4_CELLS_3_DLC                              (8U)
+#define LIFEPO4_CELLS_3_CANID                            (0x5)
 // signal: @cellVoltageB
-#define CANPARSER_cellVoltageB_CovFactor (0.001000)
-#define CANPARSER_cellVoltageB_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageB_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageB_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltageB_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageB_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltageC
-#define CANPARSER_cellVoltageC_CovFactor (0.001000)
-#define CANPARSER_cellVoltageC_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageC_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageC_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltageC_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageC_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltageD
-#define CANPARSER_cellVoltageD_CovFactor (0.001000)
-#define CANPARSER_cellVoltageD_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageD_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageD_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltageD_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageD_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 // signal: @cellVoltageE
-#define CANPARSER_cellVoltageE_CovFactor (0.001000)
-#define CANPARSER_cellVoltageE_toS(x)                                          \
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageE_CovFactor (0.001000)
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageE_toS(x)                          \
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_cellVoltageE_fromS(x) ((((x) * (0.001000)) + (0.000000)))
+#define CANPARSER_LIFEPO4_CELLS_3_cellVoltageE_fromS(x)                        \
+    ((((x) * (0.001000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
@@ -324,160 +465,284 @@ typedef struct {
 
 } LIFEPO4_CELLS_3_t;
 
-// def @LIFEPO4_GENERAL CAN Message (4    0x4)
-#define LIFEPO4_GENERAL_IDE               (0U)
-#define LIFEPO4_GENERAL_DLC               (8U)
-#define LIFEPO4_GENERAL_CANID             (0x4)
+// def @PUMPS_GENERAL CAN Message (6    0x6)
+#define PUMPS_GENERAL_IDE   (0U)
+#define PUMPS_GENERAL_DLC   (8U)
+#define PUMPS_GENERAL_CANID (0x6)
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint16_t waterLevel1; //      Bits=12
+
+    uint16_t waterLevel2; //      Bits=12
+
+    uint16_t waterLevel3; //      Bits=12
+
+    uint16_t waterLevel4; //      Bits=12
+
+    uint8_t statusPump1 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump2 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump3 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump4 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump1 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump2 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump3 : 1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump4 : 1; //      Bits= 1 Unit:'Boolean'
+
+#else
+
+    uint16_t waterLevel1; //      Bits=12
+
+    uint16_t waterLevel2; //      Bits=12
+
+    uint16_t waterLevel3; //      Bits=12
+
+    uint16_t waterLevel4; //      Bits=12
+
+    uint8_t statusPump1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump2; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump3; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusPump4; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump1; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump2; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump3; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t operatingModePump4; //      Bits= 1 Unit:'Boolean'
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} PUMPS_GENERAL_t;
+
+// def @EMBEDDED_BUS_DATA CAN Message (7    0x7)
+#define EMBEDDED_BUS_DATA_IDE                         (0U)
+#define EMBEDDED_BUS_DATA_DLC                         (8U)
+#define EMBEDDED_BUS_DATA_CANID                       (0x7)
 // signal: @voltage
-#define CANPARSER_voltage_CovFactor       (0.001000)
-#define CANPARSER_voltage_toS(x)          ((uint16_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_voltage_fromS(x)        ((((x) * (0.001000)) + (0.000000)))
-// signal: @currentCharge
-#define CANPARSER_currentCharge_CovFactor (0.100000)
-#define CANPARSER_currentCharge_toS(x)                                         \
-    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
-#define CANPARSER_currentCharge_fromS(x)     ((((x) * (0.100000)) + (0.000000)))
-// signal: @currentDischarge
-#define CANPARSER_currentDischarge_CovFactor (0.100000)
-#define CANPARSER_currentDischarge_toS(x)                                      \
-    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
-#define CANPARSER_currentDischarge_fromS(x) ((((x) * (0.100000)) + (0.000000)))
-
-typedef struct {
-#ifdef CANPARSER_USE_BITS_SIGNAL
-
-    uint16_t voltage; //      Bits=16 Factor= 0.001000        Unit:'V'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t voltage_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t currentCharge; //      Bits=12 Factor= 0.100000        Unit:'A'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t currentCharge_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t currentDischarge; //      Bits=12 Factor= 0.100000        Unit:'A'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t currentDischarge_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint8_t temperature; //      Bits= 8 Unit:'Celcius'
-
-    uint8_t capacity; //      Bits= 8 Unit:'Percent'
-
-#else
-
-    uint16_t voltage; //      Bits=16 Factor= 0.001000        Unit:'V'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t voltage_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t currentCharge; //      Bits=12 Factor= 0.100000        Unit:'A'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t currentCharge_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t currentDischarge; //      Bits=12 Factor= 0.100000        Unit:'A'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t currentDischarge_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint8_t temperature; //      Bits= 8 Unit:'Celcius'
-
-    uint8_t capacity; //      Bits= 8 Unit:'Percent'
-
-#endif // CANPARSER_USE_BITS_SIGNAL
-
-#ifdef CANPARSER_USE_DIAG_MONITORS
-
-    FrameMonitor_t mon1;
-
-#endif // CANPARSER_USE_DIAG_MONITORS
-
-} LIFEPO4_GENERAL_t;
-
-// def @MPPT_GENERAL CAN Message (4    0x4)
-#define MPPT_GENERAL_IDE                 (0U)
-#define MPPT_GENERAL_DLC                 (8U)
-#define MPPT_GENERAL_CANID               (0x4)
-// signal: @panelVoltage
-#define CANPARSER_panelVoltage_CovFactor (0.001000)
-#define CANPARSER_panelVoltage_toS(x)                                          \
+#define CANPARSER_EMBEDDED_BUS_DATA_voltage_CovFactor (0.001000)
+#define CANPARSER_EMBEDDED_BUS_DATA_voltage_toS(x)                             \
     ((uint32_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_panelVoltage_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
-// signal: @panelCurrent
-#define CANPARSER_panelCurrent_CovFactor (0.100000)
-#define CANPARSER_panelCurrent_toS(x)                                          \
-    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
-#define CANPARSER_panelCurrent_fromS(x)    ((((x) * (0.100000)) + (0.000000)))
-// signal: @chargerCurrent
-#define CANPARSER_chargerCurrent_CovFactor (0.100000)
-#define CANPARSER_chargerCurrent_toS(x)                                        \
-    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
-#define CANPARSER_chargerCurrent_fromS(x) ((((x) * (0.100000)) + (0.000000)))
+#define CANPARSER_EMBEDDED_BUS_DATA_voltage_fromS(x)                           \
+    ((((x) * (0.001000)) + (0.000000)))
+// signal: @current
+#define CANPARSER_EMBEDDED_BUS_DATA_current_CovFactor (0.001000)
+#define CANPARSER_EMBEDDED_BUS_DATA_current_toS(x)                             \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_EMBEDDED_BUS_DATA_current_fromS(x)                           \
+    ((((x) * (0.001000)) + (0.000000)))
+// signal: @power
+#define CANPARSER_EMBEDDED_BUS_DATA_power_CovFactor (0.001000)
+#define CANPARSER_EMBEDDED_BUS_DATA_power_toS(x)                               \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_EMBEDDED_BUS_DATA_power_fromS(x)                             \
+    ((((x) * (0.001000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t current; //      Bits=20 Factor= 0.001000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t current_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t power; //      Bits=20 Factor= 0.001000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#else
+
+    uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t current; //      Bits=20 Factor= 0.001000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t current_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t power; //      Bits=20 Factor= 0.001000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} EMBEDDED_BUS_DATA_t;
+
+// def @POWER_BUS_DATA CAN Message (8    0x8)
+#define POWER_BUS_DATA_IDE                         (0U)
+#define POWER_BUS_DATA_DLC                         (8U)
+#define POWER_BUS_DATA_CANID                       (0x8)
+// signal: @voltage
+#define CANPARSER_POWER_BUS_DATA_voltage_CovFactor (0.001000)
+#define CANPARSER_POWER_BUS_DATA_voltage_toS(x)                                \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_POWER_BUS_DATA_voltage_fromS(x)                              \
+    ((((x) * (0.001000)) + (0.000000)))
+// signal: @current
+#define CANPARSER_POWER_BUS_DATA_current_CovFactor (0.001000)
+#define CANPARSER_POWER_BUS_DATA_current_toS(x)                                \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_POWER_BUS_DATA_current_fromS(x)                              \
+    ((((x) * (0.001000)) + (0.000000)))
+// signal: @power
+#define CANPARSER_POWER_BUS_DATA_power_CovFactor (0.001000)
+#define CANPARSER_POWER_BUS_DATA_power_toS(x)                                  \
+    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_POWER_BUS_DATA_power_fromS(x)                                \
+    ((((x) * (0.001000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t current; //      Bits=20 Factor= 0.001000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t current_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t power; //      Bits=20 Factor= 0.001000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#else
+
+    uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t voltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t current; //      Bits=20 Factor= 0.001000        Unit:'A'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t current_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t power; //      Bits=20 Factor= 0.001000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} POWER_BUS_DATA_t;
+
+// def @PV_DATA CAN Message (9    0x9)
+#define PV_DATA_IDE                            (0U)
+#define PV_DATA_DLC                            (8U)
+#define PV_DATA_CANID                          (0x9)
 // signal: @panelPower
-#define CANPARSER_panelPower_CovFactor    (0.100000)
-#define CANPARSER_panelPower_toS(x)                                            \
+#define CANPARSER_PV_DATA_panelPower_CovFactor (0.010000)
+#define CANPARSER_PV_DATA_panelPower_toS(x)                                    \
+    ((uint32_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_PV_DATA_panelPower_fromS(x)                                  \
+    ((((x) * (0.010000)) + (0.000000)))
+// signal: @panelCurrent
+#define CANPARSER_PV_DATA_panelCurrent_CovFactor (0.100000)
+#define CANPARSER_PV_DATA_panelCurrent_toS(x)                                  \
     ((uint16_t)(((x) - (0.000000)) / (0.100000)))
-#define CANPARSER_panelPower_fromS(x) ((((x) * (0.100000)) + (0.000000)))
+#define CANPARSER_PV_DATA_panelCurrent_fromS(x)                                \
+    ((((x) * (0.100000)) + (0.000000)))
+// signal: @panelVoltage
+#define CANPARSER_PV_DATA_panelVoltage_CovFactor (0.010000)
+#define CANPARSER_PV_DATA_panelVoltage_toS(x)                                  \
+    ((uint16_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_PV_DATA_panelVoltage_fromS(x)                                \
+    ((((x) * (0.010000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
-    uint32_t panelVoltage; //      Bits=18 Factor= 0.001000        Unit:'V'
+    uint32_t panelPower; //      Bits=32 Factor= 0.010000        Unit:'W'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t panelVoltage_phys;
+    sigfloat_t panelPower_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t panelCurrent; //      Bits=12 Factor= 0.100000        Unit:'A'
+    uint16_t panelCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
 
 #ifdef CANPARSER_USE_SIGFLOAT
     sigfloat_t panelCurrent_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t chargerCurrent; //      Bits=12 Factor= 0.100000        Unit:'A'
+    uint16_t panelVoltage; //      Bits=16 Factor= 0.010000        Unit:'V'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t chargerCurrent_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t panelPower; //      Bits=16 Factor= 0.100000        Unit:'W'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t panelPower_phys;
+    sigfloat_t panelVoltage_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
 #else
 
-    uint32_t panelVoltage; //      Bits=18 Factor= 0.001000        Unit:'V'
+    uint32_t panelPower; //      Bits=32 Factor= 0.010000        Unit:'W'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t panelVoltage_phys;
+    sigfloat_t panelPower_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t panelCurrent; //      Bits=12 Factor= 0.100000        Unit:'A'
+    uint16_t panelCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
 
 #ifdef CANPARSER_USE_SIGFLOAT
     sigfloat_t panelCurrent_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t chargerCurrent; //      Bits=12 Factor= 0.100000        Unit:'A'
+    uint16_t panelVoltage; //      Bits=16 Factor= 0.010000        Unit:'V'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t chargerCurrent_phys;
-#endif // CANPARSER_USE_SIGFLOAT
-
-    uint16_t panelPower; //      Bits=16 Factor= 0.100000        Unit:'W'
-
-#ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t panelPower_phys;
+    sigfloat_t panelVoltage_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
 #endif // CANPARSER_USE_BITS_SIGNAL
@@ -488,41 +753,71 @@ typedef struct {
 
 #endif // CANPARSER_USE_DIAG_MONITORS
 
-} MPPT_GENERAL_t;
+} PV_DATA_t;
 
-// def @HEARTBEAT CAN Message (4    0x4)
-#define HEARTBEAT_IDE              (0U)
-#define HEARTBEAT_DLC              (8U)
-#define HEARTBEAT_CANID            (0x4)
-// signal: @upTime
-#define CANPARSER_upTime_CovFactor (0.001000)
-#define CANPARSER_upTime_toS(x)    ((uint32_t)(((x) - (0.000000)) / (0.001000)))
-#define CANPARSER_upTime_fromS(x)  ((((x) * (0.001000)) + (0.000000)))
+// def @MPPT_CHARGER_DATA CAN Message (10   0xa)
+#define MPPT_CHARGER_DATA_IDE                                     (0U)
+#define MPPT_CHARGER_DATA_DLC                                     (8U)
+#define MPPT_CHARGER_DATA_CANID                                   (0xa)
+// signal: @internalTemperature
+#define CANPARSER_MPPT_CHARGER_DATA_internalTemperature_CovFactor (0.010000)
+#define CANPARSER_MPPT_CHARGER_DATA_internalTemperature_toS(x)                 \
+    ((int16_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_MPPT_CHARGER_DATA_internalTemperature_fromS(x)               \
+    ((((x) * (0.010000)) + (0.000000)))
+// signal: @batteryCurrent
+#define CANPARSER_MPPT_CHARGER_DATA_batteryCurrent_CovFactor (0.100000)
+#define CANPARSER_MPPT_CHARGER_DATA_batteryCurrent_toS(x)                      \
+    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
+#define CANPARSER_MPPT_CHARGER_DATA_batteryCurrent_fromS(x)                    \
+    ((((x) * (0.100000)) + (0.000000)))
+// signal: @batteryVoltage
+#define CANPARSER_MPPT_CHARGER_DATA_batteryVoltage_CovFactor (0.010000)
+#define CANPARSER_MPPT_CHARGER_DATA_batteryVoltage_toS(x)                      \
+    ((uint16_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_MPPT_CHARGER_DATA_batteryVoltage_fromS(x)                    \
+    ((((x) * (0.010000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
-    uint32_t upTime; //      Bits=32 Factor= 0.001000        Unit:'s'
+    int16_t internalTemperature; //  [-] Bits=16 Factor= 0.010000 Unit:'Celcius'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t upTime_phys;
+    sigfloat_t internalTemperature_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint8_t canTxMessFailCount; //      Bits= 8
+    uint16_t batteryCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
 
-    uint8_t canRxMessFailCount; //      Bits= 8
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t batteryCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t batteryVoltage; //      Bits=16 Factor= 0.010000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t batteryVoltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
 
 #else
 
-    uint32_t upTime; //      Bits=32 Factor= 0.001000        Unit:'s'
+    int16_t internalTemperature; //  [-] Bits=16 Factor= 0.010000 Unit:'Celcius'
 
 #ifdef CANPARSER_USE_SIGFLOAT
-    sigfloat_t upTime_phys;
+    sigfloat_t internalTemperature_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint8_t canTxMessFailCount; //      Bits= 8
+    uint16_t batteryCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
 
-    uint8_t canRxMessFailCount; //      Bits= 8
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t batteryCurrent_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t batteryVoltage; //      Bits=16 Factor= 0.010000        Unit:'V'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t batteryVoltage_phys;
+#endif // CANPARSER_USE_SIGFLOAT
 
 #endif // CANPARSER_USE_BITS_SIGNAL
 
@@ -532,9 +827,270 @@ typedef struct {
 
 #endif // CANPARSER_USE_DIAG_MONITORS
 
-} HEARTBEAT_t;
+} MPPT_CHARGER_DATA_t;
+
+// def @YIELD_DATA CAN Message (11   0xb)
+#define YIELD_DATA_IDE                            (0U)
+#define YIELD_DATA_DLC                            (8U)
+#define YIELD_DATA_CANID                          (0xb)
+// signal: @yieldToday
+#define CANPARSER_YIELD_DATA_yieldToday_CovFactor (0.010000)
+#define CANPARSER_YIELD_DATA_yieldToday_toS(x)                                 \
+    ((uint16_t)(((x) - (0.000000)) / (0.010000)))
+#define CANPARSER_YIELD_DATA_yieldToday_fromS(x)                               \
+    ((((x) * (0.010000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint16_t yieldToday; //      Bits=16 Factor= 0.010000        Unit:'kWh'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t yieldToday_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t maximumPowerToday; //      Bits=16 Unit:'W'
+
+#else
+
+    uint16_t yieldToday; //      Bits=16 Factor= 0.010000        Unit:'kWh'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t yieldToday_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t maximumPowerToday; //      Bits=16 Unit:'W'
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} YIELD_DATA_t;
+
+// def @GEODETIC_POSITION_1 CAN Message (12   0xc)
+#define GEODETIC_POSITION_1_IDE                          (0U)
+#define GEODETIC_POSITION_1_DLC                          (8U)
+#define GEODETIC_POSITION_1_CANID                        (0xc)
+// signal: @latitude
+#define CANPARSER_GEODETIC_POSITION_1_latitude_CovFactor (0.000000)
+#define CANPARSER_GEODETIC_POSITION_1_latitude_toS(x)                          \
+    ((int32_t)(((x) - (0.000000)) / (0.000000)))
+#define CANPARSER_GEODETIC_POSITION_1_latitude_fromS(x)                        \
+    ((((x) * (0.000000)) + (0.000000)))
+// signal: @longitude
+#define CANPARSER_GEODETIC_POSITION_1_longitude_CovFactor (0.000000)
+#define CANPARSER_GEODETIC_POSITION_1_longitude_toS(x)                         \
+    ((int32_t)(((x) - (0.000000)) / (0.000000)))
+#define CANPARSER_GEODETIC_POSITION_1_longitude_fromS(x)                       \
+    ((((x) * (0.000000)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    int32_t latitude; //  [-] Bits=32 Factor= 0.000000        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t latitude_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    int32_t longitude; //  [-] Bits=32 Factor= 0.000000        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t longitude_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#else
+
+    int32_t latitude; //  [-] Bits=32 Factor= 0.000000        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t latitude_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    int32_t longitude; //  [-] Bits=32 Factor= 0.000000        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t longitude_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} GEODETIC_POSITION_1_t;
+
+// def @GEODETIC_POSITION_2 CAN Message (13   0xd)
+#define GEODETIC_POSITION_2_IDE   (0U)
+#define GEODETIC_POSITION_2_DLC   (8U)
+#define GEODETIC_POSITION_2_CANID (0xd)
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    int16_t hamsl; //  [-] Bits=16 Unit:'mm'
+
+    uint16_t horizontalAccEst; //      Bits=16 Unit:'mm'
+
+    uint16_t verticalAccEst; //      Bits=16 Unit:'mm'
+
+    uint8_t gpsFixType : 3; //      Bits= 3
+
+    uint8_t gpsFixOK : 1; //      Bits= 1
+
+#else
+
+    int16_t hamsl; //  [-] Bits=16 Unit:'mm'
+
+    uint16_t horizontalAccEst; //      Bits=16 Unit:'mm'
+
+    uint16_t verticalAccEst; //      Bits=16 Unit:'mm'
+
+    uint8_t gpsFixType; //      Bits= 3
+
+    uint8_t gpsFixOK; //      Bits= 1
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} GEODETIC_POSITION_2_t;
+
+// def @NED_VELOCITY CAN Message (14   0xe)
+#define NED_VELOCITY_IDE   (0U)
+#define NED_VELOCITY_DLC   (8U)
+#define NED_VELOCITY_CANID (0xe)
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint16_t speed; //      Bits=12 Unit:'cm/s'
+
+    uint16_t groundSpeed; //      Bits=12 Unit:'cm/s'
+
+    uint16_t speedAccEst; //      Bits=12 Unit:'cm/s'
+
+#else
+
+    uint16_t speed; //      Bits=12 Unit:'cm/s'
+
+    uint16_t groundSpeed; //      Bits=12 Unit:'cm/s'
+
+    uint16_t speedAccEst; //      Bits=12 Unit:'cm/s'
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} NED_VELOCITY_t;
+
+// def @NED_HEADING CAN Message (15   0xf)
+#define NED_HEADING_IDE                                 (0U)
+#define NED_HEADING_DLC                                 (8U)
+#define NED_HEADING_CANID                               (0xf)
+// signal: @headingOfMotion
+#define CANPARSER_NED_HEADING_headingOfMotion_CovFactor (0.000010)
+#define CANPARSER_NED_HEADING_headingOfMotion_toS(x)                           \
+    ((int32_t)(((x) - (0.000000)) / (0.000010)))
+#define CANPARSER_NED_HEADING_headingOfMotion_fromS(x)                         \
+    ((((x) * (0.000010)) + (0.000000)))
+// signal: @headingOfMotionAccEst
+#define CANPARSER_NED_HEADING_headingOfMotionAccEst_CovFactor (0.000010)
+#define CANPARSER_NED_HEADING_headingOfMotionAccEst_toS(x)                     \
+    ((uint32_t)(((x) - (0.000000)) / (0.000010)))
+#define CANPARSER_NED_HEADING_headingOfMotionAccEst_fromS(x)                   \
+    ((((x) * (0.000010)) + (0.000000)))
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    int32_t headingOfMotion; //  [-] Bits=32 Factor= 0.000010        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t headingOfMotion_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t headingOfMotionAccEst; //      Bits=32 Factor= 0.000010 Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t headingOfMotionAccEst_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#else
+
+    int32_t headingOfMotion; //  [-] Bits=32 Factor= 0.000010        Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t headingOfMotion_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint32_t headingOfMotionAccEst; //      Bits=32 Factor= 0.000010 Unit:'deg'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t headingOfMotionAccEst_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} NED_HEADING_t;
 
 // Function signatures
+
+/**
+ * @brief Unpacks raw CAN frame payload into HEARTBEAT_t struct
+ * @param _d pointer to payload to unpack
+ * @return HEARTBEAT_t unpacked object
+ */
+[[nodiscard]] HEARTBEAT_t Unpack_HEARTBEAT(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_HEARTBEAT(HEARTBEAT_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs HEARTBEAT_t object into raw 8-byte long payload
+ * @param _m pointer to HEARTBEAT_t object to pack
+ * @param _d pointer to payload, where HEARTBEAT_t object will be packed
+ */
+void Pack_HEARTBEAT(HEARTBEAT_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into LIFEPO4_GENERAL_t struct
+ * @param _d pointer to payload to unpack
+ * @return LIFEPO4_GENERAL_t unpacked object
+ */
+[[nodiscard]] LIFEPO4_GENERAL_t Unpack_LIFEPO4_GENERAL(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m,
+                          __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs LIFEPO4_GENERAL_t object into raw 8-byte long payload
+ * @param _m pointer to LIFEPO4_GENERAL_t object to pack
+ * @param _d pointer to payload, where LIFEPO4_GENERAL_t object will be packed
+ */
+void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
 
 /**
  * @brief Unpacks raw CAN frame payload into LIFEPO4_CELLS_1_t struct
@@ -591,55 +1147,181 @@ void Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 /**
- * @brief Unpacks raw CAN frame payload into LIFEPO4_GENERAL_t struct
+ * @brief Unpacks raw CAN frame payload into PUMPS_GENERAL_t struct
  * @param _d pointer to payload to unpack
- * @return LIFEPO4_GENERAL_t unpacked object
+ * @return PUMPS_GENERAL_t unpacked object
  */
-[[nodiscard]] LIFEPO4_GENERAL_t Unpack_LIFEPO4_GENERAL(const uint8_t* _d);
+[[nodiscard]] PUMPS_GENERAL_t Unpack_PUMPS_GENERAL(const uint8_t* _d);
 #ifdef CANPARSER_USE_CANSTRUCT
-void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m,
-                          __CoderDbcCanFrame_t__* cframe);
+void Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe);
 #else
 /**
- * @brief Packs LIFEPO4_GENERAL_t object into raw 8-byte long payload
- * @param _m pointer to LIFEPO4_GENERAL_t object to pack
- * @param _d pointer to payload, where LIFEPO4_GENERAL_t object will be packed
+ * @brief Packs PUMPS_GENERAL_t object into raw 8-byte long payload
+ * @param _m pointer to PUMPS_GENERAL_t object to pack
+ * @param _d pointer to payload, where PUMPS_GENERAL_t object will be packed
  */
-void Pack_LIFEPO4_GENERAL(LIFEPO4_GENERAL_t* _m, uint8_t* _d);
+void Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 /**
- * @brief Unpacks raw CAN frame payload into MPPT_GENERAL_t struct
+ * @brief Unpacks raw CAN frame payload into EMBEDDED_BUS_DATA_t struct
  * @param _d pointer to payload to unpack
- * @return MPPT_GENERAL_t unpacked object
+ * @return EMBEDDED_BUS_DATA_t unpacked object
  */
-[[nodiscard]] MPPT_GENERAL_t Unpack_MPPT_GENERAL(const uint8_t* _d);
+[[nodiscard]] EMBEDDED_BUS_DATA_t Unpack_EMBEDDED_BUS_DATA(const uint8_t* _d);
 #ifdef CANPARSER_USE_CANSTRUCT
-void Pack_MPPT_GENERAL(MPPT_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe);
+void Pack_EMBEDDED_BUS_DATA(EMBEDDED_BUS_DATA_t* _m,
+                            __CoderDbcCanFrame_t__* cframe);
 #else
 /**
- * @brief Packs MPPT_GENERAL_t object into raw 8-byte long payload
- * @param _m pointer to MPPT_GENERAL_t object to pack
- * @param _d pointer to payload, where MPPT_GENERAL_t object will be packed
+ * @brief Packs EMBEDDED_BUS_DATA_t object into raw 8-byte long payload
+ * @param _m pointer to EMBEDDED_BUS_DATA_t object to pack
+ * @param _d pointer to payload, where EMBEDDED_BUS_DATA_t object will be packed
  */
-void Pack_MPPT_GENERAL(MPPT_GENERAL_t* _m, uint8_t* _d);
+void Pack_EMBEDDED_BUS_DATA(EMBEDDED_BUS_DATA_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 /**
- * @brief Unpacks raw CAN frame payload into HEARTBEAT_t struct
+ * @brief Unpacks raw CAN frame payload into POWER_BUS_DATA_t struct
  * @param _d pointer to payload to unpack
- * @return HEARTBEAT_t unpacked object
+ * @return POWER_BUS_DATA_t unpacked object
  */
-[[nodiscard]] HEARTBEAT_t Unpack_HEARTBEAT(const uint8_t* _d);
+[[nodiscard]] POWER_BUS_DATA_t Unpack_POWER_BUS_DATA(const uint8_t* _d);
 #ifdef CANPARSER_USE_CANSTRUCT
-void Pack_HEARTBEAT(HEARTBEAT_t* _m, __CoderDbcCanFrame_t__* cframe);
+void Pack_POWER_BUS_DATA(POWER_BUS_DATA_t* _m, __CoderDbcCanFrame_t__* cframe);
 #else
 /**
- * @brief Packs HEARTBEAT_t object into raw 8-byte long payload
- * @param _m pointer to HEARTBEAT_t object to pack
- * @param _d pointer to payload, where HEARTBEAT_t object will be packed
+ * @brief Packs POWER_BUS_DATA_t object into raw 8-byte long payload
+ * @param _m pointer to POWER_BUS_DATA_t object to pack
+ * @param _d pointer to payload, where POWER_BUS_DATA_t object will be packed
  */
-void Pack_HEARTBEAT(HEARTBEAT_t* _m, uint8_t* _d);
+void Pack_POWER_BUS_DATA(POWER_BUS_DATA_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into PV_DATA_t struct
+ * @param _d pointer to payload to unpack
+ * @return PV_DATA_t unpacked object
+ */
+[[nodiscard]] PV_DATA_t Unpack_PV_DATA(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_PV_DATA(PV_DATA_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs PV_DATA_t object into raw 8-byte long payload
+ * @param _m pointer to PV_DATA_t object to pack
+ * @param _d pointer to payload, where PV_DATA_t object will be packed
+ */
+void Pack_PV_DATA(PV_DATA_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into MPPT_CHARGER_DATA_t struct
+ * @param _d pointer to payload to unpack
+ * @return MPPT_CHARGER_DATA_t unpacked object
+ */
+[[nodiscard]] MPPT_CHARGER_DATA_t Unpack_MPPT_CHARGER_DATA(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_MPPT_CHARGER_DATA(MPPT_CHARGER_DATA_t* _m,
+                            __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs MPPT_CHARGER_DATA_t object into raw 8-byte long payload
+ * @param _m pointer to MPPT_CHARGER_DATA_t object to pack
+ * @param _d pointer to payload, where MPPT_CHARGER_DATA_t object will be packed
+ */
+void Pack_MPPT_CHARGER_DATA(MPPT_CHARGER_DATA_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into YIELD_DATA_t struct
+ * @param _d pointer to payload to unpack
+ * @return YIELD_DATA_t unpacked object
+ */
+[[nodiscard]] YIELD_DATA_t Unpack_YIELD_DATA(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_YIELD_DATA(YIELD_DATA_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs YIELD_DATA_t object into raw 8-byte long payload
+ * @param _m pointer to YIELD_DATA_t object to pack
+ * @param _d pointer to payload, where YIELD_DATA_t object will be packed
+ */
+void Pack_YIELD_DATA(YIELD_DATA_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into GEODETIC_POSITION_1_t struct
+ * @param _d pointer to payload to unpack
+ * @return GEODETIC_POSITION_1_t unpacked object
+ */
+[[nodiscard]] GEODETIC_POSITION_1_t
+Unpack_GEODETIC_POSITION_1(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_GEODETIC_POSITION_1(GEODETIC_POSITION_1_t* _m,
+                              __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs GEODETIC_POSITION_1_t object into raw 8-byte long payload
+ * @param _m pointer to GEODETIC_POSITION_1_t object to pack
+ * @param _d pointer to payload, where GEODETIC_POSITION_1_t object will be
+ * packed
+ */
+void Pack_GEODETIC_POSITION_1(GEODETIC_POSITION_1_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into GEODETIC_POSITION_2_t struct
+ * @param _d pointer to payload to unpack
+ * @return GEODETIC_POSITION_2_t unpacked object
+ */
+[[nodiscard]] GEODETIC_POSITION_2_t
+Unpack_GEODETIC_POSITION_2(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m,
+                              __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs GEODETIC_POSITION_2_t object into raw 8-byte long payload
+ * @param _m pointer to GEODETIC_POSITION_2_t object to pack
+ * @param _d pointer to payload, where GEODETIC_POSITION_2_t object will be
+ * packed
+ */
+void Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into NED_VELOCITY_t struct
+ * @param _d pointer to payload to unpack
+ * @return NED_VELOCITY_t unpacked object
+ */
+[[nodiscard]] NED_VELOCITY_t Unpack_NED_VELOCITY(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_NED_VELOCITY(NED_VELOCITY_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs NED_VELOCITY_t object into raw 8-byte long payload
+ * @param _m pointer to NED_VELOCITY_t object to pack
+ * @param _d pointer to payload, where NED_VELOCITY_t object will be packed
+ */
+void Pack_NED_VELOCITY(NED_VELOCITY_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into NED_HEADING_t struct
+ * @param _d pointer to payload to unpack
+ * @return NED_HEADING_t unpacked object
+ */
+[[nodiscard]] NED_HEADING_t Unpack_NED_HEADING(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_NED_HEADING(NED_HEADING_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs NED_HEADING_t object into raw 8-byte long payload
+ * @param _m pointer to NED_HEADING_t object to pack
+ * @param _d pointer to payload, where NED_HEADING_t object will be packed
+ */
+void Pack_NED_HEADING(NED_HEADING_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 } // namespace SBT::System::Comm
