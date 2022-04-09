@@ -68,9 +68,9 @@ struct Message_t {
 
 namespace Message {
 
-constexpr Message_t HEARTBEAT = {0, Param::HEARTBEAT, Group::DEFAULT};
+constexpr Message_t HEARTBEAT = {7, Param::HEARTBEAT, Group::DEFAULT};
 
-constexpr Message_t LIFEPO4_GENERAL = {7, Param::LIFEPO4_GENERAL,
+constexpr Message_t LIFEPO4_GENERAL = {4, Param::LIFEPO4_GENERAL,
                                        Group::LIFEPO4_DATA};
 
 constexpr Message_t LIFEPO4_CELLS_1 = {7, Param::LIFEPO4_CELLS_1,
@@ -82,14 +82,14 @@ constexpr Message_t LIFEPO4_CELLS_2 = {7, Param::LIFEPO4_CELLS_2,
 constexpr Message_t LIFEPO4_CELLS_3 = {7, Param::LIFEPO4_CELLS_3,
                                        Group::LIFEPO4_DATA};
 
-constexpr Message_t PUMPS_GENERAL = {7, Param::PUMPS_GENERAL, Group::DEFAULT};
+constexpr Message_t PUMPS_GENERAL = {5, Param::PUMPS_GENERAL, Group::DEFAULT};
 
-constexpr Message_t EMBEDDED_BUS_DATA = {7, Param::EMBEDDED_BUS_DATA,
+constexpr Message_t EMBEDDED_BUS_DATA = {3, Param::EMBEDDED_BUS_DATA,
                                          Group::DEFAULT};
 
-constexpr Message_t POWER_BUS_DATA = {7, Param::POWER_BUS_DATA, Group::DEFAULT};
+constexpr Message_t POWER_BUS_DATA = {3, Param::POWER_BUS_DATA, Group::DEFAULT};
 
-constexpr Message_t PV_DATA = {7, Param::PV_DATA, Group::MPPT_DATA};
+constexpr Message_t PV_DATA = {5, Param::PV_DATA, Group::MPPT_DATA};
 
 constexpr Message_t MPPT_CHARGER_DATA = {7, Param::MPPT_CHARGER_DATA,
                                          Group::MPPT_DATA};
@@ -102,7 +102,7 @@ constexpr Message_t GEODETIC_POSITION_1 = {7, Param::GEODETIC_POSITION_1,
 constexpr Message_t GEODETIC_POSITION_2 = {7, Param::GEODETIC_POSITION_2,
                                            Group::DEFAULT};
 
-constexpr Message_t NED_VELOCITY = {7, Param::NED_VELOCITY, Group::DEFAULT};
+constexpr Message_t NED_VELOCITY = {6, Param::NED_VELOCITY, Group::DEFAULT};
 
 constexpr Message_t NED_HEADING = {7, Param::NED_HEADING, Group::DEFAULT};
 
