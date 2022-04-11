@@ -4,8 +4,14 @@
 
 #include "CommCAN.hpp"
 #include "CAN.hpp"
-#include "CanReceiver.hpp"
+
+#ifndef SBT_CAN_SENDER_DISABLE
 #include "CanSender.hpp"
+#endif
+#ifndef SBT_CAN_RECEIVER_DISABLE
+#include "CanReceiver.hpp"
+#endif
+
 #include "Error.hpp"
 
 static void commCANError(const std::string& comment)
@@ -95,6 +101,7 @@ void CAN::AddFilter(const Filter& filter,
     filters[Filter::filterBankID++] = callback;
 }
 
+#ifndef SBT_CAN_SENDER_DISABLE
 void CAN::Send(CAN::TxMessage& message)
 {
     if(!initialized)
@@ -117,7 +124,9 @@ void CAN::Send(Message_t mID, uint8_t (&data)[8])
 {
     Send(TxMessage(defaultSourceID, mID, data));
 }
+#endif
 
+#ifndef SBT_CAN_RECEIVER_DISABLE
 void CAN::CopyRxMessToQueue(uint32_t fifoId)
 {
     CAN::RxMessage message{};
@@ -129,5 +138,6 @@ void CAN::CopyRxMessToQueue(uint32_t fifoId)
     // and system task will get it from here and call proper callback
     Tasks::CanReceiver::AddToQueueFromISR(message);
 }
+#endif
 
 } // namespace SBT::System::Comm

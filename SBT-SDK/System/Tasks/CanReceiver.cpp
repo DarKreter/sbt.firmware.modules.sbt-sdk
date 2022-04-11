@@ -18,7 +18,12 @@ CanReceiver::CanReceiver() : Task("CanReceiver", 15, 256) {}
 void CanReceiver::initialize()
 {
     // Create queue
-    xQueueHandle = xQueueCreate(20, sizeof(CAN::RxMessage));
+#ifndef SBT_CAN_RECEIVER_QUEUE_SIZE
+#define SBT_CAN_RECEIVER_QUEUE_SIZE 20
+#endif
+
+    xQueueHandle =
+        xQueueCreate(SBT_CAN_RECEIVER_QUEUE_SIZE, sizeof(CAN::RxMessage));
 
     if(xQueueHandle == NULL)
         softfault(__FILE__, __LINE__, "CanReceiver: Could not create xQueue");

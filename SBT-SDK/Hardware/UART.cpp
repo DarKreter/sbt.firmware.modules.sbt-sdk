@@ -5,7 +5,6 @@
 #include "UART.hpp"
 #include "Error.hpp"
 #include "GPIO.hpp"
-#include "I2C.hpp"
 #include <cstdarg>
 #include <cstring>
 
@@ -68,21 +67,18 @@ void UART::Initialize()
     if(initialized)
         uartErrorAlreadyInit();
 
-    if(instance == Instance::UART_3 && i2c2.IsInitialized())
-        uartError("Cannot initialize UART3 along with I2C2!");
-
     switch(instance) {
     case Instance::UART_1:
-        // Enable clocks
-        __HAL_RCC_GPIOA_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_USART1_CLK_ENABLE();
         // Set GPIO
         if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-            GPIO::Enable(GPIOA, GPIO_PIN_9, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // TX1
+            GPIO::Enable(BSP::Pinouts::UART_1.tx); // TX1
         if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-            GPIO::Enable(GPIOA, GPIO_PIN_10, GPIO::Mode::AlternateInput,
-                         GPIO::Pull::PullUp); // RX1
+            GPIO::Enable(BSP::Pinouts::UART_1.rx); // RX1
+#ifdef SBT_BSP_REMAP_UART1
+        __HAL_AFIO_REMAP_USART1_ENABLE();
+#endif
         // Enable interrupts with low priority
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_SetPriority(USART1_IRQn, 11, 0);
@@ -91,16 +87,13 @@ void UART::Initialize()
         state.handle.Instance = USART1;
         break;
     case Instance::UART_2:
-        // Enable clocks
-        __HAL_RCC_GPIOA_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_USART2_CLK_ENABLE();
         // Set GPIO
         if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-            GPIO::Enable(GPIOA, GPIO_PIN_2, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // TX2
+            GPIO::Enable(BSP::Pinouts::UART_2.tx); // TX2
         if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-            GPIO::Enable(GPIOA, GPIO_PIN_3, GPIO::Mode::AlternateInput,
-                         GPIO::Pull::PullUp); // RX2
+            GPIO::Enable(BSP::Pinouts::UART_2.rx); // RX2
         // Enable interrupts with low priority
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_SetPriority(USART2_IRQn, 11, 0);
@@ -109,16 +102,13 @@ void UART::Initialize()
         state.handle.Instance = USART2;
         break;
     case Instance::UART_3:
-        // Enable clocks
-        __HAL_RCC_GPIOB_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_USART3_CLK_ENABLE();
         // Set GPIO
         if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
-            GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // TX3
+            GPIO::Enable(BSP::Pinouts::UART_3.tx); // TX3
         if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
-            GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateInput,
-                         GPIO::Pull::PullUp); // RX3
+            GPIO::Enable(BSP::Pinouts::UART_3.rx); // RX3
         // Enable interrupts with low priority
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_SetPriority(USART3_IRQn, 11, 0);
@@ -205,21 +195,21 @@ void UART::DeInitialize()
 
     switch(instance) {
     case Instance::UART_1:
-        // Disable the UART1 clock only as GPIOA may be in use by another device
+        // Disable the clock
         __HAL_RCC_USART1_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(USART1_IRQn);
         break;
     case Instance::UART_2:
-        // Disable the UART2 clock only as GPIOA may be in use by another device
+        // Disable the clock
         __HAL_RCC_USART2_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(USART2_IRQn);
         break;
     case Instance::UART_3:
-        // Disable the UART3 clock only as GPIOB may be in use by another device
+        // Disable the clock
         __HAL_RCC_USART3_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)

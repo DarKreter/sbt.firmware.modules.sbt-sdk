@@ -5,7 +5,6 @@
 #include "I2C.hpp"
 #include "Error.hpp"
 #include "GPIO.hpp"
-#include "UART.hpp"
 
 static void i2cError(const std::string& comment)
 {
@@ -64,19 +63,16 @@ void I2C::Initialize(uint32_t ownAddress)
     if(initialized)
         i2cErrorAlreadyInit();
 
-    if(instance == Instance::I2C_2 && uart3.IsInitialized())
-        i2cError("Cannot initialize I2C2 along with UART3!");
-
     switch(instance) {
     case Instance::I2C_1:
-        // Enable clocks
-        __HAL_RCC_GPIOB_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_I2C1_CLK_ENABLE();
         // Set GPIO
-        GPIO::Enable(GPIOB, GPIO_PIN_6, GPIO::Mode::AlternateOD,
-                     GPIO::Pull::PullUp); // SCL
-        GPIO::Enable(GPIOB, GPIO_PIN_7, GPIO::Mode::AlternateOD,
-                     GPIO::Pull::PullUp); // SDA
+        GPIO::Enable(BSP::Pinouts::I2C_1.scl);
+        GPIO::Enable(BSP::Pinouts::I2C_1.sda);
+#ifdef SBT_BSP_REMAP_I2C1
+        __HAL_AFIO_REMAP_I2C1_ENABLE();
+#endif
         // Enable interrupts with high priority due to silicon limitation
         // (UM1850 p. 259)
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
@@ -90,14 +86,11 @@ void I2C::Initialize(uint32_t ownAddress)
         break;
 
     case Instance::I2C_2:
-        // Enable clocks
-        __HAL_RCC_GPIOB_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_I2C2_CLK_ENABLE();
         // Set GPIO
-        GPIO::Enable(GPIOB, GPIO_PIN_10, GPIO::Mode::AlternateOD,
-                     GPIO::Pull::PullUp); // SCL
-        GPIO::Enable(GPIOB, GPIO_PIN_11, GPIO::Mode::AlternateOD,
-                     GPIO::Pull::PullUp); // SDA
+        GPIO::Enable(BSP::Pinouts::I2C_2.scl);
+        GPIO::Enable(BSP::Pinouts::I2C_2.sda);
         // Enable interrupts with high priority due to silicon limitation
         // (UM1850 p. 259)
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
@@ -189,7 +182,7 @@ void I2C::DeInitialize()
 
     switch(instance) {
     case Instance::I2C_1:
-        // Disable the I2C1 clock only as GPIOB may be in use by another device
+        // Disable the clock
         __HAL_RCC_I2C1_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
@@ -198,7 +191,7 @@ void I2C::DeInitialize()
         }
         break;
     case Instance::I2C_2:
-        // Disable the I2C2 clock only as GPIOB may be in use by another device
+        // Disable the clock
         __HAL_RCC_I2C2_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
