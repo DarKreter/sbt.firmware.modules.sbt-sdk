@@ -70,18 +70,19 @@ void SPI_t::Initialize()
 
     switch(instance) {
     case Instance::SPI_1:
-        // Enable clocks
-        __HAL_RCC_GPIOA_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_SPI1_CLK_ENABLE();
         // Set GPIO
-        GPIO::Enable(GPIOA, GPIO_PIN_5, GPIO::Mode::AlternatePP,
-                     GPIO::Pull::NoPull); // SCK
+        GPIO::Enable(BSP::Pinouts::SPI_1.sck); // SCK
         if(misoEnabled)
-            GPIO::Enable(GPIOA, GPIO_PIN_6, GPIO::Mode::AlternateInput,
-                         GPIO::Pull::NoPull); // MISO
+            GPIO::Enable(BSP::Pinouts::SPI_1.miso); // MISO
         if(mosiEnabled)
-            GPIO::Enable(GPIOA, GPIO_PIN_7, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // MOSI
+            GPIO::Enable(BSP::Pinouts::SPI_1.mosi); // MOSI
+#ifdef SBT_BSP_REMAP_SPI1
+        // JTAG pinout conflicts with remapped SPI1
+        __HAL_AFIO_REMAP_SWJ_NOJTAG();
+        __HAL_AFIO_REMAP_SPI1_ENABLE();
+#endif
         // Enable interrupts with low priority
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_SetPriority(SPI1_IRQn, 7, 0);
@@ -89,18 +90,14 @@ void SPI_t::Initialize()
         }
         break;
     case Instance::SPI_2:
-        // Enable clocks
-        __HAL_RCC_GPIOB_CLK_ENABLE();
+        // Enable the clock
         __HAL_RCC_SPI2_CLK_ENABLE();
         // Set GPIO
-        GPIO::Enable(GPIOB, GPIO_PIN_13, GPIO::Mode::AlternatePP,
-                     GPIO::Pull::NoPull); // SCK
+        GPIO::Enable(BSP::Pinouts::SPI_2.sck); // SCK
         if(misoEnabled)
-            GPIO::Enable(GPIOB, GPIO_PIN_14, GPIO::Mode::AlternateInput,
-                         GPIO::Pull::NoPull); // MISO
+            GPIO::Enable(BSP::Pinouts::SPI_2.miso); // MISO
         if(mosiEnabled)
-            GPIO::Enable(GPIOB, GPIO_PIN_15, GPIO::Mode::AlternatePP,
-                         GPIO::Pull::NoPull); // MOSI
+            GPIO::Enable(BSP::Pinouts::SPI_2.mosi); // MOSI
         // Enable interrupts with low priority
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_SetPriority(SPI2_IRQn, 7, 0);
@@ -207,14 +204,14 @@ void SPI_t::DeInitialize()
 
     switch(instance) {
     case Instance::SPI_1:
-        // Disable the SPI1 clock only as GPIOA may be in use by another device
+        // Disable the clock
         __HAL_RCC_SPI1_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(SPI1_IRQn);
         break;
     case Instance::SPI_2:
-        // Disable the SPI2 clock only as GPIOB may be in use by another device
+        // Disable the clock
         __HAL_RCC_SPI2_CLK_DISABLE();
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)

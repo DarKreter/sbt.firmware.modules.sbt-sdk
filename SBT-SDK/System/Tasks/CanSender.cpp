@@ -18,7 +18,13 @@ CanSender::CanSender() : Task("CanSender", 12, 40) {}
 void CanSender::initialize()
 {
     // Create queue
-    xQueueHandle = xQueueCreate(20, sizeof(CAN::TxMessage));
+#ifndef SBT_CAN_SENDER_QUEUE_SIZE
+#define SBT_CAN_SENDER_QUEUE_SIZE 20
+#endif
+
+    xQueueHandle =
+        xQueueCreate(SBT_CAN_SENDER_QUEUE_SIZE, sizeof(CAN::TxMessage));
+
     if(xQueueHandle == NULL)
         softfault(__FILE__, __LINE__, "CanSender: Could not create xQueue");
 

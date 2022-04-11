@@ -4,12 +4,20 @@
 
 #include "GPIO.hpp"
 #include "Error.hpp"
+#include <set>
+
+// Set of enabled pins
+static std::set<std::pair<GPIO_TypeDef*, uint32_t>> enabledPins;
 
 namespace SBT::Hardware {
 
 void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
                   GPIO::Pull pull)
 {
+    // Check if the requested pin is already enabled
+    if(enabledPins.count({gpioPort, gpioPin}))
+        softfault(__FILE__, __LINE__, "GPIO: Requested pin is already in use");
+
     GPIO_InitTypeDef initTypeDef;
     initTypeDef.Pin = gpioPin;
     initTypeDef.Mode = static_cast<uint32_t>(mode);
@@ -23,6 +31,9 @@ void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
     initTypeDef.Pull = static_cast<uint32_t>(pull);
     initTypeDef.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(gpioPort, &initTypeDef);
+
+    // Register the requested pin as enabled
+    enabledPins.insert({gpioPort, gpioPin});
 }
 void GPIO::Toggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 {

@@ -74,12 +74,12 @@ void hCAN::Initialize()
     // Calculate swj, bs1, bs2 and prescaler based on baudRate
     CalculateTQ();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_CAN1_CLK_ENABLE();
-    GPIO::Enable(GPIOA, GPIO_PIN_11, GPIO::Mode::Input,
-                 GPIO::Pull::NoPull); // RX
-    GPIO::Enable(GPIOA, GPIO_PIN_12, GPIO::Mode::AlternatePP,
-                 GPIO::Pull::NoPull); // TX
+    GPIO::Enable(BSP::Pinouts::CAN_1.rx); // RX
+    GPIO::Enable(BSP::Pinouts::CAN_1.tx); // TX
+#ifdef SBT_BSP_REMAP_CAN1
+    __HAL_AFIO_REMAP_CAN1_2();
+#endif
     HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
     HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);

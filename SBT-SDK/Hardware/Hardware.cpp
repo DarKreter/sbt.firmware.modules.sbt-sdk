@@ -129,6 +129,9 @@ void configureClocks(uint32_t ahbFreq)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    // Enable the clock for AFIO
+    __HAL_RCC_AFIO_CLK_ENABLE();
 }
 
 uint32_t GetAHB_Freq() { return HAL_RCC_GetHCLKFreq(); } // 100'000 - 72'000'000
