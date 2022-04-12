@@ -10,29 +10,31 @@ set(CPU_OPTIONS "-mthumb -mcpu=cortex-m3 -DSTM32F103xB")
 #---------------------------------------------------------------------------------------
 # Set toolchain paths
 #---------------------------------------------------------------------------------------
-set(TOOLCHAIN arm-none-eabi)
-if(NOT DEFINED TOOLCHAIN_PREFIX)
-    if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-        set(TOOLCHAIN_PREFIX "/usr")
-    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
-        set(TOOLCHAIN_PREFIX "/usr/local")
-    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
-        message(STATUS "Please specify the TOOLCHAIN_PREFIX !\n For example: -DTOOLCHAIN_PREFIX=\"C:/Program Files/GNU Tools ARM Embedded\" ")
-    else()
-        set(TOOLCHAIN_PREFIX "/usr")
-        message(STATUS "No TOOLCHAIN_PREFIX specified, using default: " ${TOOLCHAIN_PREFIX})
+if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+    set(TOOLCHAIN arm-none-eabi)
+    if(NOT DEFINED TOOLCHAIN_PREFIX)
+        if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+            set(TOOLCHAIN_PREFIX "/usr")
+        elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+            set(TOOLCHAIN_PREFIX "/usr/local")
+        elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+            message(STATUS "Please specify the TOOLCHAIN_PREFIX !\n For example: -DTOOLCHAIN_PREFIX=\"C:/Program Files/GNU Tools ARM Embedded\" ")
+        else()
+            set(TOOLCHAIN_PREFIX "/usr")
+            message(STATUS "No TOOLCHAIN_PREFIX specified, using default: " ${TOOLCHAIN_PREFIX})
+        endif()
     endif()
-endif()
 
-set(TOOLCHAIN_BIN_DIR ${TOOLCHAIN_PREFIX}/bin)
-set(TOOLCHAIN_INC_DIR ${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/include)
-set(TOOLCHAIN_LIB_DIR ${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/lib)
+    set(TOOLCHAIN_BIN_DIR ${TOOLCHAIN_PREFIX}/bin)
+    set(TOOLCHAIN_INC_DIR ${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/include)
+    set(TOOLCHAIN_LIB_DIR ${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/lib)
 
-# Set system depended extensions
-if(WIN32)
-    set(TOOLCHAIN_EXT ".exe" )
-else()
-    set(TOOLCHAIN_EXT "" )
+    # Set system depended extensions
+    if(WIN32)
+        set(TOOLCHAIN_EXT ".exe" )
+    else()
+        set(TOOLCHAIN_EXT "" )
+    endif()
 endif()
 
 # Perform compiler test with static library
@@ -86,9 +88,11 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto -ffat-lto-objects" CACHE INTERNAL "Lin
 #---------------------------------------------------------------------------------------
 # Set compilers
 #---------------------------------------------------------------------------------------
-set(CMAKE_C_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "C Compiler")
-set(CMAKE_CXX_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-g++${TOOLCHAIN_EXT} CACHE INTERNAL "C++ Compiler")
-set(CMAKE_ASM_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "ASM Compiler")
+if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+    set(CMAKE_C_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "C Compiler")
+    set(CMAKE_CXX_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-g++${TOOLCHAIN_EXT} CACHE INTERNAL "C++ Compiler")
+    set(CMAKE_ASM_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "ASM Compiler")
+endif()
 
 set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PREFIX}/${${TOOLCHAIN}} ${CMAKE_PREFIX_PATH})
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
