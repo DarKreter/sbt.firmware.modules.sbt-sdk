@@ -928,18 +928,28 @@ typedef struct {
 } GEODETIC_POSITION_1_t;
 
 // def @GEODETIC_POSITION_2 CAN Message (13   0xd)
-#define GEODETIC_POSITION_2_IDE   (0U)
-#define GEODETIC_POSITION_2_DLC   (8U)
-#define GEODETIC_POSITION_2_CANID (0xd)
+#define GEODETIC_POSITION_2_IDE                       (0U)
+#define GEODETIC_POSITION_2_DLC                       (8U)
+#define GEODETIC_POSITION_2_CANID                     (0xd)
+// signal: @hamsl
+#define CANPARSER_GEODETIC_POSITION_2_hamsl_CovFactor (0.001000)
+#define CANPARSER_GEODETIC_POSITION_2_hamsl_toS(x)                             \
+    ((int32_t)(((x) - (0.000000)) / (0.001000)))
+#define CANPARSER_GEODETIC_POSITION_2_hamsl_fromS(x)                           \
+    ((((x) * (0.001000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
-    int16_t hamsl; //  [-] Bits=16 Unit:'mm'
-
     uint16_t horizontalAccEst; //      Bits=16 Unit:'mm'
 
     uint16_t verticalAccEst; //      Bits=16 Unit:'mm'
+
+    int32_t hamsl; //  [-] Bits=28 Factor= 0.001000        Unit:'m'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t hamsl_phys;
+#endif // CANPARSER_USE_SIGFLOAT
 
     uint8_t gpsFixType : 3; //      Bits= 3
 
@@ -947,11 +957,15 @@ typedef struct {
 
 #else
 
-    int16_t hamsl; //  [-] Bits=16 Unit:'mm'
-
     uint16_t horizontalAccEst; //      Bits=16 Unit:'mm'
 
     uint16_t verticalAccEst; //      Bits=16 Unit:'mm'
+
+    int32_t hamsl; //  [-] Bits=28 Factor= 0.001000        Unit:'m'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t hamsl_phys;
+#endif // CANPARSER_USE_SIGFLOAT
 
     uint8_t gpsFixType; //      Bits= 3
 

@@ -1095,11 +1095,18 @@ void Pack_GEODETIC_POSITION_1(GEODETIC_POSITION_1_t* _m, uint8_t* _d)
 GEODETIC_POSITION_2_t Unpack_GEODETIC_POSITION_2(const uint8_t* _d)
 {
     GEODETIC_POSITION_2_t _m;
-    _m.hamsl = __ext_sig__((((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))), 16);
-    _m.horizontalAccEst = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
-    _m.verticalAccEst = ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU));
-    _m.gpsFixType = (_d[6] & (0x07U));
-    _m.gpsFixOK = ((_d[6] >> 3) & (0x01U));
+    _m.horizontalAccEst = ((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU));
+    _m.verticalAccEst = ((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU));
+    _m.hamsl =
+        __ext_sig__((((_d[7] & (0x0FU)) << 24) | ((_d[6] & (0xFFU)) << 16) |
+                     ((_d[5] & (0xFFU)) << 8) | (_d[4] & (0xFFU))),
+                    28);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.hamsl_phys = (sigfloat_t)(CANPARSER_hamsl_fromS(_m->hamsl));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.gpsFixType = ((_d[7] >> 4) & (0x07U));
+    _m.gpsFixOK = ((_d[7] >> 7) & (0x01U));
 
 #ifdef CANPARSER_USE_DIAG_MONITORS
     _m.mon1.dlc_error = (dlc_ < GEODETIC_POSITION_2_DLC);
@@ -1121,14 +1128,20 @@ uint32_t Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m,
     for(i = 0; (i < GEODETIC_POSITION_2_DLC) && (i < 8); cframe->Data[i++] = 0)
         ;
 
-    cframe->Data[0] |= (_m->hamsl & (0xFFU));
-    cframe->Data[1] |= ((_m->hamsl >> 8) & (0xFFU));
-    cframe->Data[2] |= (_m->horizontalAccEst & (0xFFU));
-    cframe->Data[3] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
-    cframe->Data[4] |= (_m->verticalAccEst & (0xFFU));
-    cframe->Data[5] |= ((_m->verticalAccEst >> 8) & (0xFFU));
-    cframe->Data[6] |=
-        (_m->gpsFixType & (0x07U)) | ((_m->gpsFixOK & (0x01U)) << 3);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->hamsl = CANPARSER_hamsl_toS(_m->hamsl_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->horizontalAccEst & (0xFFU));
+    cframe->Data[1] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->verticalAccEst & (0xFFU));
+    cframe->Data[3] |= ((_m->verticalAccEst >> 8) & (0xFFU));
+    cframe->Data[4] |= (_m->hamsl & (0xFFU));
+    cframe->Data[5] |= ((_m->hamsl >> 8) & (0xFFU));
+    cframe->Data[6] |= ((_m->hamsl >> 16) & (0xFFU));
+    cframe->Data[7] |= ((_m->hamsl >> 24) & (0x0FU)) |
+                       ((_m->gpsFixType & (0x07U)) << 4) |
+                       ((_m->gpsFixOK & (0x01U)) << 7);
 
     cframe->MsgId = GEODETIC_POSITION_2_CANID;
     cframe->DLC = GEODETIC_POSITION_2_DLC;
@@ -1144,13 +1157,19 @@ void Pack_GEODETIC_POSITION_2(GEODETIC_POSITION_2_t* _m, uint8_t* _d)
     for(i = 0; (i < GEODETIC_POSITION_2_DLC) && (i < 8); _d[i++] = 0)
         ;
 
-    _d[0] |= (_m->hamsl & (0xFFU));
-    _d[1] |= ((_m->hamsl >> 8) & (0xFFU));
-    _d[2] |= (_m->horizontalAccEst & (0xFFU));
-    _d[3] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
-    _d[4] |= (_m->verticalAccEst & (0xFFU));
-    _d[5] |= ((_m->verticalAccEst >> 8) & (0xFFU));
-    _d[6] |= (_m->gpsFixType & (0x07U)) | ((_m->gpsFixOK & (0x01U)) << 3);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->hamsl = CANPARSER_hamsl_toS(_m->hamsl_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->horizontalAccEst & (0xFFU));
+    _d[1] |= ((_m->horizontalAccEst >> 8) & (0xFFU));
+    _d[2] |= (_m->verticalAccEst & (0xFFU));
+    _d[3] |= ((_m->verticalAccEst >> 8) & (0xFFU));
+    _d[4] |= (_m->hamsl & (0xFFU));
+    _d[5] |= ((_m->hamsl >> 8) & (0xFFU));
+    _d[6] |= ((_m->hamsl >> 16) & (0xFFU));
+    _d[7] |= ((_m->hamsl >> 24) & (0x0FU)) | ((_m->gpsFixType & (0x07U)) << 4) |
+             ((_m->gpsFixOK & (0x01U)) << 7);
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
