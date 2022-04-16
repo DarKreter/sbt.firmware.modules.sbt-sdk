@@ -13,7 +13,14 @@ QueueHandle_t CanReceiver::xQueueHandle;
 CAN::RxMessage CanReceiver::mess;
 uint8_t CanReceiver::failedMessCount = 0;
 
-CanReceiver::CanReceiver() : Task("CanReceiver", 15, 256) {}
+#ifndef SBT_CAN_RECEIVER_STACK_SIZE
+#define SBT_CAN_RECEIVER_STACK_SIZE 256
+#endif
+
+CanReceiver::CanReceiver()
+    : Task("CanReceiver", 15, SBT_CAN_RECEIVER_STACK_SIZE)
+{
+}
 
 void CanReceiver::initialize()
 {
