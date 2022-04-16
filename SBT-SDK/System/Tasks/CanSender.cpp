@@ -13,7 +13,7 @@ QueueHandle_t CanSender::xQueueHandle;
 SemaphoreHandle_t CanSender::xSemaphore;
 uint8_t CanSender::failedMessCount = 0;
 
-CanSender::CanSender() : Task("CanSender", 12, 40) {}
+CanSender::CanSender() : Task("CanSender", 12, 48) {}
 
 void CanSender::initialize()
 {

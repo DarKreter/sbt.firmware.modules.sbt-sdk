@@ -24,7 +24,7 @@ using namespace SBT::System;
 using namespace SBT::System::Comm;
 #endif
 
-Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 68) {}
+Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 80) {}
 
 void Heartbeat::initialize()
 {
