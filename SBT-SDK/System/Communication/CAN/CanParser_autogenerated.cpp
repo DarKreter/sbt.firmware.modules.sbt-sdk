@@ -1319,4 +1319,77 @@ void Pack_NED_HEADING(NED_HEADING_t* _m, uint8_t* _d)
 
 #endif // CANPARSER_USE_CANSTRUCT
 
+YOKE_GENERAL_t Unpack_YOKE_GENERAL(const uint8_t* _d)
+{
+    YOKE_GENERAL_t _m;
+    _m.enablePump1 = (_d[0] & (0x03U));
+    _m.enablePump2 = ((_d[0] >> 2) & (0x03U));
+    _m.enablePump3 = ((_d[0] >> 4) & (0x03U));
+    _m.enablePump4 = ((_d[0] >> 6) & (0x03U));
+    _m.enableSiren = (_d[1] & (0x03U));
+    _m.pumpOperatingMode1 = ((_d[1] >> 2) & (0x03U));
+    _m.pumpOperatingMode2 = ((_d[1] >> 4) & (0x03U));
+    _m.pumpOperatingMode3 = ((_d[1] >> 6) & (0x03U));
+    _m.pumpOperatingMode4 = (_d[2] & (0x03U));
+    _m.resetEmbeddedBus = ((_d[2] >> 2) & (0x03U));
+    _m.resetPowerBus = ((_d[2] >> 4) & (0x03U));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < YOKE_GENERAL_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_YOKE_GENERAL_canparser(&_m.mon1, YOKE_GENERAL_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < YOKE_GENERAL_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+    cframe->Data[0] |=
+        (_m->enablePump1 & (0x03U)) | ((_m->enablePump2 & (0x03U)) << 2) |
+        ((_m->enablePump3 & (0x03U)) << 4) | ((_m->enablePump4 & (0x03U)) << 6);
+    cframe->Data[1] |= (_m->enableSiren & (0x03U)) |
+                       ((_m->pumpOperatingMode1 & (0x03U)) << 2) |
+                       ((_m->pumpOperatingMode2 & (0x03U)) << 4) |
+                       ((_m->pumpOperatingMode3 & (0x03U)) << 6);
+    cframe->Data[2] |= (_m->pumpOperatingMode4 & (0x03U)) |
+                       ((_m->resetEmbeddedBus & (0x03U)) << 2) |
+                       ((_m->resetPowerBus & (0x03U)) << 4);
+
+    cframe->MsgId = YOKE_GENERAL_CANID;
+    cframe->DLC = YOKE_GENERAL_DLC;
+    cframe->IDE = YOKE_GENERAL_IDE;
+    return YOKE_GENERAL_CANID;
+}
+
+#else
+
+void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < YOKE_GENERAL_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+    _d[0] |= (_m->enablePump1 & (0x03U)) | ((_m->enablePump2 & (0x03U)) << 2) |
+             ((_m->enablePump3 & (0x03U)) << 4) |
+             ((_m->enablePump4 & (0x03U)) << 6);
+    _d[1] |= (_m->enableSiren & (0x03U)) |
+             ((_m->pumpOperatingMode1 & (0x03U)) << 2) |
+             ((_m->pumpOperatingMode2 & (0x03U)) << 4) |
+             ((_m->pumpOperatingMode3 & (0x03U)) << 6);
+    _d[2] |= (_m->pumpOperatingMode4 & (0x03U)) |
+             ((_m->resetEmbeddedBus & (0x03U)) << 2) |
+             ((_m->resetPowerBus & (0x03U)) << 4);
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
 } // namespace SBT::System::Comm

@@ -30,6 +30,7 @@ enum class Source : uint8_t {
     CPB_CONTROLLER = 0x0E,
     PiBox = 0x0F,
     GPS_CONTROLLER = 0x10,
+    YOKE = 0x11,
     UNKNOWN
 };
 
@@ -50,6 +51,7 @@ enum class Param : uint16_t {
     GEODETIC_POSITION_2 = 0x00D,
     NED_VELOCITY = 0x00E,
     NED_HEADING = 0x00F,
+    YOKE_GENERAL = 0x010,
     UNKNOWN
 };
 
@@ -105,6 +107,8 @@ constexpr Message_t GEODETIC_POSITION_2 = {7, Param::GEODETIC_POSITION_2,
 constexpr Message_t NED_VELOCITY = {6, Param::NED_VELOCITY, Group::DEFAULT};
 
 constexpr Message_t NED_HEADING = {7, Param::NED_HEADING, Group::DEFAULT};
+
+constexpr Message_t YOKE_GENERAL = {2, Param::YOKE_GENERAL, Group::DEFAULT};
 
 } // namespace Message
 

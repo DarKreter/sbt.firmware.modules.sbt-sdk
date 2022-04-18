@@ -1069,6 +1069,70 @@ typedef struct {
 
 } NED_HEADING_t;
 
+// def @YOKE_GENERAL CAN Message (16   0x10)
+#define YOKE_GENERAL_IDE   (0U)
+#define YOKE_GENERAL_DLC   (8U)
+#define YOKE_GENERAL_CANID (0x10)
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint8_t enablePump1 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump2 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump3 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump4 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enableSiren : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode1 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode2 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode3 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode4 : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t resetEmbeddedBus : 2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t resetPowerBus : 2; //      Bits= 2 Unit:'Boolean'
+
+#else
+
+    uint8_t enablePump1; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump3; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enablePump4; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t enableSiren; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode1; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode2; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode3; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t pumpOperatingMode4; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t resetEmbeddedBus; //      Bits= 2 Unit:'Boolean'
+
+    uint8_t resetPowerBus; //      Bits= 2 Unit:'Boolean'
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} YOKE_GENERAL_t;
+
 // Function signatures
 
 /**
@@ -1336,6 +1400,23 @@ void Pack_NED_HEADING(NED_HEADING_t* _m, __CoderDbcCanFrame_t__* cframe);
  * @param _d pointer to payload, where NED_HEADING_t object will be packed
  */
 void Pack_NED_HEADING(NED_HEADING_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into YOKE_GENERAL_t struct
+ * @param _d pointer to payload to unpack
+ * @return YOKE_GENERAL_t unpacked object
+ */
+[[nodiscard]] YOKE_GENERAL_t Unpack_YOKE_GENERAL(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs YOKE_GENERAL_t object into raw 8-byte long payload
+ * @param _m pointer to YOKE_GENERAL_t object to pack
+ * @param _d pointer to payload, where YOKE_GENERAL_t object will be packed
+ */
+void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 } // namespace SBT::System::Comm
