@@ -4,13 +4,24 @@
 #include <optional>
 #include <stm32f1xx_hal.h>
 
+static void hardwareError(const std::string& comment)
+{
+    softfault("Hardware: " + comment);
+}
+
+static void hardwareHALErrorGuard(HAL_StatusTypeDef halStatus)
+{
+    if(halStatus != HAL_OK)
+        hardwareError("HAL function failed with code " +
+                      std::to_string(halStatus));
+}
+
 namespace SBT::Hardware {
 void configureClocks(uint32_t ahbFreq)
 {
     //-----------HERE----------------------
     if(ahbFreq < 100'000 || 72'000'000 < ahbFreq)
-        softfault(__FILE__, __LINE__,
-                  "Clock speed must be between 100'000 and 72'000'000");
+        hardwareError("Clock speed must be between 100'000 and 72'000'000");
 
     static const auto calculateBestAHBPrescalerAndPLLMUL =
         [ahbFreq]() -> std::pair<uint32_t, uint32_t> {
@@ -110,9 +121,10 @@ void configureClocks(uint32_t ahbFreq)
 
     clk.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    HAL_RCC_OscConfig(&osc);
-    HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_2);
-    HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
+    hardwareHALErrorGuard(HAL_RCC_OscConfig(&osc));
+    hardwareHALErrorGuard(HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_2));
+    hardwareHALErrorGuard(static_cast<HAL_StatusTypeDef>(
+        HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000)));
 
     // Set ADC clock prescaler
     // Select lowest prescaler value that will not cause the ADC clock frequency
@@ -179,14 +191,13 @@ void StartWatchdog(IWDG_HandleTypeDef& hiwdg, unsigned watchdogTimeout_ms)
     }
 
     if(hiwdg.Init.Reload == 0)
-        softfault(__FILE__, __LINE__,
-                  "Requested watchdog timeout value could not be achieved");
+        hardwareError("Requested watchdog timeout value could not be achieved");
 
     // Prescaler and Reload values are directly written to the IWDG registers
     hiwdg.Init.Prescaler -= 2;
     hiwdg.Init.Reload -= 1;
 
-    HAL_IWDG_Init(&hiwdg);
+    hardwareHALErrorGuard(HAL_IWDG_Init(&hiwdg));
 }
 #endif
 

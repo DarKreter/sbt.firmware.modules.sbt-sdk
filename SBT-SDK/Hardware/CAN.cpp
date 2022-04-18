@@ -185,7 +185,7 @@ void hCAN::AddFilter_LIST(uint8_t filterBankIndex, uint32_t id1, uint32_t id2)
 
     HALfilter.FilterBank = filterBankIndex;
     HALfilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    HAL_CAN_ConfigFilter(&handle, &HALfilter);
+    canHALErrorGuard(HAL_CAN_ConfigFilter(&handle, &HALfilter));
 }
 
 void hCAN::AddFilter_MASK(uint8_t filterBankIndex, uint32_t id, uint32_t mask)
@@ -210,14 +210,14 @@ void hCAN::AddFilter_MASK(uint8_t filterBankIndex, uint32_t id, uint32_t mask)
 
     HALfilter.FilterBank = filterBankIndex;
     HALfilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    HAL_CAN_ConfigFilter(&handle, &HALfilter);
+    canHALErrorGuard(HAL_CAN_ConfigFilter(&handle, &HALfilter));
 }
 
 void hCAN::GetRxMessage(uint32_t fifoId, uint32_t* extID, uint8_t* payload,
                         uint8_t* filterBankIdx)
 {
     CAN_RxHeaderTypeDef header;
-    HAL_CAN_GetRxMessage(&handle, fifoId, &header, payload);
+    canHALErrorGuard(HAL_CAN_GetRxMessage(&handle, fifoId, &header, payload));
 
     (*extID) = header.IDE == CAN_ID_STD ? header.StdId : header.ExtId;
 

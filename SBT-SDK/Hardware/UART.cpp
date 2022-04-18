@@ -227,95 +227,97 @@ void UART::RegisterCallback(CallbackType callbackType,
         std::move(callbackFunction);
 }
 
-void UART::Send(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::Send(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
         uartErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
-        SendIT(data, numOfBytes);
+        return SendIT(data, numOfBytes);
         break;
     case OperatingMode::BLOCKING:
-        SendRCC(data, numOfBytes);
+        return SendRCC(data, numOfBytes);
         break;
     case OperatingMode::DMA:
-        SendDMA(data, numOfBytes);
+        return SendDMA(data, numOfBytes);
         break;
     default:
         uartErrorUnknownMode();
+        return HAL_ERROR;
     }
 }
 
-void UART::SendRCC(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::SendRCC(uint8_t* data, size_t numOfBytes)
 {
-    uartHALErrorGuard(
-        HAL_UART_Transmit(&state.handle, data, numOfBytes, timeout));
+    return HAL_UART_Transmit(&state.handle, data, numOfBytes, timeout);
 }
 
-void UART::SendIT(uint8_t* data, size_t numOfBytes)
-{
-    // Check if there is no transmission
-    if(state.handle.gState == HAL_UART_STATE_READY) {
-        // If UART is not busy, transmit
-        uartHALErrorGuard(
-            HAL_UART_Transmit_IT(&state.handle, data, numOfBytes));
-    }
-}
-
-void UART::SendDMA(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::SendIT(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.gState == HAL_UART_STATE_READY) {
         // If UART is not busy, transmit
-        uartHALErrorGuard(
-            HAL_UART_Transmit_DMA(&state.handle, data, numOfBytes));
+        return HAL_UART_Transmit_IT(&state.handle, data, numOfBytes);
     }
+
+    return HAL_BUSY;
 }
 
-void UART::Receive(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::SendDMA(uint8_t* data, size_t numOfBytes)
+{
+    // Check if there is no transmission
+    if(state.handle.gState == HAL_UART_STATE_READY) {
+        // If UART is not busy, transmit
+        return HAL_UART_Transmit_DMA(&state.handle, data, numOfBytes);
+    }
+    return HAL_BUSY;
+}
+
+HAL_StatusTypeDef UART::Receive(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
         uartErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
-        ReceiveIT(data, numOfBytes);
+        return ReceiveIT(data, numOfBytes);
         break;
     case OperatingMode::BLOCKING:
-        ReceiveRCC(data, numOfBytes);
+        return ReceiveRCC(data, numOfBytes);
         break;
     case OperatingMode::DMA:
-        ReceiveDMA(data, numOfBytes);
+        return ReceiveDMA(data, numOfBytes);
         break;
     default:
         uartErrorUnknownMode();
+        return HAL_ERROR;
     }
 }
 
-void UART::ReceiveRCC(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::ReceiveRCC(uint8_t* data, size_t numOfBytes)
 {
-    uartHALErrorGuard(
-        HAL_UART_Receive(&state.handle, data, numOfBytes, timeout));
+    return HAL_UART_Receive(&state.handle, data, numOfBytes, timeout);
 }
 
-void UART::ReceiveIT(uint8_t* data, size_t numOfBytes)
-{
-    // Check if there is no transmission
-    if(state.handle.RxState == HAL_UART_STATE_READY) {
-        // If UART is not busy, receive
-        uartHALErrorGuard(HAL_UART_Receive_IT(&state.handle, data, numOfBytes));
-    }
-}
-
-void UART::ReceiveDMA(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef UART::ReceiveIT(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.RxState == HAL_UART_STATE_READY) {
         // If UART is not busy, receive
-        uartHALErrorGuard(
-            HAL_UART_Receive_DMA(&state.handle, data, numOfBytes));
+        return HAL_UART_Receive_IT(&state.handle, data, numOfBytes);
     }
+    return HAL_BUSY;
+}
+
+HAL_StatusTypeDef UART::ReceiveDMA(uint8_t* data, size_t numOfBytes)
+{
+    // Check if there is no transmission
+    if(state.handle.RxState == HAL_UART_STATE_READY) {
+        // If UART is not busy, receive
+        return HAL_UART_Receive_DMA(&state.handle, data, numOfBytes);
+    }
+    return HAL_BUSY;
 }
 
 bool UART::IsTxComplete() const
@@ -431,7 +433,7 @@ void UART::ChangeModeToDMA()
     mode = OperatingMode::DMA;
 }
 
-void UART::printf(const char* fmt, ...)
+HAL_StatusTypeDef UART::printf(const char* fmt, ...)
 {
     if(!printfEnabled)
         SetPrintfBufferSize(128);
@@ -439,13 +441,15 @@ void UART::printf(const char* fmt, ...)
     // For custom print working
     va_list vaList;
     va_start(vaList, fmt);
-
+    HAL_StatusTypeDef status = HAL_ERROR;
     if(0 < vsprintf(reinterpret_cast<char*>(UART::buffer), fmt,
                     vaList)) // build string
-        Send(reinterpret_cast<uint8_t*>(UART::buffer),
-             strlen(buffer)); // Real send data by UART
+        status = Send(reinterpret_cast<uint8_t*>(UART::buffer),
+                      strlen(buffer)); // Real send data by UART
 
     va_end(vaList);
+
+    return status;
 }
 
 void UART::SetPrintfBufferSize(uint16_t bufferSize)

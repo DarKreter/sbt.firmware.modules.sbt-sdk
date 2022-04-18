@@ -98,14 +98,14 @@ private:
     DMA::Channel dmaChannelTx, dmaChannelRx;
 
     // Send functions
-    void SendRCC(uint8_t* data, size_t numOfBytes);
-    void SendIT(uint8_t* data, size_t numOfBytes);
-    void SendDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendDMA(uint8_t* data, size_t numOfBytes);
 
     // Receive functions
-    void ReceiveRCC(uint8_t* data, size_t numOfBytes);
-    void ReceiveIT(uint8_t* data, size_t numOfBytes);
-    void ReceiveDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveDMA(uint8_t* data, size_t numOfBytes);
 
 public:
     // To avoid creating objects with different constructor than one above
@@ -233,21 +233,27 @@ public:
      * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes to send
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void Send(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef Send(uint8_t* data, size_t numOfBytes);
     /**
      * @brief Sends string
      * @param fmt string to send
      * @param ... additional parameters
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void printf(const char* fmt, ...);
+    HAL_StatusTypeDef printf(const char* fmt, ...);
     /**
      * @brief Receiving data. Way of receiving is defined by your configuration
      * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes expected to receive
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void Receive(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef Receive(uint8_t* data, size_t numOfBytes);
 
     /**
      * @brief Checks if Transmission is completed
