@@ -15,6 +15,8 @@ Task::Task(const std::string& name, size_t priority, size_t stackDepth)
 
 void Task ::executeTask()
 {
+    initialize();
+
     while(true) {
         run();
     }
@@ -34,6 +36,8 @@ PeriodicTask::PeriodicTask(const std::string& name, size_t priority,
 
 void PeriodicTask::executeTask()
 {
+    initialize();
+
     while(true) {
         run();
         vTaskDelay(_periodicity);

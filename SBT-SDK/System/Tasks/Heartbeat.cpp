@@ -24,7 +24,8 @@ using namespace SBT::System;
 using namespace SBT::System::Comm;
 #endif
 
-Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 80) {}
+// min. stackDepth = 73 (with my setup ~ @DarKreter)
+Heartbeat::Heartbeat() : PeriodicTask("Heartbeat", 9, 1000, 85) {}
 
 void Heartbeat::initialize()
 {

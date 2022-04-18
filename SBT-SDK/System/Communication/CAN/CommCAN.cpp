@@ -89,6 +89,8 @@ void CAN::AddFilter(const Filter& filter,
     if(Filter::filterBankID >= 14)
         commCANError("Too many filters. (You have only 14 filter banks)");
 
+    Hardware::can.Stop();
+
     if(filter.GetFilterType() == Filter::FilterType::MASK_FILTER)
         Hardware::can.AddFilter_MASK(Filter::filterBankID, filter.GetFilterID(),
                                      filter.GetMaskID());
@@ -99,6 +101,8 @@ void CAN::AddFilter(const Filter& filter,
 
     // Add new callback to map
     filters[Filter::filterBankID++] = callback;
+
+    Hardware::can.Start();
 }
 
 #ifndef SBT_CAN_SENDER_DISABLE

@@ -11,7 +11,7 @@ namespace SBT::System {
 
 class Task {
 public:
-    Task(const std::string& name, size_t priority, size_t stackDepth = 128);
+    Task(const std::string& name, size_t priority, size_t stackDepth);
 
     [[noreturn]] virtual void executeTask();
 
@@ -34,7 +34,7 @@ protected:
 class PeriodicTask : public Task {
 public:
     PeriodicTask(const std::string& name, size_t priority, size_t periodicity,
-                 size_t stackDepth = 128);
+                 size_t stackDepth);
 
     [[noreturn]] void executeTask() override;
 
