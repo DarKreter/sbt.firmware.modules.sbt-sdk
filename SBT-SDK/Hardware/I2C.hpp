@@ -64,43 +64,53 @@ private:
     DMA* dmaController;
     DMA::Channel dmaChannelTx, dmaChannelRx;
 
-    void SendMasterRCC(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
-    void SendMasterIT(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
-    void SendMasterDMA(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendMasterRCC(uint16_t slaveAddress, uint8_t* data,
+                                    size_t numOfBytes);
+    HAL_StatusTypeDef SendMasterIT(uint16_t slaveAddress, uint8_t* data,
+                                   size_t numOfBytes);
+    HAL_StatusTypeDef SendMasterDMA(uint16_t slaveAddress, uint8_t* data,
+                                    size_t numOfBytes);
 
-    void SendSlaveRCC(uint8_t* data, size_t numOfBytes);
-    void SendSlaveIT(uint8_t* data, size_t numOfBytes);
-    void SendSlaveDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendSlaveRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendSlaveIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendSlaveDMA(uint8_t* data, size_t numOfBytes);
 
-    void ReceiveMasterRCC(uint16_t slaveAddress, uint8_t* data,
-                          size_t numOfBytes);
-    void ReceiveMasterIT(uint16_t slaveAddress, uint8_t* data,
-                         size_t numOfBytes);
-    void ReceiveMasterDMA(uint16_t slaveAddress, uint8_t* data,
-                          size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveMasterRCC(uint16_t slaveAddress, uint8_t* data,
+                                       size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveMasterIT(uint16_t slaveAddress, uint8_t* data,
+                                      size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveMasterDMA(uint16_t slaveAddress, uint8_t* data,
+                                       size_t numOfBytes);
 
-    void ReceiveSlaveRCC(uint8_t* data, size_t numOfBytes);
-    void ReceiveSlaveIT(uint8_t* data, size_t numOfBytes);
-    void ReceiveSlaveDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveSlaveRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveSlaveIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveSlaveDMA(uint8_t* data, size_t numOfBytes);
 
-    void ReadRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress,
-                         uint8_t registerSize, uint8_t* data,
-                         uint16_t dataSize);
-    void ReadRegisterIT(uint16_t slaveAddress, uint16_t registerAddress,
-                        uint8_t registerSize, uint8_t* data, uint16_t dataSize);
-    void ReadRegisterDMA(uint16_t slaveAddress, uint16_t registerAddress,
-                         uint8_t registerSize, uint8_t* data,
-                         uint16_t dataSize);
+    HAL_StatusTypeDef ReadRegisterRCC(uint16_t slaveAddress,
+                                      uint16_t registerAddress,
+                                      uint8_t registerSize, uint8_t* data,
+                                      uint16_t dataSize);
+    HAL_StatusTypeDef ReadRegisterIT(uint16_t slaveAddress,
+                                     uint16_t registerAddress,
+                                     uint8_t registerSize, uint8_t* data,
+                                     uint16_t dataSize);
+    HAL_StatusTypeDef ReadRegisterDMA(uint16_t slaveAddress,
+                                      uint16_t registerAddress,
+                                      uint8_t registerSize, uint8_t* data,
+                                      uint16_t dataSize);
 
-    void WriteRegisterRCC(uint16_t slaveAddress, uint16_t registerAddress,
-                          uint8_t registerSize, uint8_t* data,
-                          uint16_t dataSize);
-    void WriteRegisterIT(uint16_t slaveAddress, uint16_t registerAddress,
-                         uint8_t registerSize, uint8_t* data,
-                         uint16_t dataSize);
-    void WriteRegisterDMA(uint16_t slaveAddress, uint16_t registerAddress,
-                          uint8_t registerSize, uint8_t* data,
-                          uint16_t dataSize);
+    HAL_StatusTypeDef WriteRegisterRCC(uint16_t slaveAddress,
+                                       uint16_t registerAddress,
+                                       uint8_t registerSize, uint8_t* data,
+                                       uint16_t dataSize);
+    HAL_StatusTypeDef WriteRegisterIT(uint16_t slaveAddress,
+                                      uint16_t registerAddress,
+                                      uint8_t registerSize, uint8_t* data,
+                                      uint16_t dataSize);
+    HAL_StatusTypeDef WriteRegisterDMA(uint16_t slaveAddress,
+                                       uint16_t registerAddress,
+                                       uint8_t registerSize, uint8_t* data,
+                                       uint16_t dataSize);
 
 public:
     I2C() = delete;
@@ -148,29 +158,39 @@ public:
      * @param numOfBytes Length of data in bytes
      * @warning Note that data is not copied anywhere and needs to be available
      * during entire transmission.
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void SendMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendMaster(uint16_t slaveAddress, uint8_t* data,
+                                 size_t numOfBytes);
     /**
      * @brief Send data in I2C as a slave
      * @param data Pointer to data to be sent
      * @param numOfBytes Length of data in bytes
      * @warning Note that data is not copied anywhere and needs to be available
      * during entire transmission.
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void SendSlave(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendSlave(uint8_t* data, size_t numOfBytes);
     /**
      * @brief Receive data in I2C as a master
      * @param slaveAddress Address of slave
      * @param data Pointer to container where data will be written
      * @param numOfBytes Length of data in bytes
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void ReceiveMaster(uint16_t slaveAddress, uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveMaster(uint16_t slaveAddress, uint8_t* data,
+                                    size_t numOfBytes);
     /**
      * @brief Receive data in I2C as a slave
      * @param data Pointer to container where data will be written
      * @param numOfBytes Length of data in bytes
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void ReceiveSlave(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveSlave(uint8_t* data, size_t numOfBytes);
     /**
      * @brief Read indicated register from slave device
      * @param slaveAddress Address of slave
@@ -178,9 +198,13 @@ public:
      * @param registerSize size of register
      * @param data pointer to table where read data will be stored
      * @param dataSize sizeof data
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void ReadRegister(uint16_t slaveAddress, uint16_t registerAddress,
-                      uint8_t registerSize, uint8_t* data, uint16_t dataSize);
+    HAL_StatusTypeDef ReadRegister(uint16_t slaveAddress,
+                                   uint16_t registerAddress,
+                                   uint8_t registerSize, uint8_t* data,
+                                   uint16_t dataSize);
     /**
      * @brief Write data to register as master
      * @param slaveAddress Address of slave
@@ -188,9 +212,13 @@ public:
      * @param registerSize size of register
      * @param data pointer to table where read data will be stored
      * @param dataSize sizeof data
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void WriteRegister(uint16_t slaveAddress, uint16_t registerAddress,
-                       uint8_t registerSize, uint8_t* data, uint16_t dataSize);
+    HAL_StatusTypeDef WriteRegister(uint16_t slaveAddress,
+                                    uint16_t registerAddress,
+                                    uint8_t registerSize, uint8_t* data,
+                                    uint16_t dataSize);
 
     /**
      * @brief Tells if object was already Initialized (by calling Initialize

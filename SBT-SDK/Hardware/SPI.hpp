@@ -123,13 +123,13 @@ private:
      */
     void CalculateMisoMosi();
 
-    void SendRCC(uint8_t* data, size_t numOfBytes);
-    void SendIT(uint8_t* data, size_t numOfBytes);
-    void SendDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef SendDMA(uint8_t* data, size_t numOfBytes);
 
-    void ReceiveRCC(uint8_t* data, size_t numOfBytes);
-    void ReceiveIT(uint8_t* data, size_t numOfBytes);
-    void ReceiveDMA(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveRCC(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveIT(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef ReceiveDMA(uint8_t* data, size_t numOfBytes);
 
 public:
     SPI_t() = delete;
@@ -260,15 +260,19 @@ public:
      * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes to send
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void Send(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef Send(uint8_t* data, size_t numOfBytes);
     /**
      * @brief Receiving data. Way of receiving is defined by your configuration
      * before Initialize()
      * @param data pointer to data table
      * @param numOfBytes number of bytes expected to receive
+     * @return HAL_Status returned by HAL function. See HAL doc. for possible
+     * values.
      */
-    void Receive(uint8_t* data, size_t numOfBytes);
+    HAL_StatusTypeDef Receive(uint8_t* data, size_t numOfBytes);
 
     /**
      * @brief Checks if Transmission is completed

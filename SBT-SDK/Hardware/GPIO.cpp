@@ -6,6 +6,11 @@
 #include "Error.hpp"
 #include <set>
 
+static void gpioError(const std::string& comment)
+{
+    softfault("GPIO: " + comment);
+}
+
 // Set of enabled pins
 static std::set<std::pair<GPIO_TypeDef*, uint32_t>> enabledPins;
 
@@ -16,7 +21,7 @@ void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
 {
     // Check if the requested pin is already enabled
     if(enabledPins.count({gpioPort, gpioPin}))
-        softfault(__FILE__, __LINE__, "GPIO: Requested pin is already in use");
+        gpioError("Requested pin is already in use");
 
     GPIO_InitTypeDef initTypeDef;
     initTypeDef.Pin = gpioPin;
@@ -67,7 +72,7 @@ std::pair<ADC*, ADC::Channel> GPIO::GetAnalogChannel(GPIO_TypeDef* gpioPort,
     if(gpioPort == GPIOA)
         adc = &adc1;
     else
-        softfault(__FILE__, __LINE__, "GPIO: No ADC for requested port");
+        gpioError("No ADC for requested port");
 
     // Compute ADC channel number from GPIO pin number
     uint32_t chn = 0;

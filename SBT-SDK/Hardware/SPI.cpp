@@ -229,91 +229,96 @@ void SPI_t::RegisterCallback(CallbackType callbackType,
         std::move(callbackFunction);
 }
 
-void SPI_t::Send(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::Send(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
         spiErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
-        SendIT(data, numOfBytes);
+        return SendIT(data, numOfBytes);
         break;
     case OperatingMode::BLOCKING:
-        SendRCC(data, numOfBytes);
+        return SendRCC(data, numOfBytes);
         break;
     case OperatingMode::DMA:
-        SendDMA(data, numOfBytes);
+        return SendDMA(data, numOfBytes);
         break;
     default:
         spiErrorUnknownMode();
+        return HAL_ERROR;
     }
 }
 
-void SPI_t::SendIT(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::SendIT(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, transmit
-        spiHALErrorGuard(HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes));
+        return HAL_SPI_Transmit_IT(&state.handle, data, numOfBytes);
     }
+    return HAL_BUSY;
 }
 
-void SPI_t::SendDMA(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::SendDMA(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, transmit
-        spiHALErrorGuard(HAL_SPI_Transmit_DMA(&state.handle, data, numOfBytes));
+        return HAL_SPI_Transmit_DMA(&state.handle, data, numOfBytes);
     }
+    return HAL_BUSY;
 }
 
-void SPI_t::SendRCC(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::SendRCC(uint8_t* data, size_t numOfBytes)
 {
-    spiHALErrorGuard(
-        HAL_SPI_Transmit(&state.handle, data, numOfBytes, timeout));
+    return HAL_SPI_Transmit(&state.handle, data, numOfBytes, timeout);
 }
 
-void SPI_t::Receive(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::Receive(uint8_t* data, size_t numOfBytes)
 {
     if(!initialized)
         spiErrorNotInit();
 
     switch(mode) {
     case OperatingMode::INTERRUPTS:
-        ReceiveIT(data, numOfBytes);
+        return ReceiveIT(data, numOfBytes);
         break;
     case OperatingMode::BLOCKING:
-        ReceiveRCC(data, numOfBytes);
+        return ReceiveRCC(data, numOfBytes);
         break;
     case OperatingMode::DMA:
-        ReceiveDMA(data, numOfBytes);
+        return ReceiveDMA(data, numOfBytes);
         break;
     default:
         spiErrorUnknownMode();
+        return HAL_ERROR;
     }
 }
 
-void SPI_t::ReceiveIT(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::ReceiveIT(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, receive
-        spiHALErrorGuard(HAL_SPI_Receive_IT(&state.handle, data, numOfBytes));
+        return HAL_SPI_Receive_IT(&state.handle, data, numOfBytes);
     }
+    return HAL_BUSY;
 }
 
-void SPI_t::ReceiveDMA(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::ReceiveDMA(uint8_t* data, size_t numOfBytes)
 {
     // Check if there is no transmission
     if(state.handle.State == HAL_SPI_STATE_READY) {
         // If SPI is not busy, receive
-        spiHALErrorGuard(HAL_SPI_Receive_DMA(&state.handle, data, numOfBytes));
+        return HAL_SPI_Receive_DMA(&state.handle, data, numOfBytes);
     }
+    return HAL_BUSY;
 }
 
-void SPI_t::ReceiveRCC(uint8_t* data, size_t numOfBytes)
+HAL_StatusTypeDef SPI_t::ReceiveRCC(uint8_t* data, size_t numOfBytes)
 {
-    spiHALErrorGuard(HAL_SPI_Receive(&state.handle, data, numOfBytes, timeout));
+    return HAL_SPI_Receive(&state.handle, data, numOfBytes, timeout);
 }
 
 bool SPI_t::IsTxComplete() const
