@@ -150,6 +150,11 @@ public:
      * and GetRxMessage can be used. Change state to STARTED.
      */
     void Start();
+    /**
+     * @brief Stops CAN. Needs to be called after Start. After that Send
+     * and GetRxMessage cannot be used. Change state to INITIALIZED.
+     */
+    void Stop();
 
     /**
      * @brief Checks if we can send message.

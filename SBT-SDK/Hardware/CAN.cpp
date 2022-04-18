@@ -122,18 +122,6 @@ void hCAN::Initialize()
     CAN_REGISTER_CALLBACK(&handle, WakeUpFromRxMsg);
     CAN_REGISTER_CALLBACK(&handle, Error);
 
-    state = State::INITIALIZED;
-}
-
-void hCAN::Start()
-{
-    if(state == State::NOT_INITIALIZED)
-        canErrorNotInit();
-    else if(state == State::STARTED)
-        canErrorAlreadyStarted();
-
-    canHALErrorGuard(HAL_CAN_Start(&handle));
-
     CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspInit)
     CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::MspDeInit)
     CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::TxMailbox0Complete)
@@ -150,7 +138,29 @@ void hCAN::Start()
     CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::WakeUpFromRxMsg)
     CAN_ACTIVE_NOTIFICATION(&handle, CallbackType::Error)
 
+    state = State::INITIALIZED;
+}
+
+void hCAN::Start()
+{
+    if(state == State::NOT_INITIALIZED)
+        canErrorNotInit();
+    else if(state == State::STARTED)
+        canErrorAlreadyStarted();
+
+    canHALErrorGuard(HAL_CAN_Start(&handle));
+
     state = State::STARTED;
+}
+
+void hCAN::Stop()
+{
+    if(state != State::STARTED)
+        canErrorNotStarted();
+
+    canHALErrorGuard(HAL_CAN_Stop(&handle));
+
+    state = State::INITIALIZED;
 }
 
 void hCAN::AddFilter_LIST(uint8_t filterBankIndex, uint32_t id1, uint32_t id2)

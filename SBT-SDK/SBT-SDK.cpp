@@ -125,9 +125,6 @@ void Start([[maybe_unused]] unsigned watchdogTimeout_ms)
     Hardware::StartWatchdog(hiwdg, watchdogTimeout_ms);
 #endif
 
-    // Calls "initialize()" function for all registered tasks
-    TaskManager::TasksInit();
-
 #ifndef SBT_CAN_DISABLE
     // Start CAN
     Hardware::can.Start();
