@@ -401,6 +401,12 @@ typedef struct {
     ((uint16_t)(((x) - (0.000000)) / (0.001000)))
 #define CANPARSER_LIFEPO4_CELLS_3_cellVoltageE_fromS(x)                        \
     ((((x) * (0.001000)) + (0.000000)))
+// signal: @power
+#define CANPARSER_LIFEPO4_CELLS_3_power_CovFactor (0.100000)
+#define CANPARSER_LIFEPO4_CELLS_3_power_toS(x)                                 \
+    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
+#define CANPARSER_LIFEPO4_CELLS_3_power_fromS(x)                               \
+    ((((x) * (0.100000)) + (0.000000)))
 
 typedef struct {
 #ifdef CANPARSER_USE_BITS_SIGNAL
@@ -429,6 +435,12 @@ typedef struct {
     sigfloat_t cellVoltageE_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
+    uint16_t power; //      Bits=16 Factor= 0.100000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
 #else
 
     uint16_t cellVoltageB; //      Bits=12 Factor= 0.001000        Unit:'V'
@@ -453,6 +465,12 @@ typedef struct {
 
 #ifdef CANPARSER_USE_SIGFLOAT
     sigfloat_t cellVoltageE_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    uint16_t power; //      Bits=16 Factor= 0.100000        Unit:'W'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t power_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
 #endif // CANPARSER_USE_BITS_SIGNAL
