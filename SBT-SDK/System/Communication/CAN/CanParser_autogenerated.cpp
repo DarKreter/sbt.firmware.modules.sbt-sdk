@@ -435,6 +435,11 @@ LIFEPO4_CELLS_3_t Unpack_LIFEPO4_CELLS_3(const uint8_t* _d)
         (sigfloat_t)(CANPARSER_cellVoltageE_fromS(_m->cellVoltageE));
 #endif // CANPARSER_USE_SIGFLOAT
 
+    _m.power = ((_d[7] & (0xFFU)) << 8) | (_d[6] & (0xFFU));
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.power_phys = (sigfloat_t)(CANPARSER_power_fromS(_m->power));
+#endif // CANPARSER_USE_SIGFLOAT
+
 #ifdef CANPARSER_USE_DIAG_MONITORS
     _m.mon1.dlc_error = (dlc_ < LIFEPO4_CELLS_3_DLC);
     _m.mon1.last_cycle = GetSystemTick();
@@ -460,6 +465,7 @@ uint32_t Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m,
     _m->cellVoltageC = CANPARSER_cellVoltageC_toS(_m->cellVoltageC_phys);
     _m->cellVoltageD = CANPARSER_cellVoltageD_toS(_m->cellVoltageD_phys);
     _m->cellVoltageE = CANPARSER_cellVoltageE_toS(_m->cellVoltageE_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
     cframe->Data[0] |= (_m->cellVoltageB & (0xFFU));
@@ -470,6 +476,8 @@ uint32_t Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m,
     cframe->Data[4] |= ((_m->cellVoltageD >> 8) & (0x0FU)) |
                        ((_m->cellVoltageE & (0x0FU)) << 4);
     cframe->Data[5] |= ((_m->cellVoltageE >> 4) & (0xFFU));
+    cframe->Data[6] |= (_m->power & (0xFFU));
+    cframe->Data[7] |= ((_m->power >> 8) & (0xFFU));
 
     cframe->MsgId = LIFEPO4_CELLS_3_CANID;
     cframe->DLC = LIFEPO4_CELLS_3_DLC;
@@ -490,6 +498,7 @@ void Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m, uint8_t* _d)
     _m->cellVoltageC = CANPARSER_cellVoltageC_toS(_m->cellVoltageC_phys);
     _m->cellVoltageD = CANPARSER_cellVoltageD_toS(_m->cellVoltageD_phys);
     _m->cellVoltageE = CANPARSER_cellVoltageE_toS(_m->cellVoltageE_phys);
+    _m->power = CANPARSER_power_toS(_m->power_phys);
 #endif // CANPARSER_USE_SIGFLOAT
 
     _d[0] |= (_m->cellVoltageB & (0xFFU));
@@ -500,6 +509,8 @@ void Pack_LIFEPO4_CELLS_3(LIFEPO4_CELLS_3_t* _m, uint8_t* _d)
     _d[4] |= ((_m->cellVoltageD >> 8) & (0x0FU)) |
              ((_m->cellVoltageE & (0x0FU)) << 4);
     _d[5] |= ((_m->cellVoltageE >> 4) & (0xFFU));
+    _d[6] |= (_m->power & (0xFFU));
+    _d[7] |= ((_m->power >> 8) & (0xFFU));
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
