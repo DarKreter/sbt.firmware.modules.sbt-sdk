@@ -46,12 +46,12 @@ struct UARTPinout {
 namespace Pinouts {
 constexpr CANPinout CAN_1 = {
 #ifndef SBT_BSP_REMAP_CAN1
-    {{GPIOA_BASE, GPIO_PIN_11}, GPIOBase::Mode::Input, GPIOBase::Pull::NoPull},
+    {{GPIOA_BASE, GPIO_PIN_11}, GPIOBase::Mode::Input, GPIOBase::Pull::PullUp},
     {{GPIOA_BASE, GPIO_PIN_12},
      GPIOBase::Mode::AlternatePP,
      GPIOBase::Pull::NoPull}
 #else
-    {{GPIOB_BASE, GPIO_PIN_8}, GPIOBase::Mode::Input, GPIOBase::Pull::NoPull},
+    {{GPIOB_BASE, GPIO_PIN_8}, GPIOBase::Mode::Input, GPIOBase::Pull::PullUp},
     {{GPIOB_BASE, GPIO_PIN_9},
      GPIOBase::Mode::AlternatePP,
      GPIOBase::Pull::NoPull}
