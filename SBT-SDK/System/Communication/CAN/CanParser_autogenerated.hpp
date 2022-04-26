@@ -13,6 +13,9 @@
 
 namespace SBT::System::Comm {
 
+struct CAN_STRUCT_SAMPLE_t {
+};
+
 // DBC file version
 #define VER_CANPARSER_MAJ (0U)
 #define VER_CANPARSER_MIN (0U)
@@ -36,7 +39,7 @@ namespace SBT::System::Comm {
     ((uint32_t)(((x) - (0.000000)) / (0.001000)))
 #define CANPARSER_HEARTBEAT_upTime_fromS(x) ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct HEARTBEAT_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint32_t upTime; //      Bits=32 Factor= 0.001000        Unit:'s'
@@ -68,8 +71,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} HEARTBEAT_t;
+};
 
 // def @LIFEPO4_GENERAL CAN Message (2    0x2)
 #define LIFEPO4_GENERAL_IDE                               (0U)
@@ -94,7 +96,7 @@ typedef struct {
 #define CANPARSER_LIFEPO4_GENERAL_voltage_fromS(x)                             \
     ((((x) * (0.100000)) + (0.000000)))
 
-typedef struct {
+struct LIFEPO4_GENERAL_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t chargeCurrent; //      Bits=16 Factor= 0.100000        Unit:'A'
@@ -150,8 +152,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} LIFEPO4_GENERAL_t;
+};
 
 // def @LIFEPO4_CELLS_1 CAN Message (3    0x3)
 #define LIFEPO4_CELLS_1_IDE                              (0U)
@@ -188,7 +189,7 @@ typedef struct {
 #define CANPARSER_LIFEPO4_CELLS_1_cellVoltage5_fromS(x)                        \
     ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct LIFEPO4_CELLS_1_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t cellVoltage1; //      Bits=12 Factor= 0.001000        Unit:'V'
@@ -260,8 +261,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} LIFEPO4_CELLS_1_t;
+};
 
 // def @LIFEPO4_CELLS_2 CAN Message (4    0x4)
 #define LIFEPO4_CELLS_2_IDE                              (0U)
@@ -298,7 +298,7 @@ typedef struct {
 #define CANPARSER_LIFEPO4_CELLS_2_cellVoltageA_fromS(x)                        \
     ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct LIFEPO4_CELLS_2_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t cellVoltage6; //      Bits=12 Factor= 0.001000        Unit:'V'
@@ -370,8 +370,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} LIFEPO4_CELLS_2_t;
+};
 
 // def @LIFEPO4_CELLS_3 CAN Message (5    0x5)
 #define LIFEPO4_CELLS_3_IDE                              (0U)
@@ -408,7 +407,7 @@ typedef struct {
 #define CANPARSER_LIFEPO4_CELLS_3_power_fromS(x)                               \
     ((((x) * (0.100000)) + (0.000000)))
 
-typedef struct {
+struct LIFEPO4_CELLS_3_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t cellVoltageB; //      Bits=12 Factor= 0.001000        Unit:'V'
@@ -480,15 +479,14 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} LIFEPO4_CELLS_3_t;
+};
 
 // def @PUMPS_GENERAL CAN Message (6    0x6)
 #define PUMPS_GENERAL_IDE   (0U)
 #define PUMPS_GENERAL_DLC   (8U)
 #define PUMPS_GENERAL_CANID (0x6)
 
-typedef struct {
+struct PUMPS_GENERAL_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t waterLevel1; //      Bits=12
@@ -552,8 +550,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} PUMPS_GENERAL_t;
+};
 
 // def @EMBEDDED_BUS_DATA CAN Message (7    0x7)
 #define EMBEDDED_BUS_DATA_IDE                         (0U)
@@ -578,7 +575,7 @@ typedef struct {
 #define CANPARSER_EMBEDDED_BUS_DATA_power_fromS(x)                             \
     ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct EMBEDDED_BUS_DATA_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
@@ -626,8 +623,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} EMBEDDED_BUS_DATA_t;
+};
 
 // def @POWER_BUS_DATA CAN Message (8    0x8)
 #define POWER_BUS_DATA_IDE                         (0U)
@@ -652,7 +648,7 @@ typedef struct {
 #define CANPARSER_POWER_BUS_DATA_power_fromS(x)                                \
     ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct POWER_BUS_DATA_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint32_t voltage; //      Bits=20 Factor= 0.001000        Unit:'V'
@@ -700,8 +696,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} POWER_BUS_DATA_t;
+};
 
 // def @PV_DATA CAN Message (9    0x9)
 #define PV_DATA_IDE                            (0U)
@@ -726,7 +721,7 @@ typedef struct {
 #define CANPARSER_PV_DATA_panelVoltage_fromS(x)                                \
     ((((x) * (0.010000)) + (0.000000)))
 
-typedef struct {
+struct PV_DATA_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint32_t panelPower; //      Bits=32 Factor= 0.010000        Unit:'W'
@@ -774,8 +769,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} PV_DATA_t;
+};
 
 // def @MPPT_CHARGER_DATA CAN Message (10   0xa)
 #define MPPT_CHARGER_DATA_IDE                                     (0U)
@@ -800,7 +794,7 @@ typedef struct {
 #define CANPARSER_MPPT_CHARGER_DATA_batteryVoltage_fromS(x)                    \
     ((((x) * (0.010000)) + (0.000000)))
 
-typedef struct {
+struct MPPT_CHARGER_DATA_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     int16_t internalTemperature; //  [-] Bits=16 Factor= 0.010000 Unit:'Celcius'
@@ -848,8 +842,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} MPPT_CHARGER_DATA_t;
+};
 
 // def @YIELD_DATA CAN Message (11   0xb)
 #define YIELD_DATA_IDE                            (0U)
@@ -862,7 +855,7 @@ typedef struct {
 #define CANPARSER_YIELD_DATA_yieldToday_fromS(x)                               \
     ((((x) * (0.010000)) + (0.000000)))
 
-typedef struct {
+struct YIELD_DATA_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t yieldToday; //      Bits=16 Factor= 0.010000        Unit:'kWh'
@@ -890,8 +883,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} YIELD_DATA_t;
+};
 
 // def @GEODETIC_POSITION_1 CAN Message (12   0xc)
 #define GEODETIC_POSITION_1_IDE                          (0U)
@@ -910,7 +902,7 @@ typedef struct {
 #define CANPARSER_GEODETIC_POSITION_1_longitude_fromS(x)                       \
     ((((x) * (0.000000)) + (0.000000)))
 
-typedef struct {
+struct GEODETIC_POSITION_1_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     int32_t latitude; //  [-] Bits=32 Factor= 0.000000        Unit:'deg'
@@ -946,8 +938,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} GEODETIC_POSITION_1_t;
+};
 
 // def @GEODETIC_POSITION_2 CAN Message (13   0xd)
 #define GEODETIC_POSITION_2_IDE                       (0U)
@@ -960,7 +951,7 @@ typedef struct {
 #define CANPARSER_GEODETIC_POSITION_2_hamsl_fromS(x)                           \
     ((((x) * (0.001000)) + (0.000000)))
 
-typedef struct {
+struct GEODETIC_POSITION_2_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t horizontalAccEst; //      Bits=16 Unit:'mm'
@@ -1000,15 +991,14 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} GEODETIC_POSITION_2_t;
+};
 
 // def @NED_VELOCITY CAN Message (14   0xe)
 #define NED_VELOCITY_IDE   (0U)
 #define NED_VELOCITY_DLC   (8U)
 #define NED_VELOCITY_CANID (0xe)
 
-typedef struct {
+struct NED_VELOCITY_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t speed; //      Bits=12 Unit:'cm/s'
@@ -1032,8 +1022,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} NED_VELOCITY_t;
+};
 
 // def @NED_HEADING CAN Message (15   0xf)
 #define NED_HEADING_IDE                                 (0U)
@@ -1052,7 +1041,7 @@ typedef struct {
 #define CANPARSER_NED_HEADING_headingOfMotionAccEst_fromS(x)                   \
     ((((x) * (0.000010)) + (0.000000)))
 
-typedef struct {
+struct NED_HEADING_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     int32_t headingOfMotion; //  [-] Bits=32 Factor= 0.000010        Unit:'deg'
@@ -1088,15 +1077,14 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} NED_HEADING_t;
+};
 
 // def @YOKE_GENERAL CAN Message (16   0x10)
 #define YOKE_GENERAL_IDE   (0U)
 #define YOKE_GENERAL_DLC   (8U)
 #define YOKE_GENERAL_CANID (0x10)
 
-typedef struct {
+struct YOKE_GENERAL_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint8_t enablePump1 : 2; //      Bits= 2 Unit:'Boolean'
@@ -1152,15 +1140,14 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} YOKE_GENERAL_t;
+};
 
 // def @PUMPS_THRESHOLD CAN Message (17   0x11)
 #define PUMPS_THRESHOLD_IDE   (0U)
 #define PUMPS_THRESHOLD_DLC   (8U)
 #define PUMPS_THRESHOLD_CANID (0x11)
 
-typedef struct {
+struct PUMPS_THRESHOLD_t : CAN_STRUCT_SAMPLE_t {
 #ifdef CANPARSER_USE_BITS_SIGNAL
 
     uint16_t thresholdWaterSensor1; //      Bits=12
@@ -1188,8 +1175,7 @@ typedef struct {
     FrameMonitor_t mon1;
 
 #endif // CANPARSER_USE_DIAG_MONITORS
-
-} PUMPS_THRESHOLD_t;
+};
 
 // Function signatures
 
