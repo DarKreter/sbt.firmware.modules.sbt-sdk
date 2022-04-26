@@ -530,6 +530,7 @@ PUMPS_GENERAL_t Unpack_PUMPS_GENERAL(const uint8_t* _d)
     _m.operatingModePump2 = ((_d[6] >> 5) & (0x01U));
     _m.operatingModePump3 = ((_d[6] >> 6) & (0x01U));
     _m.operatingModePump4 = ((_d[6] >> 7) & (0x01U));
+    _m.statusSiren = (_d[7] & (0x01U));
 
 #ifdef CANPARSER_USE_DIAG_MONITORS
     _m.mon1.dlc_error = (dlc_ < PUMPS_GENERAL_DLC);
@@ -566,6 +567,7 @@ uint32_t Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe)
                        ((_m->operatingModePump2 & (0x01U)) << 5) |
                        ((_m->operatingModePump3 & (0x01U)) << 6) |
                        ((_m->operatingModePump4 & (0x01U)) << 7);
+    cframe->Data[7] |= (_m->statusSiren & (0x01U));
 
     cframe->MsgId = PUMPS_GENERAL_CANID;
     cframe->DLC = PUMPS_GENERAL_DLC;
@@ -596,6 +598,7 @@ void Pack_PUMPS_GENERAL(PUMPS_GENERAL_t* _m, uint8_t* _d)
              ((_m->operatingModePump2 & (0x01U)) << 5) |
              ((_m->operatingModePump3 & (0x01U)) << 6) |
              ((_m->operatingModePump4 & (0x01U)) << 7);
+    _d[7] |= (_m->statusSiren & (0x01U));
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
@@ -1399,6 +1402,71 @@ void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, uint8_t* _d)
     _d[2] |= (_m->pumpOperatingMode4 & (0x03U)) |
              ((_m->resetEmbeddedBus & (0x03U)) << 2) |
              ((_m->resetPowerBus & (0x03U)) << 4);
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
+PUMPS_THRESHOLD_t Unpack_PUMPS_THRESHOLD(const uint8_t* _d)
+{
+    PUMPS_THRESHOLD_t _m;
+    _m.thresholdWaterSensor1 = ((_d[1] & (0x0FU)) << 8) | (_d[0] & (0xFFU));
+    _m.thresholdWaterSensor2 =
+        ((_d[2] & (0xFFU)) << 4) | ((_d[1] >> 4) & (0x0FU));
+    _m.thresholdWaterSensor3 = ((_d[4] & (0x0FU)) << 8) | (_d[3] & (0xFFU));
+    _m.thresholdWaterSensor4 =
+        ((_d[5] & (0xFFU)) << 4) | ((_d[4] >> 4) & (0x0FU));
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < PUMPS_THRESHOLD_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_PUMPS_THRESHOLD_canparser(&_m.mon1, PUMPS_THRESHOLD_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m,
+                              __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < PUMPS_THRESHOLD_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+    cframe->Data[0] |= (_m->thresholdWaterSensor1 & (0xFFU));
+    cframe->Data[1] |= ((_m->thresholdWaterSensor1 >> 8) & (0x0FU)) |
+                       ((_m->thresholdWaterSensor2 & (0x0FU)) << 4);
+    cframe->Data[2] |= ((_m->thresholdWaterSensor2 >> 4) & (0xFFU));
+    cframe->Data[3] |= (_m->thresholdWaterSensor3 & (0xFFU));
+    cframe->Data[4] |= ((_m->thresholdWaterSensor3 >> 8) & (0x0FU)) |
+                       ((_m->thresholdWaterSensor4 & (0x0FU)) << 4);
+    cframe->Data[5] |= ((_m->thresholdWaterSensor4 >> 4) & (0xFFU));
+
+    cframe->MsgId = PUMPS_THRESHOLD_CANID;
+    cframe->DLC = PUMPS_THRESHOLD_DLC;
+    cframe->IDE = PUMPS_THRESHOLD_IDE;
+    return PUMPS_THRESHOLD_CANID;
+}
+
+#else
+
+void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < PUMPS_THRESHOLD_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+    _d[0] |= (_m->thresholdWaterSensor1 & (0xFFU));
+    _d[1] |= ((_m->thresholdWaterSensor1 >> 8) & (0x0FU)) |
+             ((_m->thresholdWaterSensor2 & (0x0FU)) << 4);
+    _d[2] |= ((_m->thresholdWaterSensor2 >> 4) & (0xFFU));
+    _d[3] |= (_m->thresholdWaterSensor3 & (0xFFU));
+    _d[4] |= ((_m->thresholdWaterSensor3 >> 8) & (0x0FU)) |
+             ((_m->thresholdWaterSensor4 & (0x0FU)) << 4);
+    _d[5] |= ((_m->thresholdWaterSensor4 >> 4) & (0xFFU));
 }
 
 #endif // CANPARSER_USE_CANSTRUCT
