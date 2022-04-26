@@ -52,6 +52,7 @@ enum class Param : uint16_t {
     NED_VELOCITY = 0x00E,
     NED_HEADING = 0x00F,
     YOKE_GENERAL = 0x010,
+    PUMPS_THRESHOLD = 0x011,
     UNKNOWN
 };
 
@@ -109,6 +110,9 @@ constexpr Message_t NED_VELOCITY = {6, Param::NED_VELOCITY, Group::DEFAULT};
 constexpr Message_t NED_HEADING = {7, Param::NED_HEADING, Group::DEFAULT};
 
 constexpr Message_t YOKE_GENERAL = {2, Param::YOKE_GENERAL, Group::DEFAULT};
+
+constexpr Message_t PUMPS_THRESHOLD = {2, Param::PUMPS_THRESHOLD,
+                                       Group::DEFAULT};
 
 } // namespace Message
 

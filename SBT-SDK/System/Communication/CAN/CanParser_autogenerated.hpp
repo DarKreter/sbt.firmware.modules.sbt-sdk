@@ -82,11 +82,11 @@ typedef struct {
 #define CANPARSER_LIFEPO4_GENERAL_chargeCurrent_fromS(x)                       \
     ((((x) * (0.100000)) + (0.000000)))
 // signal: @dischargingCurrent
-#define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_CovFactor (0.010000)
+#define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_CovFactor (0.100000)
 #define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_toS(x)                    \
-    ((uint16_t)(((x) - (0.000000)) / (0.010000)))
+    ((uint16_t)(((x) - (0.000000)) / (0.100000)))
 #define CANPARSER_LIFEPO4_GENERAL_dischargingCurrent_fromS(x)                  \
-    ((((x) * (0.010000)) + (0.000000)))
+    ((((x) * (0.100000)) + (0.000000)))
 // signal: @voltage
 #define CANPARSER_LIFEPO4_GENERAL_voltage_CovFactor (0.100000)
 #define CANPARSER_LIFEPO4_GENERAL_voltage_toS(x)                               \
@@ -103,7 +103,7 @@ typedef struct {
     sigfloat_t chargeCurrent_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.010000 Unit:'A'
+    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.100000 Unit:'A'
 
 #ifdef CANPARSER_USE_SIGFLOAT
     sigfloat_t dischargingCurrent_phys;
@@ -127,7 +127,7 @@ typedef struct {
     sigfloat_t chargeCurrent_phys;
 #endif // CANPARSER_USE_SIGFLOAT
 
-    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.010000 Unit:'A'
+    uint16_t dischargingCurrent; //      Bits=16 Factor= 0.100000 Unit:'A'
 
 #ifdef CANPARSER_USE_SIGFLOAT
     sigfloat_t dischargingCurrent_phys;
@@ -515,6 +515,8 @@ typedef struct {
 
     uint8_t operatingModePump4 : 1; //      Bits= 1 Unit:'Boolean'
 
+    uint8_t statusSiren : 1; //      Bits= 1 Unit:'Boolean'
+
 #else
 
     uint16_t waterLevel1; //      Bits=12
@@ -540,6 +542,8 @@ typedef struct {
     uint8_t operatingModePump3; //      Bits= 1 Unit:'Boolean'
 
     uint8_t operatingModePump4; //      Bits= 1 Unit:'Boolean'
+
+    uint8_t statusSiren; //      Bits= 1 Unit:'Boolean'
 
 #endif // CANPARSER_USE_BITS_SIGNAL
 
@@ -1151,6 +1155,42 @@ typedef struct {
 
 } YOKE_GENERAL_t;
 
+// def @PUMPS_THRESHOLD CAN Message (17   0x11)
+#define PUMPS_THRESHOLD_IDE   (0U)
+#define PUMPS_THRESHOLD_DLC   (8U)
+#define PUMPS_THRESHOLD_CANID (0x11)
+
+typedef struct {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    uint16_t thresholdWaterSensor1; //      Bits=12
+
+    uint16_t thresholdWaterSensor2; //      Bits=12
+
+    uint16_t thresholdWaterSensor3; //      Bits=12
+
+    uint16_t thresholdWaterSensor4; //      Bits=12
+
+#else
+
+    uint16_t thresholdWaterSensor1; //      Bits=12
+
+    uint16_t thresholdWaterSensor2; //      Bits=12
+
+    uint16_t thresholdWaterSensor3; //      Bits=12
+
+    uint16_t thresholdWaterSensor4; //      Bits=12
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+} PUMPS_THRESHOLD_t;
+
 // Function signatures
 
 /**
@@ -1435,6 +1475,24 @@ void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe);
  * @param _d pointer to payload, where YOKE_GENERAL_t object will be packed
  */
 void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into PUMPS_THRESHOLD_t struct
+ * @param _d pointer to payload to unpack
+ * @return PUMPS_THRESHOLD_t unpacked object
+ */
+[[nodiscard]] PUMPS_THRESHOLD_t Unpack_PUMPS_THRESHOLD(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m,
+                          __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs PUMPS_THRESHOLD_t object into raw 8-byte long payload
+ * @param _m pointer to PUMPS_THRESHOLD_t object to pack
+ * @param _d pointer to payload, where PUMPS_THRESHOLD_t object will be packed
+ */
+void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 } // namespace SBT::System::Comm
