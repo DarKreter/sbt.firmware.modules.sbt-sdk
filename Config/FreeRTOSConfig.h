@@ -37,12 +37,14 @@ extern uint32_t SystemCoreClock;
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION         0
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   10240
-#define configAPPLICATION_ALLOCATED_HEAP        1
+#ifndef configTOTAL_HEAP_SIZE
+#define configTOTAL_HEAP_SIZE 15360
+#endif
+#define configAPPLICATION_ALLOCATED_HEAP 1
 
 /* Hook function related definitions. */
-#define configUSE_IDLE_HOOK                     1
-#define configUSE_TICK_HOOK                     0
+#define configUSE_IDLE_HOOK              1
+#define configUSE_TICK_HOOK              0
 
 #ifdef SBT_DEBUG
 #define configCHECK_FOR_STACK_OVERFLOW 2
@@ -66,10 +68,18 @@ void vApplicationMallocFailedHook(void);
 #define configMAX_CO_ROUTINE_PRIORITIES      1
 
 /* Software timer related definitions. */
-#define configUSE_TIMERS                     0
-#define configTIMER_TASK_PRIORITY            3
-#define configTIMER_QUEUE_LENGTH             10
-#define configTIMER_TASK_STACK_DEPTH         configMINIMAL_STACK_SIZE
+#ifndef configUSE_TIMERS
+#define configUSE_TIMERS 0
+#endif
+#ifndef configTIMER_TASK_PRIORITY
+#define configTIMER_TASK_PRIORITY 8
+#endif
+#ifndef configTIMER_QUEUE_LENGTH
+#define configTIMER_QUEUE_LENGTH 10
+#endif
+#ifndef configTIMER_TASK_STACK_DEPTH
+#define configTIMER_TASK_STACK_DEPTH 64
+#endif
 
 /* Interrupt nesting behaviour configuration. */
 
