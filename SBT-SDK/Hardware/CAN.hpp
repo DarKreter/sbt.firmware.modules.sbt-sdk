@@ -169,7 +169,7 @@ public:
      * @param data 8-byte long CAN data
      */
 
-    void Send(const uint32_t& id, uint8_t(data)[8]);
+    HAL_StatusTypeDef Send(const uint32_t& id, uint8_t(data)[8]);
 
     /**
      * @brief Get received message from HAL queue

@@ -40,8 +40,15 @@ void CanSender::run()
     // Wait here until something is in queue
     xQueueReceive(xQueueHandle, &mess, portMAX_DELAY);
 
-    if(xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
-        SBT::Hardware::can.Send(mess.GetExtID(), mess.GetPayload());
+    if(xSemaphoreTake(xSemaphore, static_cast<TickType_t>(100)) == pdTRUE) {
+        if(SBT::Hardware::can.Send(mess.GetExtID(), mess.GetPayload()) !=
+           HAL_OK)
+            failedMessCount++;
+    }
+    else {
+        failedMessCount++;
+        xSemaphoreGive(xSemaphore);
+    }
 }
 
 void CanSender::CanTxCompleteCallback()

@@ -233,7 +233,7 @@ bool hCAN::IsAnyTxMailboxFree()
     return HAL_CAN_GetTxMailboxesFreeLevel(&handle) > 0;
 }
 
-void hCAN::Send(const uint32_t& id, uint8_t(data)[8])
+HAL_StatusTypeDef hCAN::Send(const uint32_t& id, uint8_t(data)[8])
 {
     if(state != State::STARTED)
         canErrorNotStarted();
@@ -246,8 +246,7 @@ void hCAN::Send(const uint32_t& id, uint8_t(data)[8])
     header.RTR = CAN_RTR_DATA;
     header.DLC = 8;
 
-    canHALErrorGuard(
-        HAL_CAN_AddTxMessage(&handle, &header, data, &usedMailbox));
+    return HAL_CAN_AddTxMessage(&handle, &header, data, &usedMailbox);
 }
 
 void hCAN::RegisterCallback(CallbackType callbackType,
