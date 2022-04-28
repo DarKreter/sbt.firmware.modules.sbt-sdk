@@ -1341,10 +1341,10 @@ YOKE_GENERAL_t Unpack_YOKE_GENERAL(const uint8_t* _d)
     _m.enablePump3 = ((_d[0] >> 4) & (0x03U));
     _m.enablePump4 = ((_d[0] >> 6) & (0x03U));
     _m.enableSiren = (_d[1] & (0x03U));
-    _m.pumpOperatingMode1 = ((_d[1] >> 2) & (0x03U));
-    _m.pumpOperatingMode2 = ((_d[1] >> 4) & (0x03U));
-    _m.pumpOperatingMode3 = ((_d[1] >> 6) & (0x03U));
-    _m.pumpOperatingMode4 = (_d[2] & (0x03U));
+    _m.operatingModePump1 = ((_d[1] >> 2) & (0x03U));
+    _m.operatingModePump2 = ((_d[1] >> 4) & (0x03U));
+    _m.operatingModePump3 = ((_d[1] >> 6) & (0x03U));
+    _m.operatingModePump4 = (_d[2] & (0x03U));
     _m.resetEmbeddedBus = ((_d[2] >> 2) & (0x03U));
     _m.resetPowerBus = ((_d[2] >> 4) & (0x03U));
 
@@ -1371,10 +1371,10 @@ uint32_t Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, __CoderDbcCanFrame_t__* cframe)
         (_m->enablePump1 & (0x03U)) | ((_m->enablePump2 & (0x03U)) << 2) |
         ((_m->enablePump3 & (0x03U)) << 4) | ((_m->enablePump4 & (0x03U)) << 6);
     cframe->Data[1] |= (_m->enableSiren & (0x03U)) |
-                       ((_m->pumpOperatingMode1 & (0x03U)) << 2) |
-                       ((_m->pumpOperatingMode2 & (0x03U)) << 4) |
-                       ((_m->pumpOperatingMode3 & (0x03U)) << 6);
-    cframe->Data[2] |= (_m->pumpOperatingMode4 & (0x03U)) |
+                       ((_m->operatingModePump1 & (0x03U)) << 2) |
+                       ((_m->operatingModePump2 & (0x03U)) << 4) |
+                       ((_m->operatingModePump3 & (0x03U)) << 6);
+    cframe->Data[2] |= (_m->operatingModePump4 & (0x03U)) |
                        ((_m->resetEmbeddedBus & (0x03U)) << 2) |
                        ((_m->resetPowerBus & (0x03U)) << 4);
 
@@ -1396,10 +1396,10 @@ void Pack_YOKE_GENERAL(YOKE_GENERAL_t* _m, uint8_t* _d)
              ((_m->enablePump3 & (0x03U)) << 4) |
              ((_m->enablePump4 & (0x03U)) << 6);
     _d[1] |= (_m->enableSiren & (0x03U)) |
-             ((_m->pumpOperatingMode1 & (0x03U)) << 2) |
-             ((_m->pumpOperatingMode2 & (0x03U)) << 4) |
-             ((_m->pumpOperatingMode3 & (0x03U)) << 6);
-    _d[2] |= (_m->pumpOperatingMode4 & (0x03U)) |
+             ((_m->operatingModePump1 & (0x03U)) << 2) |
+             ((_m->operatingModePump2 & (0x03U)) << 4) |
+             ((_m->operatingModePump3 & (0x03U)) << 6);
+    _d[2] |= (_m->operatingModePump4 & (0x03U)) |
              ((_m->resetEmbeddedBus & (0x03U)) << 2) |
              ((_m->resetPowerBus & (0x03U)) << 4);
 }
