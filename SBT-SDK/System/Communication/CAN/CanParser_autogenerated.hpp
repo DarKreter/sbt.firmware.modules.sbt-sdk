@@ -1097,13 +1097,13 @@ struct YOKE_GENERAL_t : CAN_STRUCT_SAMPLE_t {
 
     uint8_t enableSiren : 2; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode1 : 2; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump1 : 2; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode2 : 2; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump2 : 2; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode3 : 2; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump3 : 2; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode4 : 2; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump4 : 2; //      Bits= 2 Unit:'Boolean'
 
     uint8_t resetEmbeddedBus : 2; //      Bits= 2 Unit:'Boolean'
 
@@ -1121,13 +1121,13 @@ struct YOKE_GENERAL_t : CAN_STRUCT_SAMPLE_t {
 
     uint8_t enableSiren; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode1; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump1; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode2; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump2; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode3; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump3; //      Bits= 2 Unit:'Boolean'
 
-    uint8_t pumpOperatingMode4; //      Bits= 2 Unit:'Boolean'
+    uint8_t operatingModePump4; //      Bits= 2 Unit:'Boolean'
 
     uint8_t resetEmbeddedBus; //      Bits= 2 Unit:'Boolean'
 
