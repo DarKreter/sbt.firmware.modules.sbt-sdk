@@ -1471,4 +1471,78 @@ void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m, uint8_t* _d)
 
 #endif // CANPARSER_USE_CANSTRUCT
 
+TEMPERATURE_POWERBOX_t Unpack_TEMPERATURE_POWERBOX(const uint8_t* _d)
+{
+    TEMPERATURE_POWERBOX_t _m;
+    _m.temperature1 =
+        __ext_sig__((((_d[1] & (0xFFU)) << 8) | (_d[0] & (0xFFU))), 16);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.temperature1_phys =
+        (sigfloat_t)(CANPARSER_temperature1_fromS(_m->temperature1));
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _m.temperature2 =
+        __ext_sig__((((_d[3] & (0xFFU)) << 8) | (_d[2] & (0xFFU))), 16);
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m.temperature2_phys =
+        (sigfloat_t)(CANPARSER_temperature2_fromS(_m->temperature2));
+#endif // CANPARSER_USE_SIGFLOAT
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+    _m.mon1.dlc_error = (dlc_ < TEMPERATURE_POWERBOX_DLC);
+    _m.mon1.last_cycle = GetSystemTick();
+    _m.mon1.frame_cnt++;
+
+    FMon_TEMPERATURE_POWERBOX_canparser(&_m.mon1, TEMPERATURE_POWERBOX_CANID);
+#endif // CANPARSER_USE_DIAG_MONITORS
+
+    return _m;
+}
+
+#ifdef CANPARSER_USE_CANSTRUCT
+
+uint32_t Pack_TEMPERATURE_POWERBOX(TEMPERATURE_POWERBOX_t* _m,
+                                   __CoderDbcCanFrame_t__* cframe)
+{
+    uint8_t i;
+    for(i = 0; (i < TEMPERATURE_POWERBOX_DLC) && (i < 8); cframe->Data[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->temperature1 = CANPARSER_temperature1_toS(_m->temperature1_phys);
+    _m->temperature2 = CANPARSER_temperature2_toS(_m->temperature2_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    cframe->Data[0] |= (_m->temperature1 & (0xFFU));
+    cframe->Data[1] |= ((_m->temperature1 >> 8) & (0xFFU));
+    cframe->Data[2] |= (_m->temperature2 & (0xFFU));
+    cframe->Data[3] |= ((_m->temperature2 >> 8) & (0xFFU));
+
+    cframe->MsgId = TEMPERATURE_POWERBOX_CANID;
+    cframe->DLC = TEMPERATURE_POWERBOX_DLC;
+    cframe->IDE = TEMPERATURE_POWERBOX_IDE;
+    return TEMPERATURE_POWERBOX_CANID;
+}
+
+#else
+
+void Pack_TEMPERATURE_POWERBOX(TEMPERATURE_POWERBOX_t* _m, uint8_t* _d)
+{
+    uint8_t i;
+    for(i = 0; (i < TEMPERATURE_POWERBOX_DLC) && (i < 8); _d[i++] = 0)
+        ;
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    _m->temperature1 = CANPARSER_temperature1_toS(_m->temperature1_phys);
+    _m->temperature2 = CANPARSER_temperature2_toS(_m->temperature2_phys);
+#endif // CANPARSER_USE_SIGFLOAT
+
+    _d[0] |= (_m->temperature1 & (0xFFU));
+    _d[1] |= ((_m->temperature1 >> 8) & (0xFFU));
+    _d[2] |= (_m->temperature2 & (0xFFU));
+    _d[3] |= ((_m->temperature2 >> 8) & (0xFFU));
+}
+
+#endif // CANPARSER_USE_CANSTRUCT
+
 } // namespace SBT::System::Comm
