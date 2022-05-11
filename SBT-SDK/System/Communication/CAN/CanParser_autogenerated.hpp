@@ -1177,6 +1177,61 @@ struct PUMPS_THRESHOLD_t : CAN_STRUCT_SAMPLE_t {
 #endif // CANPARSER_USE_DIAG_MONITORS
 };
 
+// def @TEMPERATURE_POWERBOX CAN Message (18   0x12)
+#define TEMPERATURE_POWERBOX_IDE                              (0U)
+#define TEMPERATURE_POWERBOX_DLC                              (8U)
+#define TEMPERATURE_POWERBOX_CANID                            (0x12)
+// signal: @temperature1
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature1_CovFactor (0.062500)
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature1_toS(x)                     \
+    ((int16_t)(((x) - (0.000000)) / (0.062500)))
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature1_fromS(x)                   \
+    ((((x) * (0.062500)) + (0.000000)))
+// signal: @temperature2
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature2_CovFactor (0.062500)
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature2_toS(x)                     \
+    ((int16_t)(((x) - (0.000000)) / (0.062500)))
+#define CANPARSER_TEMPERATURE_POWERBOX_temperature2_fromS(x)                   \
+    ((((x) * (0.062500)) + (0.000000)))
+
+struct TEMPERATURE_POWERBOX_t : CAN_STRUCT_SAMPLE_t {
+#ifdef CANPARSER_USE_BITS_SIGNAL
+
+    int16_t temperature1; //  [-] Bits=16 Factor= 0.062500        Unit:'Celcius'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t temperature1_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    int16_t temperature2; //  [-] Bits=16 Factor= 0.062500        Unit:'Celcius'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t temperature2_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#else
+
+    int16_t temperature1; //  [-] Bits=16 Factor= 0.062500        Unit:'Celcius'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t temperature1_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+    int16_t temperature2; //  [-] Bits=16 Factor= 0.062500        Unit:'Celcius'
+
+#ifdef CANPARSER_USE_SIGFLOAT
+    sigfloat_t temperature2_phys;
+#endif // CANPARSER_USE_SIGFLOAT
+
+#endif // CANPARSER_USE_BITS_SIGNAL
+
+#ifdef CANPARSER_USE_DIAG_MONITORS
+
+    FrameMonitor_t mon1;
+
+#endif // CANPARSER_USE_DIAG_MONITORS
+};
+
 // Function signatures
 
 /**
@@ -1479,6 +1534,26 @@ void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m,
  * @param _d pointer to payload, where PUMPS_THRESHOLD_t object will be packed
  */
 void Pack_PUMPS_THRESHOLD(PUMPS_THRESHOLD_t* _m, uint8_t* _d);
+#endif // CANPARSER_USE_CANSTRUCT
+
+/**
+ * @brief Unpacks raw CAN frame payload into TEMPERATURE_POWERBOX_t struct
+ * @param _d pointer to payload to unpack
+ * @return TEMPERATURE_POWERBOX_t unpacked object
+ */
+[[nodiscard]] TEMPERATURE_POWERBOX_t
+Unpack_TEMPERATURE_POWERBOX(const uint8_t* _d);
+#ifdef CANPARSER_USE_CANSTRUCT
+void Pack_TEMPERATURE_POWERBOX(TEMPERATURE_POWERBOX_t* _m,
+                               __CoderDbcCanFrame_t__* cframe);
+#else
+/**
+ * @brief Packs TEMPERATURE_POWERBOX_t object into raw 8-byte long payload
+ * @param _m pointer to TEMPERATURE_POWERBOX_t object to pack
+ * @param _d pointer to payload, where TEMPERATURE_POWERBOX_t object will be
+ * packed
+ */
+void Pack_TEMPERATURE_POWERBOX(TEMPERATURE_POWERBOX_t* _m, uint8_t* _d);
 #endif // CANPARSER_USE_CANSTRUCT
 
 } // namespace SBT::System::Comm

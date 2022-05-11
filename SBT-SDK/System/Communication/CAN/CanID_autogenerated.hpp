@@ -31,6 +31,7 @@ enum class Source : uint8_t {
     PiBox = 0x0F,
     GPS_CONTROLLER = 0x10,
     YOKE = 0x11,
+    TEMPERATURE_BOX = 0x12,
     UNKNOWN
 };
 
@@ -53,6 +54,7 @@ enum class Param : uint16_t {
     NED_HEADING = 0x00F,
     YOKE_GENERAL = 0x010,
     PUMPS_THRESHOLD = 0x011,
+    TEMPERATURE_POWERBOX = 0x012,
     UNKNOWN
 };
 
@@ -113,6 +115,9 @@ constexpr Message_t YOKE_GENERAL = {2, Param::YOKE_GENERAL, Group::DEFAULT};
 
 constexpr Message_t PUMPS_THRESHOLD = {2, Param::PUMPS_THRESHOLD,
                                        Group::DEFAULT};
+
+constexpr Message_t TEMPERATURE_POWERBOX = {5, Param::TEMPERATURE_POWERBOX,
+                                            Group::DEFAULT};
 
 } // namespace Message
 
