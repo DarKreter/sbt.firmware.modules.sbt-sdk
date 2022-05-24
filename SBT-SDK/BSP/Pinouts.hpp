@@ -124,14 +124,24 @@ constexpr UARTPinout UART_1 = {
      GPIOBase::Pull::NoPull},
     {{GPIOA_BASE, GPIO_PIN_10},
      GPIOBase::Mode::AlternateInput,
-     GPIOBase::Pull::PullUp}
+#ifndef SBT_UART1_RX_NOPULL
+     GPIOBase::Pull::PullUp
+#else
+     GPIOBase::Pull::NoPull
+#endif
+    }
 #else
     {{GPIOB_BASE, GPIO_PIN_6},
      GPIOBase::Mode::AlternatePP,
      GPIOBase::Pull::NoPull},
     {{GPIOB_BASE, GPIO_PIN_7},
      GPIOBase::Mode::AlternateInput,
-     GPIOBase::Pull::PullUp}
+#ifndef SBT_UART1_RX_NOPULL
+     GPIOBase::Pull::PullUp
+#else
+     GPIOBase::Pull::NoPull
+#endif
+    }
 #endif
 };
 
@@ -140,14 +150,24 @@ constexpr UARTPinout UART_2 = {{{GPIOA_BASE, GPIO_PIN_2},
                                 GPIOBase::Pull::NoPull},
                                {{GPIOA_BASE, GPIO_PIN_3},
                                 GPIOBase::Mode::AlternateInput,
-                                GPIOBase::Pull::PullUp}};
+#ifndef SBT_UART2_RX_NOPULL
+                                GPIOBase::Pull::PullUp
+#else
+                                GPIOBase::Pull::NoPull
+#endif
+                               }};
 
 constexpr UARTPinout UART_3 = {{{GPIOB_BASE, GPIO_PIN_10},
                                 GPIOBase::Mode::AlternatePP,
                                 GPIOBase::Pull::NoPull},
                                {{GPIOB_BASE, GPIO_PIN_11},
                                 GPIOBase::Mode::AlternateInput,
-                                GPIOBase::Pull::PullUp}};
+#ifndef SBT_UART3_RX_NOPULL
+                                GPIOBase::Pull::PullUp
+#else
+                                GPIOBase::Pull::NoPull
+#endif
+                               }};
 
 // High-power pins
 
