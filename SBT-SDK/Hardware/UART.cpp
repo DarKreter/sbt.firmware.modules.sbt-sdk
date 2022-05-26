@@ -84,7 +84,6 @@ void UART::Initialize()
             HAL_NVIC_SetPriority(USART1_IRQn, 11, 0);
             HAL_NVIC_EnableIRQ(USART1_IRQn);
         }
-        state.handle.Instance = USART1;
         break;
     case Instance::UART_2:
         // Enable the clock
@@ -99,7 +98,6 @@ void UART::Initialize()
             HAL_NVIC_SetPriority(USART2_IRQn, 11, 0);
             HAL_NVIC_EnableIRQ(USART2_IRQn);
         }
-        state.handle.Instance = USART2;
         break;
     case Instance::UART_3:
         // Enable the clock
@@ -114,7 +112,6 @@ void UART::Initialize()
             HAL_NVIC_SetPriority(USART3_IRQn, 11, 0);
             HAL_NVIC_EnableIRQ(USART3_IRQn);
         }
-        state.handle.Instance = USART3;
         break;
     case Instance::NONE:
         uartErrorUnknownInstance();
@@ -345,6 +342,7 @@ UART::UART(USART_TypeDef* usart)
     initialized = false;
     printfEnabled = false;
     buffer = nullptr;
+    state.handle.Instance = usart;
 
     if(usart == USART1) {
         instance = Instance::UART_1;
