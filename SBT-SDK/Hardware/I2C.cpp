@@ -82,7 +82,6 @@ void I2C::Initialize(uint32_t ownAddress)
             HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
         }
 
-        state.handle.Instance = I2C1;
         break;
 
     case Instance::I2C_2:
@@ -100,7 +99,6 @@ void I2C::Initialize(uint32_t ownAddress)
             HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
         }
 
-        state.handle.Instance = I2C2;
         break;
 
     case Instance::NONE:
@@ -584,6 +582,7 @@ void I2C::SetSpeed(uint32_t _speed)
 I2C::I2C(I2C_TypeDef* i2cc)
 {
     initialized = false;
+    state.handle.Instance = i2cc;
 
     if(i2cc == I2C1) {
         instance = Instance::I2C_1;

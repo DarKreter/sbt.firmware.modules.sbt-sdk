@@ -109,7 +109,6 @@ void SPI_t::Initialize()
     }
 
     auto& handle = state.handle;
-    handle.Instance = instance == Instance::SPI_1 ? SPI1 : SPI2;
     handle.Init.Mode = static_cast<uint32_t>(deviceType);
     handle.Init.Direction = static_cast<uint32_t>(direction);
     handle.Init.BaudRatePrescaler = static_cast<uint32_t>(prescaler);
@@ -338,6 +337,7 @@ void SPI_t::Abort() { spiHALErrorGuard(HAL_SPI_Abort(&state.handle)); }
 SPI_t::SPI_t(SPI_TypeDef* spii)
 {
     initialized = false;
+    state.handle.Instance = spii;
 
     if(spii == SPI1) {
         instance = Instance::SPI_1;
