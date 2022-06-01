@@ -159,6 +159,20 @@ void I2C::Initialize(uint32_t ownAddress)
     initialized = true;
 }
 
+void I2C::ReInitialize(uint32_t ownAddress)
+{
+    if(!initialized)
+        i2cErrorNotInit();
+
+    auto& handle = state.handle;
+    handle.Init.ClockSpeed = speed;
+    handle.Init.AddressingMode = static_cast<uint32_t>(addressingMode);
+    handle.Init.OwnAddress1 = ownAddress;
+
+    // Reinitialize UART using HAL
+    i2cHALErrorGuard(HAL_I2C_Init(&state.handle));
+}
+
 void I2C::DeInitialize()
 {
     if(!initialized)
@@ -182,6 +196,9 @@ void I2C::DeInitialize()
     case Instance::I2C_1:
         // Disable the clock
         __HAL_RCC_I2C1_CLK_DISABLE();
+        // Disable GPIO
+        GPIO::Disable(BSP::Pinouts::I2C_1.scl);
+        GPIO::Disable(BSP::Pinouts::I2C_1.sda);
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_DisableIRQ(I2C1_EV_IRQn);
@@ -191,6 +208,9 @@ void I2C::DeInitialize()
     case Instance::I2C_2:
         // Disable the clock
         __HAL_RCC_I2C2_CLK_DISABLE();
+        // Disable GPIO
+        GPIO::Disable(BSP::Pinouts::I2C_2.scl);
+        GPIO::Disable(BSP::Pinouts::I2C_2.sda);
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA) {
             HAL_NVIC_DisableIRQ(I2C2_EV_IRQn);
@@ -565,19 +585,10 @@ void I2C::ChangeModeToDMA()
 
 void I2C::SetAddressingMode(AddressingMode _addressingMode)
 {
-    if(initialized)
-        i2cErrorAlreadyInit(); // Too late
-
     addressingMode = _addressingMode;
 }
 
-void I2C::SetSpeed(uint32_t _speed)
-{
-    if(initialized)
-        i2cErrorAlreadyInit(); // Too late
-
-    speed = _speed;
-}
+void I2C::SetSpeed(uint32_t _speed) { speed = _speed; }
 
 I2C::I2C(I2C_TypeDef* i2cc)
 {

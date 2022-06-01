@@ -168,6 +168,21 @@ void UART::Initialize()
     initialized = true;
 }
 
+void UART::ReInitialize()
+{
+    if(!initialized)
+        uartErrorNotInit();
+
+    state.handle.Init.BaudRate = baudRate;
+    state.handle.Init.WordLength = static_cast<uint32_t>(wordLength);
+    state.handle.Init.Parity = static_cast<uint32_t>(parity);
+    state.handle.Init.StopBits = static_cast<uint32_t>(stopBits);
+    state.handle.Init.Mode = static_cast<uint32_t>(transmissionMode);
+
+    // Reinitialize UART using HAL
+    uartHALErrorGuard(HAL_UART_Init(&state.handle));
+}
+
 void UART::DeInitialize()
 {
     if(!initialized)
@@ -194,6 +209,11 @@ void UART::DeInitialize()
     case Instance::UART_1:
         // Disable the clock
         __HAL_RCC_USART1_CLK_DISABLE();
+        // Disable GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_1.tx); // TX1
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_1.rx); // RX1
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(USART1_IRQn);
@@ -201,6 +221,11 @@ void UART::DeInitialize()
     case Instance::UART_2:
         // Disable the clock
         __HAL_RCC_USART2_CLK_DISABLE();
+        // Disable GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_2.tx); // TX2
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_2.rx); // RX2
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(USART2_IRQn);
@@ -208,6 +233,11 @@ void UART::DeInitialize()
     case Instance::UART_3:
         // Disable the clock
         __HAL_RCC_USART3_CLK_DISABLE();
+        // Disable GPIO
+        if(transmissionMode != TransmissionMode::RECEIVE_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_3.tx); // TX3
+        if(transmissionMode != TransmissionMode::TRANSMIT_ONLY)
+            GPIO::Disable(BSP::Pinouts::UART_3.rx); // RX3
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(USART3_IRQn);
@@ -376,35 +406,14 @@ UART::UART(USART_TypeDef* usart)
 
 void UART::SetWordLength(UART::WordLength _wordLength)
 {
-    if(initialized)
-        uartErrorAlreadyInit(); // Too late
-
     wordLength = _wordLength;
 }
 
-void UART::SetParity(UART::Parity _parity)
-{
-    if(initialized)
-        uartErrorAlreadyInit(); // Too late
+void UART::SetParity(UART::Parity _parity) { parity = _parity; }
 
-    parity = _parity;
-}
+void UART::SetStopBits(UART::StopBits _stopBits) { stopBits = _stopBits; }
 
-void UART::SetStopBits(UART::StopBits _stopBits)
-{
-    if(initialized)
-        uartErrorAlreadyInit(); // Too late
-
-    stopBits = _stopBits;
-}
-
-void UART::SetBaudRate(uint32_t _baudRate)
-{
-    if(initialized)
-        uartErrorAlreadyInit(); // Too late
-
-    baudRate = _baudRate;
-}
+void UART::SetBaudRate(uint32_t _baudRate) { baudRate = _baudRate; }
 
 void UART::ChangeModeToBlocking(uint32_t Timeout)
 {
@@ -467,9 +476,6 @@ void UART::DisablePrintf()
 
 void UART::SetTransmissionMode(UART::TransmissionMode _transmissionMode)
 {
-    if(initialized)
-        uartErrorAlreadyInit(); // Too late
-
     transmissionMode = _transmissionMode;
 }
 

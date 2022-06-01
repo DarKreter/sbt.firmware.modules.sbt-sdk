@@ -30,7 +30,8 @@ void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
         auto [adc, channel] = GetAnalogChannel(gpioPort, gpioPin);
         if(!adc->IsConverterInited())
             adc->InitConverter();
-        adc->CreateChannel(channel);
+        if(!adc->DoesChannelExist(channel))
+            adc->CreateChannel(channel);
         adc->InitChannels();
     }
     initTypeDef.Pull = static_cast<uint32_t>(pull);
@@ -39,6 +40,15 @@ void GPIO::Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, GPIO::Mode mode,
 
     // Register the requested pin as enabled
     enabledPins.insert({gpioPort, gpioPin});
+}
+void GPIO::Disable(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
+{
+    if(!enabledPins.count({gpioPort, gpioPin}))
+        gpioError("Requested pin is not in use");
+
+    HAL_GPIO_DeInit(gpioPort, gpioPin);
+
+    enabledPins.erase({gpioPort, gpioPin});
 }
 void GPIO::Toggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin)
 {

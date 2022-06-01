@@ -179,6 +179,27 @@ void SPI_t::Initialize()
     initialized = true;
 }
 
+void SPI_t::ReInitialize()
+{
+    if(!initialized)
+        spiErrorNotInit();
+
+    CalculateMisoMosi();
+    CalculateSpeed();
+
+    auto& handle = state.handle;
+    handle.Init.Mode = static_cast<uint32_t>(deviceType);
+    handle.Init.Direction = static_cast<uint32_t>(direction);
+    handle.Init.BaudRatePrescaler = static_cast<uint32_t>(prescaler);
+    handle.Init.CLKPhase = static_cast<uint32_t>(clockPhase);
+    handle.Init.CLKPolarity = static_cast<uint32_t>(clockPolarity);
+    handle.Init.DataSize = static_cast<uint32_t>(dataSize);
+    handle.Init.FirstBit = static_cast<uint32_t>(firstBit);
+
+    // Reinitialize SPI using HAL
+    spiHALErrorGuard(HAL_SPI_Init(&state.handle));
+}
+
 void SPI_t::DeInitialize()
 {
     if(!initialized)
@@ -205,6 +226,12 @@ void SPI_t::DeInitialize()
     case Instance::SPI_1:
         // Disable the clock
         __HAL_RCC_SPI1_CLK_DISABLE();
+        // Disable GPIO
+        GPIO::Disable(BSP::Pinouts::SPI_1.sck); // SCK
+        if(misoEnabled)
+            GPIO::Disable(BSP::Pinouts::SPI_1.miso); // MISO
+        if(mosiEnabled)
+            GPIO::Disable(BSP::Pinouts::SPI_1.mosi); // MOSI
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(SPI1_IRQn);
@@ -212,6 +239,12 @@ void SPI_t::DeInitialize()
     case Instance::SPI_2:
         // Disable the clock
         __HAL_RCC_SPI2_CLK_DISABLE();
+        // Disable GPIO
+        GPIO::Disable(BSP::Pinouts::SPI_2.sck); // SCK
+        if(misoEnabled)
+            GPIO::Disable(BSP::Pinouts::SPI_2.miso); // MISO
+        if(mosiEnabled)
+            GPIO::Disable(BSP::Pinouts::SPI_2.mosi); // MOSI
         // Disable interrupts
         if(mode == OperatingMode::INTERRUPTS || mode == OperatingMode::DMA)
             HAL_NVIC_DisableIRQ(SPI2_IRQn);
@@ -370,54 +403,27 @@ SPI_t::SPI_t(SPI_TypeDef* spii)
 
 void SPI_t::SetPrescaler(SPI_t::Prescaler _prescaler)
 {
-    if(initialized)
-        spiErrorAlreadyInit();
-
     prescaler = _prescaler;
 }
 
 void SPI_t::SetBaudRate(int32_t _baudRate)
 {
-    if(initialized)
-        spiErrorAlreadyInit();
-
     if(_baudRate < 1 || 18'000'000 < _baudRate)
         spiError("Baud rate for SPI must be between 1 and 18'000'000");
 
     baudRate = _baudRate;
 }
 
-void SPI_t::SetDataSize(DataSize _dataSize)
-{
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
+void SPI_t::SetDataSize(DataSize _dataSize) { dataSize = _dataSize; }
 
-    dataSize = _dataSize;
-}
-
-void SPI_t::SetFirstBit(FirstBit _firstBit)
-{
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
-
-    firstBit = _firstBit;
-}
+void SPI_t::SetFirstBit(FirstBit _firstBit) { firstBit = _firstBit; }
 
 void SPI_t::SetClockPolarity(ClockPolarity _clockPolarity)
 {
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
-
     clockPolarity = _clockPolarity;
 }
 
-void SPI_t::SetClockPhase(ClockPhase _clockPhase)
-{
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
-
-    clockPhase = _clockPhase;
-}
+void SPI_t::SetClockPhase(ClockPhase _clockPhase) { clockPhase = _clockPhase; }
 
 void SPI_t::ChangeModeToBlocking(uint32_t _timeout)
 {
@@ -446,17 +452,11 @@ void SPI_t::ChangeModeToDMA()
 
 void SPI_t::SetTransmissionMode(SPI_t::TransmissionMode _transmissionMode)
 {
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
-
     transmissionMode = _transmissionMode;
 }
 
 void SPI_t::SetDeviceType(SPI_t::DeviceType _deviceType)
 {
-    if(initialized)
-        spiErrorAlreadyInit(); // Too late
-
     deviceType = _deviceType;
 }
 

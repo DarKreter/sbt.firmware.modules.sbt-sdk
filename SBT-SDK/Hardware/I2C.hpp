@@ -229,12 +229,15 @@ public:
 
     /**
      * @brief Configure I2C in master mode
-     * @param id ID of I2C. Currently only I2C_1 is supported.
-     * @param address Address of a master
-     * @param speed Transmission speed in Hz. This value needs to be between
-     * 100000Hz and 400000Hz
+     * @param ownAddress Address of a master
      */
     void Initialize(uint32_t ownAddress);
+
+    /**
+     * @brief Reinitialize I2C
+     * @param ownAddress Address of a master
+     */
+    void ReInitialize(uint32_t ownAddress);
 
     /**
      * @brief Deinitialize I2C

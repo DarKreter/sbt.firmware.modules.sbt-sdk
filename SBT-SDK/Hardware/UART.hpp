@@ -185,6 +185,11 @@ public:
     void Initialize();
 
     /**
+     * @brief Reinitialize function
+     */
+    void ReInitialize();
+
+    /**
      * @brief Deinitialize function
      */
     void DeInitialize();
