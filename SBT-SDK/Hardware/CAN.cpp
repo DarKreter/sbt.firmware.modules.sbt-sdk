@@ -141,6 +141,48 @@ void hCAN::Initialize()
     state = State::INITIALIZED;
 }
 
+void hCAN::ReInitialize()
+{
+    if(state == State::NOT_INITIALIZED)
+        canErrorNotInit();
+    else if(state == State::STARTED)
+        canErrorAlreadyStarted();
+
+    CalculateTQ();
+
+    handle.Init.Mode = static_cast<uint32_t>(mode);
+    handle.Init.Prescaler = prescaler;
+    handle.Init.SyncJumpWidth = static_cast<uint32_t>(swj);
+    handle.Init.TimeSeg1 = static_cast<uint32_t>(bs1);
+    handle.Init.TimeSeg2 = static_cast<uint32_t>(bs2);
+
+    // Reinitialize CAN using HAL
+    canHALErrorGuard(HAL_CAN_Init(&handle));
+}
+
+void hCAN::DeInitialize()
+{
+    if(state == State::NOT_INITIALIZED)
+        canErrorNotInit();
+    else if(state == State::STARTED)
+        canErrorAlreadyStarted();
+
+    state = State::NOT_INITIALIZED;
+
+    // Deinitialize CAN using HAL
+    canHALErrorGuard(HAL_CAN_DeInit(&handle));
+
+    __HAL_RCC_CAN1_CLK_DISABLE();
+
+    GPIO::Disable(BSP::Pinouts::CAN_1.rx); // RX
+    GPIO::Disable(BSP::Pinouts::CAN_1.tx); // TX
+
+    HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
+    HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_RX1_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_SCE_IRQn);
+}
+
 void hCAN::Start()
 {
     if(state == State::NOT_INITIALIZED)
@@ -344,9 +386,7 @@ void hCAN::CalculateTQ()
 
 void hCAN::SetBaudRate([[maybe_unused]] uint32_t _baudRate)
 {
-    if(state != State::NOT_INITIALIZED)
-        canErrorAlreadyInit(); // Too late
-    else if(_baudRate > 1'000'000)
+    if(_baudRate > 1'000'000)
         canError("CAN BUS speed must be below 1MHz!");
     else if(_baudRate > Hardware::GetAPB1_Freq() / 8)
         canError("Too high baud rate for this clock speed!");
@@ -354,13 +394,7 @@ void hCAN::SetBaudRate([[maybe_unused]] uint32_t _baudRate)
     baudRate = _baudRate;
 }
 
-void hCAN::SetMode(hCAN::Mode _mode)
-{
-    if(state != State::NOT_INITIALIZED)
-        canErrorAlreadyInit(); // Too late
-
-    mode = _mode;
-}
+void hCAN::SetMode(hCAN::Mode _mode) { mode = _mode; }
 
 hCAN can;
 } // namespace SBT::Hardware

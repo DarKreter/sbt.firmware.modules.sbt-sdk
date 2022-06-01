@@ -14,6 +14,7 @@ class GPIO : public GPIOBase {
 public:
     static void Enable(GPIO_TypeDef* gpioPort, uint32_t gpioPin, Mode mode,
                        Pull pull);
+    static void Disable(GPIO_TypeDef* gpioPort, uint32_t gpioPin);
     static void Toggle(GPIO_TypeDef* gpioPort, uint32_t gpioPin);
     static void DigitalWrite(GPIO_TypeDef* gpioPort, uint32_t gpioPin,
                              State state);
@@ -26,6 +27,12 @@ public:
         Enable(reinterpret_cast<GPIO_TypeDef*>(devicePinConfig.gpioPortBase),
                devicePinConfig.gpioPin, devicePinConfig.mode,
                devicePinConfig.pull);
+    }
+
+    static inline void Disable(BSP::DevicePin devicePin)
+    {
+        Disable(reinterpret_cast<GPIO_TypeDef*>(devicePin.gpioPortBase),
+                devicePin.gpioPin);
     }
 
     static inline void Toggle(BSP::DevicePin devicePin)

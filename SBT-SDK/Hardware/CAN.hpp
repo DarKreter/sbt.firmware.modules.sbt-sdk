@@ -130,6 +130,16 @@ public:
      */
     void Initialize();
     /**
+     * @brief Reinitialize function, may only be called when the device is
+     * initialized and not started. Does not change state.
+     */
+    void ReInitialize();
+    /**
+     * @brief Deinitialize function, may only be called when the device is
+     * initialized and not started. Changes state to NOT_INITIALIZED.
+     */
+    void DeInitialize();
+    /**
      * @brief Add CAN filter. It adds one filter in LIST mode (filter 2 unique
      * IDs). can must be in INITIALIZED state.
      * @param filterBankIndex id of filter bank for which we want to make filter
